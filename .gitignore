@@ -2,6 +2,6 @@
 
 .DS_Store
 Thumbs.db
-.pictures
+pictures/
 
-.README.txt
+README.txt
