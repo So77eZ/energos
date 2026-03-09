@@ -1,0 +1,34 @@
+[
+  {
+    "id": "monster",
+    "name": "Monster Energy",
+    "price": 1.79,
+    "nosugar": false,
+    "flavor": "tropical",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Monster_Energy_drink.jpg",
+    "scores": [2, 4, 3, 3, 2, 4, 3],
+    "coords": { "sweet": 4, "acid": 2 }
+  },
+
+  {
+    "id": "celsius",
+    "name": "Celsius Orange",
+    "price": 2.29,
+    "nosugar": true,
+    "flavor": "citrus",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Celsius_energy_drink.jpg",
+    "scores": [4, 2, 3, 4, 4, 3, 3],
+    "coords": { "sweet": 2, "acid": 4 }
+  },
+
+  {
+    "id": "redbull",
+    "name": "Red Bull",
+    "price": 1.99,
+    "nosugar": false,
+    "flavor": "classic",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Red_Bull_Energy_Drink.jpg",
+    "scores": [3, 3, 3, 3, 3, 4, 2],
+    "coords": { "sweet": 3, "acid": 3 }
+  }
+]

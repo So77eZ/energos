@@ -1,0 +1,116 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f0f14;
+  color: white;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 40px;
+  background: #151520;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 40px;
+  padding: 40px;
+}
+
+.card {
+  background: rgba(30, 30, 40, 0.7);
+  border-radius: 18px;
+  padding: 24px;
+  transition: 0.35s;
+}
+
+.card:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 30px #00e5ff;
+  z-index: 5;
+}
+
+.card img {
+  width: 100%;
+  height: 240px;
+  object-fit: contain;
+}
+
+.title {
+  font-size: 22px;
+}
+
+.price {
+  color: #ff2e88;
+}
+
+.rating {
+  color: #ffd700;
+}
+
+.details {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: 0.35s;
+}
+
+.card:hover .details {
+  max-height: 800px;
+  opacity: 1;
+}
+
+.radar {
+  margin-top: 10px;
+}
+
+.boolean {
+  margin-top: 10px;
+}
+
+.true {
+  color: #00ff9d;
+}
+.false {
+  color: #ff4f4f;
+}
+
+body[data-view="stars"] .radar {
+  display: none;
+}
+body[data-view="radar"] .rating {
+  display: none;
+}
+
+/* цвет вкуса */
+
+.card[data-flavor="citrus"] {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 170, 0, 0.25),
+    rgba(30, 30, 40, 0.7)
+  );
+}
+
+.card[data-flavor="tropical"] {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 120, 0, 0.25),
+    rgba(30, 30, 40, 0.7)
+  );
+}
+
+.card[data-flavor="berry"] {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 120, 0.25),
+    rgba(30, 30, 40, 0.7)
+  );
+}
