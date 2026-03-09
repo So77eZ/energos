@@ -8,16 +8,170 @@
   </head>
 
   <body>
-    <h1 id="drinkName"></h1>
+    <header>
+      <div class="logo">⚡ EnergyRank</div>
+      <nav>
+        <a href="index.html">Главная</a>
+        <a href="taste-map.html">Карта вкусов</a>
+      </nav>
+      <div class="nav-fixed">
+        <button id="prevDrink">←</button>
+        <button id="nextDrink">→</button>
+      </div>
+    </header>
 
-    <div id="reviews"></div>
+    <div id="drinkInfo">
+      <div id="prevPreview"></div>
+      <div class="drink-display">
+        <h2 id="drinkNameAbove"></h2>
+        <img id="drinkImage" src="" alt="" />
+      </div>
+      <div id="nextPreview"></div>
+    </div>
 
-    <h3>Добавить отзыв</h3>
+    <div id="adminUserRatings">
+      <div id="adminRating"></div>
+      <div id="userRating"></div>
+    </div>
 
-    <input id="text" />
-    <input id="rating" type="number" min="1" max="5" />
+    <div class="reviews-container">
+      <div class="form-wrapper">
+        <h3>Добавить отзыв</h3>
 
-    <button id="add">добавить</button>
+        <form id="reviewForm">
+          <input
+            id="username"
+            name="username"
+            placeholder="Ваше имя"
+            required
+          />
+
+          <textarea
+            id="text"
+            name="text"
+            placeholder="Ваш отзыв"
+            required
+          ></textarea>
+
+          <label class="zebra2"
+            >Общий рейтинг:
+            <input
+              id="overallRating"
+              name="overallRating"
+              type="number"
+              min="1"
+              max="5"
+              step="0.1"
+              value="3"
+              oninput="
+                if (this.value > 5) this.value = 5;
+                if (this.value < 1) this.value = 1;
+              "
+          /></label>
+
+          <h4>Оцените критерии (1-5, можно дробные):</h4>
+          <label class="zebra1"
+            >Кислота:
+            <input
+              name="scores[0]"
+              type="number"
+              min="1"
+              max="5"
+              step="0.1"
+              value="3"
+              oninput="
+                if (this.value > 5) this.value = 5;
+                if (this.value < 1) this.value = 1;
+              "
+          /></label>
+          <label class="zebra2"
+            >Сладость:
+            <input
+              name="scores[1]"
+              type="number"
+              min="1"
+              max="5"
+              step="0.1"
+              value="3"
+              oninput="
+                if (this.value > 5) this.value = 5;
+                if (this.value < 1) this.value = 1;
+              "
+          /></label>
+          <label class="zebra1"
+            >Газированность:
+            <input
+              name="scores[2]"
+              type="number"
+              min="1"
+              max="5"
+              step="0.1"
+              value="3"
+              oninput="
+                if (this.value > 5) this.value = 5;
+                if (this.value < 1) this.value = 1;
+              "
+          /></label>
+          <label class="zebra2"
+            >Концентрация:
+            <input
+              name="scores[3]"
+              type="number"
+              min="1"
+              max="5"
+              step="0.1"
+              value="3"
+              oninput="
+                if (this.value > 5) this.value = 5;
+                if (this.value < 1) this.value = 1;
+              "
+          /></label>
+          <label class="zebra1"
+            >Послевкусие:
+            <input
+              name="scores[4]"
+              type="number"
+              min="1"
+              max="5"
+              step="0.1"
+              value="3"
+              oninput="
+                if (this.value > 5) this.value = 5;
+                if (this.value < 1) this.value = 1;
+              "
+          /></label>
+          <label class="zebra2"
+            >Энергия:
+            <input
+              name="scores[5]"
+              type="number"
+              min="1"
+              max="5"
+              step="0.1"
+              value="3"
+              oninput="
+                if (this.value > 5) this.value = 5;
+                if (this.value < 1) this.value = 1;
+              "
+          /></label>
+          <label class="zebra1"
+            >Цена:
+            <select name="scores[6]">
+              <option value="1">Очень дешево</option>
+              <option value="2">Дешево</option>
+              <option value="3" selected>Нормально</option>
+              <option value="4">Дорого</option>
+              <option value="5">Для богатых</option>
+            </select>
+          </label>
+
+          <button type="submit">Добавить отзыв</button>
+        </form>
+      </div>
+
+      <h2>Отзывы</h2>
+      <div id="reviews"></div>
+    </div>
 
     <script src="reviews.js"></script>
   </body>

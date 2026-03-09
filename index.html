@@ -13,17 +13,17 @@
     <header>
       <div class="logo">⚡ EnergyRank</div>
 
+      <nav>
+        <a href="taste-map.html">Карта вкусов</a>
+        <a href="reviews.html">Отзывы</a>
+      </nav>
+
       <div class="controls">
         <input id="search" placeholder="поиск" />
 
         <select id="sort">
           <option value="rating">рейтинг</option>
           <option value="price">цена</option>
-        </select>
-
-        <select id="viewMode">
-          <option value="stars">⭐ рейтинг</option>
-          <option value="radar">📊 диаграмма</option>
         </select>
 
         <label>
@@ -35,9 +35,6 @@
 
     <main>
       <div id="grid" class="grid"></div>
-
-      <h2>Карта вкусов</h2>
-      <canvas id="tasteMap"></canvas>
     </main>
 
     <script src="app.js"></script>
