@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.post("/{id}/upload-image/", response_model=EnergyDrink)
-async def upload_image_to_drink(id: int = Path(ge=0), file: UploadFile = File(...)):
+async def upload_image_to_drink(id: int = Path(ge=1), file: UploadFile = File(...)):
     result = await energy_drink.upload_image_to_drink(id, file)
     if not result:
         raise HTTPException(status_code=404, detail="Energy drink not found")
@@ -22,7 +22,7 @@ async def create_energy_drink(payload: EnergyDrink):
 
 @router.get("/{id}/", response_model=EnergyDrink)
 async def read_energy_drink(
-    id: int = Path(ge=0),
+    id: int = Path(ge=1),
 ):
     drink = await energy_drink.get(id)
     if not drink:
@@ -36,7 +36,7 @@ async def read_all_energy_drinks():
 
 
 @router.put("/{id}/", response_model=EnergyDrink)
-async def update_energy_drink(payload: EnergyDrink, id: int = Path(ge=0)):
+async def update_energy_drink(payload: EnergyDrink, id: int = Path(ge=1)):
     result = await energy_drink.put(id, payload)
     if not result:
         raise HTTPException(status_code=404, detail="Energy drink not found")
@@ -44,7 +44,7 @@ async def update_energy_drink(payload: EnergyDrink, id: int = Path(ge=0)):
 
 
 @router.delete("/{id}/", response_model=EnergyDrink)
-async def delete_energy_drink(id: int = Path(ge=0)):
+async def delete_energy_drink(id: int = Path(ge=1)):
     drink = await energy_drink.get(id)
     if not drink:
         raise HTTPException(status_code=404, detail="Energy drink not found")
