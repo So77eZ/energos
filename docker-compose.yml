@@ -9,6 +9,8 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql
+    # - ./pg_hba.conf:/var/lib/postgresql/pg_hba.conf:ro
+    # - ./postgresql.conf:/var/lib/postgresql/data/postgresql.conf:ro
     networks:
       - backend
     env_file:

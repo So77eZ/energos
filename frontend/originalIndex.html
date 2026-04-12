@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>EnergyRank</title>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+
+  <body>
+    <header>
+      <div class="logo">⚡ EnergyRank</div>
+
+      <nav>
+        <a href="taste-map.html">Карта вкусов</a>
+        <a href="reviews.html">Отзывы</a>
+      </nav>
+
+      <div class="controls">
+        <input id="search" placeholder="поиск" />
+
+        <select id="sort">
+          <option value="rating">рейтинг</option>
+          <option value="price">цена</option>
+        </select>
+
+        <label>
+          <input type="checkbox" id="sugarFilter" />
+          без сахара
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <div id="grid" class="grid"></div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

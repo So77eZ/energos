@@ -13,8 +13,8 @@ import uvicorn
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(EnergyDrink.metadata.create_all)
+    #async with engine.begin() as conn:
+    #    await conn.run_sync(EnergyDrink.metadata.create_all)
     yield
 
 
