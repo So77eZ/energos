@@ -2,65 +2,154 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Energy Drinks</title>
-    <link rel="stylesheet" href="styleTest.css" />
+
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
+
   <body>
-    <h1>Список энергетиков</h1>
-    <ul id="list"></ul>
+    <header class="site-header">
+      <div class="site-header__shell">
+        <div class="site-header__inner">
+          <div class="logo site-header__logo">⚡ Energy Drinks</div>
+          <input
+            type="search"
+            id="headerSearch"
+            class="site-header__search-input"
+            placeholder="Поиск по названию…"
+            autocomplete="off"
+            aria-label="Поиск по названию"
+          />
+          <nav class="site-nav site-header__nav" aria-label="Основная навигация">
+            <a href="taste-map.html">Карта вкусов</a>
+            <a href="reviews.html">Отзывы</a>
+            <a href="energy-drinks-list.html">Управление</a>
+          </nav>
+          <button
+            type="button"
+            class="filter-menu-btn site-header__filter-btn"
+            id="filterMenuBtn"
+            aria-expanded="false"
+            aria-controls="filterDropdown"
+            title="Фильтры"
+          >
+            <svg
+              class="filter-menu-btn__icon"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+            </svg>
+            <span class="visually-hidden">Открыть фильтры</span>
+          </button>
+        </div>
 
-    <h2>Добавить новый</h2>
+        <div
+          id="filterDropdown"
+          class="filter-dropdown"
+          role="region"
+          aria-label="Фильтры каталога"
+          hidden
+        >
+          <label class="filter-dropdown__field">
+            <span>Сортировка</span>
+            <select id="sort">
+              <option value="rating">по рейтингу</option>
+              <option value="price">по цене</option>
+            </select>
+          </label>
+          <label class="filter-dropdown__field filter-dropdown__field--row">
+            <input type="checkbox" id="sugarFilter" />
+            <span>Только без сахара</span>
+          </label>
+          <p class="filter-dropdown__caption">Оценки (1–5), «не важно» — без фильтра</p>
+          <div class="filter-dropdown__metrics">
+            <label class="filter-dropdown__field">
+              <span>Кислотность</span>
+              <select id="filterAcidity">
+                <option value="">не важно</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </label>
+            <label class="filter-dropdown__field">
+              <span>Сладость</span>
+              <select id="filterSweetness">
+                <option value="">не важно</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </label>
+            <label class="filter-dropdown__field">
+              <span>Газированность</span>
+              <select id="filterCarbonation">
+                <option value="">не важно</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </label>
+            <label class="filter-dropdown__field">
+              <span>Концентрация</span>
+              <select id="filterConcentration">
+                <option value="">не важно</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </label>
+            <label class="filter-dropdown__field">
+              <span>Послевкусие</span>
+              <select id="filterAftertaste">
+                <option value="">не важно</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </label>
+            <label class="filter-dropdown__field">
+              <span>Цена / качество</span>
+              <select id="filterPriceQuality">
+                <option value="">не важно</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+    </header>
 
-    <input type="text" id="name" placeholder="Название" /><br />
-    <input type="number" id="price" placeholder="Цена" /><br />
-    <input
-      type="number"
-      id="acidity"
-      min="1"
-      max="5"
-      placeholder="Кислотность (1-5)"
-    /><br />
-    <input
-      type="number"
-      id="sweetness"
-      min="1"
-      max="5"
-      placeholder="Сладость (1-5)"
-    /><br />
-    <input
-      type="number"
-      id="concentration"
-      min="1"
-      max="5"
-      placeholder="Концентрация (1-5)"
-    /><br />
-    <input
-      type="number"
-      id="carbonation"
-      min="1"
-      max="5"
-      placeholder="Газ (1-5)"
-    /><br />
-    <input
-      type="number"
-      id="aftertaste"
-      min="1"
-      max="5"
-      placeholder="Послевкусие (1-5)"
-    /><br />
-    <input
-      type="number"
-      id="price_quality"
-      min="1"
-      max="5"
-      placeholder="Цена/качество (1-5)"
-    /><br />
+    <main>
+      <div id="grid" class="grid"></div>
+    </main>
 
-    <p>Без сахара</p>
-    <input type="checkbox" id="no_sugar" /><br /><br />
-
-    <button onclick="createDrink()">Создать</button>
-
-    <script src="front-back-test.js"></script>
+    <script src="drink-utils.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>

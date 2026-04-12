@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Редактирование энергетика</title>
+    <link rel="stylesheet" href="energy-drinks-crud.css" />
+  </head>
+  <body>
+    <div class="crud-wrap">
+      <header class="crud-site-header">
+        <div class="crud-site-header__bar">
+          <a href="/" class="crud-site-brand">⚡ Energy Drinks</a>
+          <div class="crud-site-header__cluster">
+            <nav class="crud-nav" aria-label="Разделы">
+              <a href="energy-drinks-list.html">Список</a>
+              <a href="energy-drink-new.html">Создать</a>
+              <a href="/">Каталог</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <h1>Редактирование</h1>
+      <div id="dirtyBar" class="dirty-bar">Изменения не сохранены</div>
+      <div id="msg" class="msg" role="status" aria-live="polite"></div>
+      <p id="loading">Загрузка…</p>
+      <form id="form" class="crud-form" style="display: none">
+        <div class="crud-form-panel">
+        <input type="hidden" id="drink_id" />
+        <label>
+          Название *
+          <input type="text" id="name" required autocomplete="off" />
+        </label>
+        <label>
+          Цена
+          <input type="number" id="price" min="0" step="0.01" />
+        </label>
+        <label>
+          URL изображения (необязательно)
+          <input
+            type="text"
+            id="image_url"
+            placeholder="https://…"
+            inputmode="url"
+            autocomplete="off"
+          />
+        </label>
+        <label>
+          Кислотность (1–5) *
+          <input type="number" id="acidity" min="1" max="5" required />
+        </label>
+        <label>
+          Сладость (1–5) *
+          <input type="number" id="sweetness" min="1" max="5" required />
+        </label>
+        <label>
+          Концентрация (1–5) *
+          <input type="number" id="concentration" min="1" max="5" required />
+        </label>
+        <label>
+          Газированность (1–5) *
+          <input type="number" id="carbonation" min="1" max="5" required />
+        </label>
+        <label>
+          Послевкусие (1–5) *
+          <input type="number" id="aftertaste" min="1" max="5" required />
+        </label>
+        <label>
+          Цена / качество (1–5) *
+          <input type="number" id="price_quality" min="1" max="5" required />
+        </label>
+        <label>
+          <input type="checkbox" id="no_sugar" />
+          Без сахара
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="primary">Сохранить</button>
+          <a class="btn-back-list" href="energy-drinks-list.html">К списку</a>
+        </div>
+        </div>
+      </form>
+    </div>
+    <script src="energy-drinks-api.js"></script>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const id = Number(params.get("id"));
+      const msg = document.getElementById("msg");
+      const dirtyBar = document.getElementById("dirtyBar");
+      const loading = document.getElementById("loading");
+      const form = document.getElementById("form");
+
+      let savedSnapshot = "";
+
+      function showErr(text) {
+        msg.className = "msg err";
+        msg.textContent = text;
+      }
+
+      function clearMsg() {
+        msg.className = "msg";
+        msg.textContent = "";
+      }
+
+      function showOk(text) {
+        msg.className = "msg ok";
+        msg.textContent = text;
+      }
+
+      function captureSnapshot() {
+        const parts = [
+          document.getElementById("name").value,
+          document.getElementById("price").value,
+          document.getElementById("image_url").value,
+          document.getElementById("acidity").value,
+          document.getElementById("sweetness").value,
+          document.getElementById("concentration").value,
+          document.getElementById("carbonation").value,
+          document.getElementById("aftertaste").value,
+          document.getElementById("price_quality").value,
+          document.getElementById("no_sugar").checked ? "1" : "0",
+        ];
+        return parts.join("\u001f");
+      }
+
+      function updateDirtyUi() {
+        const dirty = captureSnapshot() !== savedSnapshot;
+        dirtyBar.classList.toggle("is-visible", dirty);
+      }
+
+      function intField(name) {
+        const v = Number(document.getElementById(name).value);
+        if (!Number.isFinite(v) || v < 1 || v > 5) return null;
+        return v;
+      }
+
+      function fill(d) {
+        document.getElementById("drink_id").value = String(d.id);
+        document.getElementById("name").value = d.name || "";
+        document.getElementById("price").value =
+          d.price != null && d.price !== "" ? d.price : "";
+        document.getElementById("image_url").value = d.image_url || "";
+        document.getElementById("acidity").value = d.acidity;
+        document.getElementById("sweetness").value = d.sweetness;
+        document.getElementById("concentration").value = d.concentration;
+        document.getElementById("carbonation").value = d.carbonation;
+        document.getElementById("aftertaste").value = d.aftertaste;
+        document.getElementById("price_quality").value = d.price_quality;
+        document.getElementById("no_sugar").checked = Boolean(d.no_sugar);
+        savedSnapshot = captureSnapshot();
+        dirtyBar.classList.remove("is-visible");
+      }
+
+      function buildBody(drinkId) {
+        const name = document.getElementById("name").value.trim();
+        if (!name) return null;
+        const priceRaw = document.getElementById("price").value.trim();
+        const price =
+          priceRaw === "" ? null : Number(priceRaw);
+        if (priceRaw !== "" && !Number.isFinite(price)) return null;
+        const image_url = document.getElementById("image_url").value.trim();
+        const acidity = intField("acidity");
+        const sweetness = intField("sweetness");
+        const concentration = intField("concentration");
+        const carbonation = intField("carbonation");
+        const aftertaste = intField("aftertaste");
+        const price_quality = intField("price_quality");
+        if (
+          acidity == null ||
+          sweetness == null ||
+          concentration == null ||
+          carbonation == null ||
+          aftertaste == null ||
+          price_quality == null
+        ) {
+          return null;
+        }
+        return {
+          id: drinkId,
+          name,
+          price,
+          image_url: image_url || null,
+          acidity,
+          sweetness,
+          concentration,
+          carbonation,
+          aftertaste,
+          price_quality,
+          no_sugar: document.getElementById("no_sugar").checked,
+        };
+      }
+
+      if (!Number.isInteger(id) || id < 1) {
+        loading.style.display = "none";
+        showErr("Укажите корректный id в адресе: ?id=…");
+      } else {
+        (async () => {
+          try {
+            const d = await EnergyDrinksAPI.get(id);
+            fill(d);
+            loading.style.display = "none";
+            form.style.display = "";
+            document.title = `Редактирование: ${d.name}`;
+          } catch (e) {
+            loading.style.display = "none";
+            showErr(e.message || "Не найдено");
+          }
+        })();
+      }
+
+      form.addEventListener("input", updateDirtyUi);
+      form.addEventListener("change", updateDirtyUi);
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const drinkId = Number(document.getElementById("drink_id").value);
+        const body = buildBody(drinkId);
+        if (!body) {
+          showErr("Проверьте поля: название и все оценки от 1 до 5.");
+          return;
+        }
+        try {
+          await EnergyDrinksAPI.update(drinkId, body);
+          savedSnapshot = captureSnapshot();
+          dirtyBar.classList.remove("is-visible");
+          clearMsg();
+          showOk("Сохранено");
+        } catch (err) {
+          showErr(err.message || "Ошибка сохранения");
+        }
+      });
+    </script>
+  </body>
+</html>

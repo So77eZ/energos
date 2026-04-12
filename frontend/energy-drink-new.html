@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Новый энергетик</title>
+    <link rel="stylesheet" href="energy-drinks-crud.css" />
+  </head>
+  <body>
+    <div class="crud-wrap">
+      <header class="crud-site-header">
+        <div class="crud-site-header__bar">
+          <a href="/" class="crud-site-brand">⚡ Energy Drinks</a>
+          <div class="crud-site-header__cluster">
+            <nav class="crud-nav" aria-label="Разделы">
+              <a href="energy-drinks-list.html">Список</a>
+              <a href="energy-drink-new.html">Создать</a>
+              <a href="/">Каталог</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+      <h1>Новый энергетик</h1>
+      <div id="msg" class="msg" role="status" aria-live="polite"></div>
+      <form id="form" class="crud-form">
+        <div class="crud-form-panel">
+        <label>
+          Название *
+          <input type="text" id="name" required autocomplete="off" />
+        </label>
+        <label>
+          Цена
+          <input type="number" id="price" min="0" step="0.01" />
+        </label>
+        <label>
+          URL изображения (необязательно)
+          <input
+            type="text"
+            id="image_url"
+            placeholder="https://…"
+            inputmode="url"
+            autocomplete="off"
+          />
+        </label>
+        <label>
+          Кислотность (1–5) *
+          <input type="number" id="acidity" min="1" max="5" value="3" required />
+        </label>
+        <label>
+          Сладость (1–5) *
+          <input type="number" id="sweetness" min="1" max="5" value="3" required />
+        </label>
+        <label>
+          Концентрация (1–5) *
+          <input
+            type="number"
+            id="concentration"
+            min="1"
+            max="5"
+            value="3"
+            required
+          />
+        </label>
+        <label>
+          Газированность (1–5) *
+          <input
+            type="number"
+            id="carbonation"
+            min="1"
+            max="5"
+            value="3"
+            required
+          />
+        </label>
+        <label>
+          Послевкусие (1–5) *
+          <input
+            type="number"
+            id="aftertaste"
+            min="1"
+            max="5"
+            value="3"
+            required
+          />
+        </label>
+        <label>
+          Цена / качество (1–5) *
+          <input
+            type="number"
+            id="price_quality"
+            min="1"
+            max="5"
+            value="3"
+            required
+          />
+        </label>
+        <label>
+          <input type="checkbox" id="no_sugar" />
+          Без сахара
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="primary">Сохранить</button>
+          <a class="btn-back-list" href="energy-drinks-list.html">Отмена</a>
+        </div>
+        </div>
+      </form>
+    </div>
+    <script src="energy-drinks-api.js"></script>
+    <script>
+      const msg = document.getElementById("msg");
+      const form = document.getElementById("form");
+
+      function showErr(text) {
+        msg.className = "msg err";
+        msg.textContent = text;
+      }
+
+      function showOk(text) {
+        msg.className = "msg ok";
+        msg.textContent = text;
+      }
+
+      function intField(id) {
+        const v = Number(document.getElementById(id).value);
+        if (!Number.isFinite(v) || v < 1 || v > 5) return null;
+        return v;
+      }
+
+      function buildBody() {
+        const name = document.getElementById("name").value.trim();
+        if (!name) return null;
+        const priceRaw = document.getElementById("price").value.trim();
+        const price =
+          priceRaw === "" ? null : Number(priceRaw);
+        if (priceRaw !== "" && !Number.isFinite(price)) return null;
+        const image_url = document.getElementById("image_url").value.trim();
+        const acidity = intField("acidity");
+        const sweetness = intField("sweetness");
+        const concentration = intField("concentration");
+        const carbonation = intField("carbonation");
+        const aftertaste = intField("aftertaste");
+        const price_quality = intField("price_quality");
+        if (
+          acidity == null ||
+          sweetness == null ||
+          concentration == null ||
+          carbonation == null ||
+          aftertaste == null ||
+          price_quality == null
+        ) {
+          return null;
+        }
+        const body = {
+          name,
+          price,
+          image_url: image_url || null,
+          acidity,
+          sweetness,
+          concentration,
+          carbonation,
+          aftertaste,
+          price_quality,
+          no_sugar: document.getElementById("no_sugar").checked,
+        };
+        return body;
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const body = buildBody();
+        if (!body) {
+          showErr("Проверьте поля: название и все оценки от 1 до 5.");
+          return;
+        }
+        try {
+          const created = await EnergyDrinksAPI.create(body);
+          showOk("Создано. Переход к редактированию…");
+          window.location.href = `energy-drink-edit.html?id=${created.id}`;
+        } catch (err) {
+          showErr(err.message || "Ошибка сохранения");
+        }
+      });
+    </script>
+  </body>
+</html>

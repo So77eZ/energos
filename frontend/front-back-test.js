@@ -92,7 +92,7 @@ function createDrink() {
 
 // удалить
 function deleteDrink(id) {
-  fetch(`${API_URL}${id}`, {
+  fetch(`${API_URL}${id}/`, {
     method: "DELETE",
   })
     .then(() => loadDrinks())

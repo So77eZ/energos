@@ -9,9 +9,9 @@
 
   <body>
     <header>
-      <div class="logo">⚡ EnergyRank</div>
+      <div class="logo">⚡ Energy Drinks</div>
       <nav>
-        <a href="index.html">Главная</a>
+        <a href="/">Главная</a>
         <a href="taste-map.html">Карта вкусов</a>
       </nav>
       <div class="nav-fixed">
@@ -140,23 +140,9 @@
                 if (this.value < 1) this.value = 1;
               "
           /></label>
-          <label class="zebra2"
-            >Энергия:
-            <input
-              name="scores[5]"
-              type="number"
-              min="1"
-              max="5"
-              step="0.1"
-              value="3"
-              oninput="
-                if (this.value > 5) this.value = 5;
-                if (this.value < 1) this.value = 1;
-              "
-          /></label>
           <label class="zebra1"
-            >Цена:
-            <select name="scores[6]">
+            >Цена / качество:
+            <select name="scores[5]">
               <option value="1">Очень дешево</option>
               <option value="2">Дешево</option>
               <option value="3" selected>Нормально</option>
@@ -173,6 +159,7 @@
       <div id="reviews"></div>
     </div>
 
+    <script src="drink-utils.js"></script>
     <script src="reviews.js"></script>
   </body>
 </html>
