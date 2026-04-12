@@ -8,7 +8,12 @@ from sqlmodel import select
 
 
 async def post(payload: EnergyDrink):
-    drink = EnergyDrink(**payload.model_dump(exclude={"created_at", "updated_at"}))
+    now = datetime.now(timezone.utc)
+    drink = EnergyDrink(
+        **payload.model_dump(exclude={"created_at", "updated_at"}),
+        created_at=now,
+        updated_at=now,
+    )
     async with async_session_maker() as session:
         session.add(drink)
         await session.commit()
