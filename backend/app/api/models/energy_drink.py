@@ -8,7 +8,7 @@ from sqlmodel import DateTime, Field, SQLModel
 class EnergyDrink(SQLModel, table=True):
     __tablename__ = "energy_drinks"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True, ge=1)
     name: str
     price: float | None = None
     image_url: str | None = None
