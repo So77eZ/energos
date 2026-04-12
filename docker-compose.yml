@@ -9,6 +9,11 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
     # - ./pg_hba.conf:/var/lib/postgresql/pg_hba.conf:ro
     # - ./postgresql.conf:/var/lib/postgresql/data/postgresql.conf:ro
     networks:
@@ -32,7 +37,8 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - backend
     env_file:
