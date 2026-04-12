@@ -8,7 +8,7 @@ from sqlmodel import select
 
 
 async def post(payload: EnergyDrink):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     drink = EnergyDrink(
         **payload.model_dump(exclude={"created_at", "updated_at"}),
         created_at=now,
@@ -50,7 +50,7 @@ async def put(id: int, payload: EnergyDrink):
             exclude={"created_at", "updated_at"}
         ).items():
             setattr(row, key, value)
-        row.updated_at = datetime.now(timezone.utc)
+        row.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await session.commit()
         return row
 
@@ -81,6 +81,6 @@ async def upload_image_to_drink(id: int, file: UploadFile):
             SupabaseService.delete_image(drink.image_url)
         image_url = await SupabaseService.upload_image(file)
         drink.image_url = image_url
-        drink.updated_at = datetime.now(timezone.utc)
+        drink.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await session.commit()
         return drink
