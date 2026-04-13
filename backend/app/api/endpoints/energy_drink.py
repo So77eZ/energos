@@ -45,7 +45,7 @@ async def update_energy_drink(payload: EnergyDrink, id: int = Path(ge=1)):
 
 @router.delete("/{id}/", response_model=EnergyDrink)
 async def delete_energy_drink(id: int = Path(ge=1)):
-    drink = await energy_drink.get(id)
+    drink = await energy_drink.delete(id)
     if not drink:
         raise HTTPException(status_code=404, detail="Energy drink not found")
-    return await energy_drink.delete(id)
+    return drink
