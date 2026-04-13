@@ -14,8 +14,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    # - ./pg_hba.conf:/var/lib/postgresql/pg_hba.conf:ro
-    # - ./postgresql.conf:/var/lib/postgresql/data/postgresql.conf:ro
     networks:
       - backend
     env_file:
@@ -43,8 +41,6 @@ services:
       - backend
     env_file:
       - .env
-    volumes:
-      - ./uploads:/app/uploads
 
   server:
     build:
