@@ -21,11 +21,15 @@ async def post(payload: EnergyDrink):
         return drink
 
 
+async def query_energy_drink_by_id(session, id: int):
+    query = select(EnergyDrink).where(EnergyDrink.id == id)
+    result = await session.execute(query)
+    return result.scalar_one_or_none()
+
+
 async def get(id: int):
     async with async_session_maker() as session:
-        query = select(EnergyDrink).where(EnergyDrink.id == id)
-        result = await session.execute(query)
-        row = result.scalar_one_or_none()
+        row = await query_energy_drink_by_id(session, id)
         if row is None:
             return None
         return row
@@ -41,9 +45,7 @@ async def get_all():
 
 async def put(id: int, payload: EnergyDrink):
     async with async_session_maker() as session:
-        query = select(EnergyDrink).where(EnergyDrink.id == id)
-        result = await session.execute(query)
-        row = result.scalar_one_or_none()
+        row = await query_energy_drink_by_id(session, id)
         if row is None:
             return None
         for key, value in payload.model_dump(
@@ -55,11 +57,9 @@ async def put(id: int, payload: EnergyDrink):
         return row
 
 
-async def delete(id: int):
+async def delete(id: int) -> EnergyDrink | None:
     async with async_session_maker() as session:
-        query = select(EnergyDrink).where(EnergyDrink.id == id)
-        result = await session.execute(query)
-        row = result.scalar_one_or_none()
+        row = await query_energy_drink_by_id(session, id)
         if row is None:
             return None
         if row.image_url:
@@ -72,9 +72,7 @@ async def delete(id: int):
 
 async def upload_image_to_drink(id: int, file: UploadFile):
     async with async_session_maker() as session:
-        query = select(EnergyDrink).where(EnergyDrink.id == id)
-        result = await session.execute(query)
-        drink = result.scalar_one_or_none()
+        drink = await query_energy_drink_by_id(session, id)
         if drink is None:
             return None
         if drink.image_url:
