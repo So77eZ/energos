@@ -14,8 +14,8 @@ sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 from app.database import DATABASE_URL
 from app.models.base import Base
-from app.api.models.energy_drink import EnergyDrink
-from app.api.models.auth import User
+from app.api.models.energy_drink import EnergyDrink  # noqa: F401
+from app.api.models.auth import User  # noqa: F401
 
 
 # this is the Alembic Config object, which provides
