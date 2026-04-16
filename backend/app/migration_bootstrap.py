@@ -3,7 +3,6 @@ import subprocess
 import sys
 
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from config import settings
@@ -12,24 +11,17 @@ from config import settings
 async def should_stamp_head(db_url: str) -> bool:
     engine = create_async_engine(db_url)
     try:
-        for attempt in range(30):
-            try:
-                async with engine.connect() as connection:
-                    alembic_exists = await connection.scalar(
-                        text("SELECT to_regclass('public.alembic_version') IS NOT NULL")
-                    )
-                    if alembic_exists:
-                        return False
+        async with engine.connect() as connection:
+            alembic_exists = await connection.scalar(
+                text("SELECT to_regclass('public.alembic_version') IS NOT NULL")
+            )
+            if alembic_exists:
+                return False
 
-                    app_table_exists = await connection.scalar(
-                        text("SELECT to_regclass('public.energy_drinks') IS NOT NULL")
-                    )
-                    return bool(app_table_exists)
-            except SQLAlchemyError:
-                if attempt == 29:
-                    raise
-                await asyncio.sleep(1)
-        return False
+            app_table_exists = await connection.scalar(
+                text("SELECT to_regclass('public.energy_drinks') IS NOT NULL")
+            )
+            return bool(app_table_exists)
     finally:
         await engine.dispose()
 
