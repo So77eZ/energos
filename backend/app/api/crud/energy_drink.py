@@ -2,15 +2,15 @@ from datetime import datetime, timezone
 
 from fastapi import UploadFile
 
-from app.api.models.energy_drink import EnergyDrink
+from app.api.models.energy_drink import EnergyDrink, EnergyDrinkSchema
 from app.database import async_session_maker, SupabaseService
-from sqlmodel import select
+from sqlalchemy import select
 
 
-async def post(payload: EnergyDrink):
+async def post(payload: EnergyDrinkSchema):
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     drink = EnergyDrink(
-        **payload.model_dump(exclude={"created_at", "updated_at"}),
+        **payload.model_dump(exclude={"id", "created_at", "updated_at"}),
         created_at=now,
         updated_at=now,
     )
@@ -43,15 +43,15 @@ async def get_all():
         return [row for row in rows]
 
 
-async def put(id: int, payload: EnergyDrink):
+async def put(id: int, payload: EnergyDrinkSchema):
     async with async_session_maker() as session:
         row = await query_energy_drink_by_id(session, id)
         if row is None:
             return None
-        for key, value in payload.model_dump(
-            exclude={"created_at", "updated_at"}
-        ).items():
-            setattr(row, key, value)
+        update_data = payload.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            if key not in ["id", "created_at", "updated_at"] and value is not None:
+                setattr(row, key, value)
         row.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await session.commit()
         return row
