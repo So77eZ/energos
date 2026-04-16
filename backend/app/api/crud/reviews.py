@@ -5,11 +5,14 @@ from app.database import async_session_maker
 from sqlalchemy import select
 
 
-async def post(payload: EnergyDrinkReviewSchema, user_id: int):
+async def post(payload: EnergyDrinkReviewSchema, user_id: int, is_admin: bool = False):
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     review = EnergyDrinkReview(
-        **payload.model_dump(exclude={"id", "user_id", "created_at", "updated_at"}),
+        **payload.model_dump(
+            exclude={"id", "user_id", "created_at", "updated_at", "from_admin"}
+        ),
         user_id=user_id,
+        from_admin=is_admin,
         created_at=now,
         updated_at=now,
     )

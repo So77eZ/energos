@@ -12,7 +12,8 @@ router = APIRouter()
 async def create_review(
     payload: EnergyDrinkReviewSchema, current_user=Depends(get_current_user)
 ):
-    return await reviews.post(payload, current_user.id)
+    is_admin = current_user.role == "admin"
+    return await reviews.post(payload, current_user.id, is_admin)
 
 
 @router.get("/{id}/", response_model=EnergyDrinkReviewSchema)

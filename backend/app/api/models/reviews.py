@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, Float, DateTime
+from sqlalchemy import Integer, Float, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -30,6 +30,7 @@ class EnergyDrinkReview(Base):
     )  # соотношение цена-качество (1-5)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    from_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class EnergyDrinkReviewSchema(BaseModel):
@@ -45,5 +46,6 @@ class EnergyDrinkReviewSchema(BaseModel):
     carbonation: float = Field(..., ge=1, le=5)
     aftertaste: float = Field(..., ge=1, le=5)
     price_quality: float = Field(..., ge=1, le=5)
+    from_admin: bool = False
     created_at: datetime | None = None
     updated_at: datetime | None = None
