@@ -5,7 +5,7 @@ from app.database import async_session_maker
 from sqlalchemy import select
 
 
-async def post(payload: EnergyDrinkReviewSchema, user_id: int, is_admin: bool = False):
+async def post(payload: EnergyDrinkReviewSchema, user_id: int, is_admin: bool = False) -> EnergyDrinkReview:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     review = EnergyDrinkReview(
         **payload.model_dump(
@@ -27,13 +27,13 @@ async def post(payload: EnergyDrinkReviewSchema, user_id: int, is_admin: bool = 
         return review
 
 
-async def query_review_by_id(session, id: int):
+async def query_review_by_id(session, id: int) -> EnergyDrinkReview | None:
     query = select(EnergyDrinkReview).where(EnergyDrinkReview.id == id)
     result = await session.execute(query)
     return result.scalar_one_or_none()
 
 
-async def get(id: int):
+async def get(id: int) -> EnergyDrinkReview | None:
     async with async_session_maker() as session:
         row = await query_review_by_id(session, id)
         if row is None:
@@ -41,7 +41,7 @@ async def get(id: int):
         return row
 
 
-async def get_all():
+async def get_all() -> list[EnergyDrinkReview]:
     async with async_session_maker() as session:
         query = select(EnergyDrinkReview)
         result = await session.execute(query)
@@ -49,7 +49,7 @@ async def get_all():
         return [row for row in rows]
 
 
-async def get_by_energy_drink_id(energy_drink_id: int):
+async def get_by_energy_drink_id(energy_drink_id: int) -> list[EnergyDrinkReview]:
     async with async_session_maker() as session:
         query = select(EnergyDrinkReview).where(
             EnergyDrinkReview.energy_drink_id == energy_drink_id
@@ -59,7 +59,7 @@ async def get_by_energy_drink_id(energy_drink_id: int):
         return [row for row in rows]
 
 
-async def get_by_user_id(user_id: int):
+async def get_by_user_id(user_id: int) -> list[EnergyDrinkReview]:
     async with async_session_maker() as session:
         query = select(EnergyDrinkReview).where(EnergyDrinkReview.user_id == user_id)
         result = await session.execute(query)
@@ -67,7 +67,7 @@ async def get_by_user_id(user_id: int):
         return [row for row in rows]
 
 
-async def put(id: int, payload: EnergyDrinkReviewSchema):
+async def put(id: int, payload: EnergyDrinkReviewSchema) -> EnergyDrinkReview | None:
     async with async_session_maker() as session:
         row = await query_review_by_id(session, id)
         if row is None:

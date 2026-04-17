@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.api import api_router
@@ -27,12 +28,12 @@ app.add_middleware(
 
 
 @app.get("/")
-def root():
+def root() -> dict[str, str]:
     return {"message": "Energy drink rating API"}
 
 
 @app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
+async def custom_swagger_ui_html() -> HTMLResponse:
     assert app.openapi_url is not None, "app.openapi_url is None"
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,

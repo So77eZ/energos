@@ -42,7 +42,7 @@ class SupabaseService:
             )
 
     @staticmethod
-    def delete_image(image_url: str):
+    def delete_image(image_url: str) -> None:
         if not image_url:
             return
         prefix = f"{settings.SUPABASE_URL}/storage/v1/object/public/{settings.SUPABASE_BUCKET_NAME}/"

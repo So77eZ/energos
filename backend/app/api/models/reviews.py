@@ -28,9 +28,9 @@ class EnergyDrinkReview(Base):
     price_quality: Mapped[float] = mapped_column(
         Float, nullable=False
     )  # соотношение цена-качество (1-5)
+    from_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    from_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class EnergyDrinkReviewSchema(BaseModel):

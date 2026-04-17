@@ -11,7 +11,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login/")
 
 
 @router.post("/register/", response_model=UserResponse, status_code=201)
-async def register_user(payload: UserCreate):
+async def register_user(payload: UserCreate) -> UserResponse:
     existing_user = await auth.get_user_by_username(payload.username)
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")
@@ -21,7 +21,9 @@ async def register_user(payload: UserCreate):
 
 
 @router.post("/login/", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+) -> dict[str, str]:
     user = await auth.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -33,7 +35,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
     username = verify_token(token)
     if username is None:
         raise HTTPException(
@@ -46,5 +48,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 @router.get("/me/", response_model=UserResponse)
-async def read_users_me(current_user: UserResponse = Depends(get_current_user)):
+async def read_users_me(
+    current_user: UserResponse = Depends(get_current_user),
+) -> UserResponse:
     return current_user

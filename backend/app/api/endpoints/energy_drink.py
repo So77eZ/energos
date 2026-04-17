@@ -1,3 +1,4 @@
+from backend.app.api.models.energy_drink import EnergyDrink
 from typing import List
 from fastapi import APIRouter, HTTPException, Path, UploadFile, File, Depends
 
@@ -13,7 +14,7 @@ async def upload_image_to_drink(
     id: int = Path(ge=1),
     file: UploadFile = File(...),
     current_user=Depends(get_current_user),
-):
+) -> EnergyDrinkSchema:
     result = await energy_drink.upload_image_to_drink(id, file)
     if not result:
         raise HTTPException(status_code=404, detail="Energy drink not found")
@@ -23,14 +24,14 @@ async def upload_image_to_drink(
 @router.post("/", response_model=EnergyDrinkSchema, status_code=201)
 async def create_energy_drink(
     payload: EnergyDrinkSchema, current_user=Depends(get_current_user)
-):
+) -> EnergyDrinkSchema:
     return await energy_drink.post(payload)
 
 
 @router.get("/{id}/", response_model=EnergyDrinkSchema)
 async def read_energy_drink(
     id: int = Path(ge=1),
-):
+) -> EnergyDrinkSchema:
     drink = await energy_drink.get(id)
     if not drink:
         raise HTTPException(status_code=404, detail="Energy drink not found")
@@ -38,7 +39,7 @@ async def read_energy_drink(
 
 
 @router.get("/", response_model=List[EnergyDrinkSchema])
-async def read_all_energy_drinks():
+async def read_all_energy_drinks() -> List[EnergyDrink]:
     return await energy_drink.get_all()
 
 
@@ -47,7 +48,7 @@ async def update_energy_drink(
     payload: EnergyDrinkSchema,
     id: int = Path(ge=1),
     current_user=Depends(get_current_user),
-):
+) -> EnergyDrinkSchema:
     result = await energy_drink.put(id, payload)
     if not result:
         raise HTTPException(status_code=404, detail="Energy drink not found")
@@ -57,7 +58,7 @@ async def update_energy_drink(
 @router.delete("/{id}/", response_model=EnergyDrinkSchema)
 async def delete_energy_drink(
     id: int = Path(ge=1), current_user=Depends(get_current_user)
-):
+) -> EnergyDrinkSchema:
     drink = await energy_drink.delete(id)
     if not drink:
         raise HTTPException(status_code=404, detail="Energy drink not found")
