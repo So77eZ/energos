@@ -5,7 +5,9 @@ from app.database import async_session_maker
 from sqlalchemy import select
 
 
-async def post(payload: EnergyDrinkReviewSchema, user_id: int, is_admin: bool = False) -> EnergyDrinkReview:
+async def post(
+    payload: EnergyDrinkReviewSchema, user_id: int, is_admin: bool = False
+) -> EnergyDrinkReview:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     review = EnergyDrinkReview(
         **payload.model_dump(
@@ -17,10 +19,6 @@ async def post(payload: EnergyDrinkReviewSchema, user_id: int, is_admin: bool = 
         updated_at=now,
     )
     async with async_session_maker() as session:
-        session.add(review)
-        await session.commit()
-        await session.refresh(review)
-        return review
         session.add(review)
         await session.commit()
         await session.refresh(review)
