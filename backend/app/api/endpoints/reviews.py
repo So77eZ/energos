@@ -1,4 +1,4 @@
-from backend.app.api.models.reviews import EnergyDrinkReview
+from app.api.models.reviews import EnergyDrinkReview
 from typing import List
 from fastapi import APIRouter, HTTPException, Path, Depends
 

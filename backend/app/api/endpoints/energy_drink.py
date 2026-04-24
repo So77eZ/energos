@@ -1,4 +1,4 @@
-from backend.app.api.models.energy_drink import EnergyDrink
+from app.api.models.energy_drink import EnergyDrink
 from typing import List
 from fastapi import APIRouter, HTTPException, Path, UploadFile, File, Depends
 
