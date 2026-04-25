@@ -21,8 +21,10 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-next
       dockerfile: Dockerfile
+    environment:
+      API_ORIGIN: http://server
     depends_on:
       - backend
     networks:

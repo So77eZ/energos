@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #0a0a12;
+    color: #f0f0f5;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url('/assets/site-bg.png');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.35;
+    z-index: -1;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  /* Native select — тёмный фон для выпадающего списка */
+  select,
+  select option {
+    background-color: #1a1a2e;
+    color: #f0f0f5;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 102, 204, 0.4);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 229, 255, 0.5);
+  }
+}
+
+@layer utilities {
+  /* Glassmorphism base */
+  .glass {
+    background: rgba(21, 21, 32, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 102, 204, 0.35);
+  }
+
+  .glass-surface {
+    background: rgba(30, 30, 40, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 102, 204, 0.2);
+  }
+}

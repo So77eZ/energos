@@ -17,19 +17,16 @@ async def create_review(
     return await reviews.post(payload, current_user.id, is_admin)
 
 
-@router.get("/{id}/", response_model=EnergyDrinkReviewSchema)
-async def read_review(
-    id: int = Path(ge=1),
-) -> EnergyDrinkReviewSchema:
-    review = await reviews.get(id)
-    if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
-    return review
-
-
 @router.get("/", response_model=List[EnergyDrinkReviewSchema])
 async def read_all_reviews() -> List[EnergyDrinkReview]:
     return await reviews.get_all()
+
+
+@router.get("/user/", response_model=List[EnergyDrinkReviewSchema])
+async def read_reviews_by_user(
+    current_user=Depends(get_current_user),
+) -> List[EnergyDrinkReview]:
+    return await reviews.get_by_user_id(current_user.id)
 
 
 @router.get(
@@ -41,11 +38,14 @@ async def read_reviews_by_energy_drink(
     return await reviews.get_by_energy_drink_id(energy_drink_id)
 
 
-@router.get("/user/", response_model=List[EnergyDrinkReviewSchema])
-async def read_reviews_by_user(
-    current_user=Depends(get_current_user),
-) -> List[EnergyDrinkReview]:
-    return await reviews.get_by_user_id(current_user.id)
+@router.get("/{id}/", response_model=EnergyDrinkReviewSchema)
+async def read_review(
+    id: int = Path(ge=1),
+) -> EnergyDrinkReviewSchema:
+    review = await reviews.get(id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+    return review
 
 
 @router.put("/{id}/", response_model=EnergyDrinkReviewSchema)
