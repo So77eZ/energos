@@ -120,7 +120,7 @@ function OtherReviewCard({ review }: { review: Review }) {
   return (
     <div className="glass-surface rounded-xl p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-[#f0f0f5]">Пользователь #{review.user_id}</span>
+        <span className="text-sm font-semibold text-[#f0f0f5]">{review.username ?? `Пользователь #${review.user_id}`}</span>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             <Star className="w-3.5 h-3.5 fill-neon-pink text-neon-pink" />
@@ -185,16 +185,16 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   const userReviews = initialReviews.filter((r) => !r.from_admin)
   const otherReviews = myReview ? userReviews.filter((r) => r.id !== myReview.id) : userReviews
 
-  const avgReview = otherReviews.length > 0
+  const avgReview = userReviews.length > 0
     ? {
-        ...otherReviews[0],
+        ...userReviews[0],
         ...Object.fromEntries(
           METRIC_KEYS.map((k) => [
             k,
-            Math.round((otherReviews.reduce((s, r) => s + r[k], 0) / otherReviews.length) * 10) / 10,
+            Math.round((userReviews.reduce((s, r) => s + r[k], 0) / userReviews.length) * 10) / 10,
           ]),
         ),
-        rating: Math.round((otherReviews.reduce((s, r) => s + r.rating, 0) / otherReviews.length) * 10) / 10,
+        rating: Math.round((userReviews.reduce((s, r) => s + r.rating, 0) / userReviews.length) * 10) / 10,
       } as Review
     : null
 
@@ -256,7 +256,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
 
         {/* Average other users (shown here only, beside admin) */}
         {avgReview ? (
-          <MetricBars review={avgReview} label={`Среднее пользователей (${otherReviews.length})`} />
+          <MetricBars review={avgReview} label={`Среднее пользователей (${userReviews.length})`} />
         ) : userReviews.length === 0 ? (
           <div className="glass-surface rounded-xl p-4 text-sm text-[#9090a8]">
             Пользовательских отзывов пока нет.

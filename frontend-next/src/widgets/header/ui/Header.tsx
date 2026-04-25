@@ -25,9 +25,11 @@ export async function Header() {
           <span className="hidden lg:inline font-bold text-sm tracking-wide">Energos</span>
         </Link>
 
-        <Suspense fallback={null}>
-          <HeaderSearchBar />
-        </Suspense>
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <Suspense fallback={null}>
+            <HeaderSearchBar />
+          </Suspense>
+        </div>
 
         <nav className="flex items-center gap-1 ml-auto shrink-0" aria-label="Основная навигация">
           {NAV_LINKS.map(({ href, label, icon: Icon }) => (

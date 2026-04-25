@@ -6,14 +6,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
 import { ROUTES } from '@shared/config/routes'
 
-const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/reviews']
+const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/reviews', '/taste-map']
 
-const PLACEHOLDERS: Record<string, string> = {
-  '/': 'Поиск напитков…',
-  '/admin/drinks': 'Поиск по названию…',
-  '/profile': 'Поиск по отзывам…',
-  '/reviews': 'Найти напиток…',
-}
+const PLACEHOLDER = 'Поиск напитков…'
 
 export function HeaderSearchBar() {
   const pathname = usePathname()
@@ -23,6 +18,7 @@ export function HeaderSearchBar() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const isCatalog = pathname === '/'
+  const isTasteMap = pathname === '/taste-map'
   const isReviews = pathname === '/reviews'
   const hasActiveFilters = noSugarOnly || sort !== 'name'
 
@@ -45,11 +41,11 @@ export function HeaderSearchBar() {
 
   return (
     <>
-      <div className="relative flex-1 min-w-0 max-w-xs" ref={containerRef}>
+      <div className="relative flex-1 min-w-0" ref={containerRef}>
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9090a8] pointer-events-none" />
         <input
           type="search"
-          placeholder={PLACEHOLDERS[pathname] ?? 'Поиск…'}
+          placeholder={PLACEHOLDER}
           value={search}
           onChange={(e) => { setSearch(e.target.value); if (isReviews) setDropdownOpen(true) }}
           onFocus={() => { if (isReviews && search) setDropdownOpen(true) }}
@@ -83,7 +79,7 @@ export function HeaderSearchBar() {
         )}
       </div>
 
-      {isCatalog && (
+      {(isCatalog || isTasteMap) && (
         <button
           onClick={() => setFilterOpen(!filterOpen)}
           className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors border shrink-0 ${

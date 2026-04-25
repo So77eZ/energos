@@ -11,6 +11,7 @@ export interface Review extends ReviewMetrics {
   id: number
   energy_drink_id: number
   user_id: number | null
+  username: string | null
   rating: number        // 1–5, общая оценка
   from_admin: boolean
   created_at: string | null
@@ -18,7 +19,7 @@ export interface Review extends ReviewMetrics {
 }
 
 // from_admin включён — нужен при создании admin-отзыва
-export type ReviewCreate = Omit<Review, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+export type ReviewCreate = Omit<Review, 'id' | 'user_id' | 'username' | 'created_at' | 'updated_at'>
 
 export const METRIC_LABELS: Record<keyof ReviewMetrics, string> = {
   acidity: 'Кислотность',

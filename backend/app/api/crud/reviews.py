@@ -1,8 +1,28 @@
 from datetime import datetime, timezone
 
 from app.api.models.reviews import EnergyDrinkReview, EnergyDrinkReviewSchema
+from app.api.models.auth import User
 from app.database import async_session_maker
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+
+async def _attach_usernames(
+    session: AsyncSession, rows: list[EnergyDrinkReview]
+) -> list[EnergyDrinkReviewSchema]:
+    user_ids = {r.user_id for r in rows if r.user_id is not None}
+    username_map: dict[int, str] = {}
+    if user_ids:
+        result = await session.execute(
+            select(User.id, User.username).where(User.id.in_(user_ids))
+        )
+        username_map = dict(result.all())
+    schemas = []
+    for row in rows:
+        schema = EnergyDrinkReviewSchema.model_validate(row)
+        schema.username = username_map.get(row.user_id) if row.user_id else None
+        schemas.append(schema)
+    return schemas
 
 
 async def post(
@@ -11,7 +31,7 @@ async def post(
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     review = EnergyDrinkReview(
         **payload.model_dump(
-            exclude={"id", "user_id", "created_at", "updated_at", "from_admin"}
+            exclude={"id", "user_id", "created_at", "updated_at", "from_admin", "username"}
         ),
         user_id=user_id,
         from_admin=is_admin,
@@ -39,30 +59,31 @@ async def get(id: int) -> EnergyDrinkReview | None:
         return row
 
 
-async def get_all() -> list[EnergyDrinkReview]:
+async def get_all() -> list[EnergyDrinkReviewSchema]:
     async with async_session_maker() as session:
-        query = select(EnergyDrinkReview)
-        result = await session.execute(query)
-        rows = result.scalars().all()
-        return [row for row in rows]
+        result = await session.execute(select(EnergyDrinkReview))
+        rows = list(result.scalars().all())
+        return await _attach_usernames(session, rows)
 
 
-async def get_by_energy_drink_id(energy_drink_id: int) -> list[EnergyDrinkReview]:
+async def get_by_energy_drink_id(energy_drink_id: int) -> list[EnergyDrinkReviewSchema]:
     async with async_session_maker() as session:
-        query = select(EnergyDrinkReview).where(
-            EnergyDrinkReview.energy_drink_id == energy_drink_id
+        result = await session.execute(
+            select(EnergyDrinkReview).where(
+                EnergyDrinkReview.energy_drink_id == energy_drink_id
+            )
         )
-        result = await session.execute(query)
-        rows = result.scalars().all()
-        return [row for row in rows]
+        rows = list(result.scalars().all())
+        return await _attach_usernames(session, rows)
 
 
-async def get_by_user_id(user_id: int) -> list[EnergyDrinkReview]:
+async def get_by_user_id(user_id: int) -> list[EnergyDrinkReviewSchema]:
     async with async_session_maker() as session:
-        query = select(EnergyDrinkReview).where(EnergyDrinkReview.user_id == user_id)
-        result = await session.execute(query)
-        rows = result.scalars().all()
-        return [row for row in rows]
+        result = await session.execute(
+            select(EnergyDrinkReview).where(EnergyDrinkReview.user_id == user_id)
+        )
+        rows = list(result.scalars().all())
+        return await _attach_usernames(session, rows)
 
 
 async def put(id: int, payload: EnergyDrinkReviewSchema) -> EnergyDrinkReview | None:
@@ -72,7 +93,7 @@ async def put(id: int, payload: EnergyDrinkReviewSchema) -> EnergyDrinkReview | 
             return None
         update_data = payload.model_dump(exclude_unset=True)
         for key, value in update_data.items():
-            if key not in ["id", "created_at", "updated_at"] and value is not None:
+            if key not in ["id", "created_at", "updated_at", "username"] and value is not None:
                 setattr(row, key, value)
         row.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await session.commit()

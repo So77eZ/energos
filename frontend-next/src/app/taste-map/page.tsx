@@ -24,7 +24,7 @@ export default async function TasteMapPage() {
         return { sweetness: avg('sweetness'), acidity: avg('acidity') }
       })()
 
-    return [{ id: drink.id, name: drink.name, x: source.sweetness, y: source.acidity }]
+    return [{ id: drink.id, name: drink.name, no_sugar: drink.no_sugar, x: source.sweetness, y: source.acidity }]
   })
 
   return (

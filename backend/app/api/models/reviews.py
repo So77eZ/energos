@@ -49,3 +49,4 @@ class EnergyDrinkReviewSchema(BaseModel):
     from_admin: bool = False
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    username: str | None = None

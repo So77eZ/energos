@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import {
   Chart,
   ScatterController,
@@ -10,12 +10,15 @@ import {
   Legend,
   type ChartConfiguration,
 } from 'chart.js'
+import { useCatalogSearch } from '@shared/lib/catalog-search'
+import { FilterPanel } from '@features/filter-drinks/ui/FilterPanel'
 
 Chart.register(ScatterController, LinearScale, PointElement, Tooltip, Legend)
 
 interface Point {
   id: number
   name: string
+  no_sugar: boolean
   x: number
   y: number
 }
@@ -27,6 +30,17 @@ interface TasteMapChartProps {
 export function TasteMapChart({ points }: TasteMapChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const chartRef = useRef<Chart | null>(null)
+  const { search, noSugarOnly } = useCatalogSearch()
+
+  const filteredPoints = useMemo(
+    () =>
+      points.filter((p) => {
+        if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
+        if (noSugarOnly && !p.no_sugar) return false
+        return true
+      }),
+    [points, search, noSugarOnly],
+  )
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -36,12 +50,12 @@ export function TasteMapChart({ points }: TasteMapChartProps) {
     const config: ChartConfiguration<'scatter'> = {
       type: 'scatter',
       data: {
-        datasets: points.map((p, i) => ({
+        datasets: filteredPoints.map((p, i) => ({
           label: p.name,
           data: [{ x: p.x, y: p.y }],
           pointRadius: 8,
           pointHoverRadius: 13,
-          backgroundColor: `hsl(${(i * 360) / points.length}, 70%, 55%)`,
+          backgroundColor: `hsl(${(i * 360) / filteredPoints.length}, 70%, 55%)`,
         })),
       },
       options: {
@@ -96,12 +110,21 @@ export function TasteMapChart({ points }: TasteMapChartProps) {
 
     chartRef.current = new Chart(canvasRef.current, config)
     return () => { chartRef.current?.destroy() }
-  }, [points])
+  }, [filteredPoints])
 
   return (
-    <div className="glass rounded-xl p-6">
-      <div style={{ height: 500, position: 'relative' }}>
-        <canvas ref={canvasRef} />
+    <div>
+      <FilterPanel />
+      <div className="glass rounded-xl p-6">
+        {filteredPoints.length === 0 ? (
+          <p className="text-[#9090a8] py-16 text-center">
+            Ничего не найдено — попробуйте изменить фильтры.
+          </p>
+        ) : (
+          <div style={{ height: 500, position: 'relative' }}>
+            <canvas ref={canvasRef} />
+          </div>
+        )}
       </div>
     </div>
   )
