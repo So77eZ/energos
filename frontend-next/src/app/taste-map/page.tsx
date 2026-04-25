@@ -31,7 +31,7 @@ export default async function TasteMapPage() {
     <div className="space-y-6">
       <div className="glass rounded-xl px-5 py-4">
         <h1 className="text-2xl font-bold text-[#f0f0f5]">Карта вкусов</h1>
-        <p className="text-sm text-[#9090a8] mt-1">Сравните напитки по сладости и кислотности</p>
+        <p className="text-sm text-[#9090a8] mt-1">Сравнение напитков по сладости и кислотности</p>
       </div>
       {points.length === 0 ? (
         <p className="text-[#9090a8] py-16 text-center">

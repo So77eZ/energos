@@ -20,14 +20,14 @@ export function AdminDrinksList({ drinks: allDrinks }: AdminDrinksListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="glass rounded-xl px-4 py-3 flex items-center gap-3">
-        <h1 className="text-lg font-bold text-[#f0f0f5] shrink-0">Управление</h1>
+      <div className="glass rounded-xl px-4 py-3 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-[#f0f0f5]">Управление</h1>
         <Link
           href={ROUTES.admin.newDrink}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-neon-blue/20 border border-neon-blue/50 rounded-lg text-sm font-semibold text-neon-cyan hover:bg-neon-blue/30 transition-colors shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Добавить</span>
+          <span>Добавить</span>
         </Link>
       </div>
 

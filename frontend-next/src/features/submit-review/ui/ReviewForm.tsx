@@ -1,7 +1,7 @@
 'use client'
 
-import { useActionState } from 'react'
-import { Send } from 'lucide-react'
+import { useActionState, useState } from 'react'
+import { Save, Star, Biohazard, Candy, Bubbles, FlaskConical, Shell, BadgeRussianRuble, type LucideIcon } from 'lucide-react'
 import { saveReviewAction } from '../model/actions'
 import { METRIC_LABELS, METRIC_KEYS, type Review } from '@entities/review'
 
@@ -10,45 +10,83 @@ interface ReviewFormProps {
   editReview?: Review | null
 }
 
-const METRIC_COLORS = [
-  'peer-checked:border-neon-cyan  peer-checked:bg-neon-cyan/20  peer-checked:text-neon-cyan',
-  'peer-checked:border-neon-blue  peer-checked:bg-neon-blue/20  peer-checked:text-neon-blue',
-  'peer-checked:border-neon-pink  peer-checked:bg-neon-pink/20  peer-checked:text-neon-pink',
-  'peer-checked:border-purple-400 peer-checked:bg-purple-400/20 peer-checked:text-purple-400',
-  'peer-checked:border-amber-400  peer-checked:bg-amber-400/20  peer-checked:text-amber-400',
-  'peer-checked:border-neon-green peer-checked:bg-neon-green/20 peer-checked:text-neon-green',
-]
+const METRIC_ICONS: LucideIcon[] = [Biohazard, Candy, Bubbles, FlaskConical, Shell, BadgeRussianRuble]
+const METRIC_ICON_COLORS = ['text-neon-cyan', 'text-neon-blue', 'text-neon-pink', 'text-purple-400', 'text-amber-400', 'text-neon-green']
 
-function RatingSelector({
+function IconRatingSelector({
   name,
   defaultValue = 3,
-  colorClass,
+  icon: Icon,
+  activeColor,
 }: {
   name: string
   defaultValue?: number
-  colorClass: string
+  icon: LucideIcon
+  activeColor: string
 }) {
+  const [value, setValue] = useState(defaultValue)
+  const [hover, setHover] = useState<number | null>(null)
+  const display = hover ?? value
+
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-1.5">
       {[1, 2, 3, 4, 5].map((val) => (
-        <label key={val} className="group cursor-pointer">
+        <label
+          key={val}
+          className="cursor-pointer"
+          onMouseEnter={() => setHover(val)}
+          onMouseLeave={() => setHover(null)}
+        >
           <input
             type="radio"
             name={name}
             value={val}
-            defaultChecked={val === defaultValue}
-            className="sr-only peer"
+            checked={val === value}
+            onChange={() => setValue(val)}
+            className="sr-only"
             required
           />
-          <span
-            className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border transition-all select-none
-              border-white/10 bg-white/5 text-[#9090a8]
-              group-hover:border-white/30 group-hover:text-[#f0f0f5]
-              peer-checked:scale-110 peer-checked:shadow-sm
-              ${colorClass}`}
-          >
-            {val}
-          </span>
+          <Icon
+            className={`w-6 h-6 transition-colors ${val <= display ? activeColor : 'text-white/20'}`}
+          />
+        </label>
+      ))}
+    </div>
+  )
+}
+
+function StarRatingSelector({
+  name,
+  defaultValue = 3,
+}: {
+  name: string
+  defaultValue?: number
+}) {
+  const [value, setValue] = useState(defaultValue)
+  const [hover, setHover] = useState<number | null>(null)
+  const display = hover ?? value
+
+  return (
+    <div className="flex gap-1.5">
+      {[1, 2, 3, 4, 5].map((val) => (
+        <label
+          key={val}
+          className="cursor-pointer"
+          onMouseEnter={() => setHover(val)}
+          onMouseLeave={() => setHover(null)}
+        >
+          <input
+            type="radio"
+            name={name}
+            value={val}
+            checked={val === value}
+            onChange={() => setValue(val)}
+            className="sr-only"
+            required
+          />
+          <Star
+            className={`w-6 h-6 transition-colors ${val <= display ? 'fill-neon-cyan text-neon-cyan' : 'text-white/20'}`}
+          />
         </label>
       ))}
     </div>
@@ -80,25 +118,28 @@ export function ReviewForm({ drinkId, editReview }: ReviewFormProps) {
       {/* Overall rating */}
       <div className="flex flex-col gap-2 items-center">
         <span className="text-sm text-[#9090a8]">Общая оценка</span>
-        <RatingSelector
-          name="rating"
-          defaultValue={editReview?.rating ?? 3}
-          colorClass="peer-checked:border-neon-cyan peer-checked:bg-neon-cyan/20 peer-checked:text-neon-cyan"
-        />
+        <StarRatingSelector name="rating" defaultValue={editReview?.rating ?? 3} />
       </div>
 
       {/* Metrics */}
       <div className="flex flex-col gap-3 w-full">
-        {METRIC_KEYS.map((key, i) => (
-          <div key={key} className="flex items-center justify-between gap-3">
-            <span className="text-xs text-[#9090a8] w-24 shrink-0">{METRIC_LABELS[key]}</span>
-            <RatingSelector
-              name={key}
-              defaultValue={editReview?.[key] ?? 3}
-              colorClass={METRIC_COLORS[i]}
-            />
-          </div>
-        ))}
+        {METRIC_KEYS.map((key, i) => {
+          const Icon = METRIC_ICONS[i]
+          return (
+            <div key={key} className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1.5 text-xs text-[#9090a8] w-24 shrink-0">
+                <Icon className={`w-3.5 h-3.5 shrink-0 ${METRIC_ICON_COLORS[i]}`} />
+                {METRIC_LABELS[key]}
+              </span>
+              <IconRatingSelector
+                name={key}
+                defaultValue={editReview?.[key] ?? 3}
+                icon={Icon}
+                activeColor={METRIC_ICON_COLORS[i]}
+              />
+            </div>
+          )
+        })}
       </div>
 
       <button
@@ -106,7 +147,7 @@ export function ReviewForm({ drinkId, editReview }: ReviewFormProps) {
         disabled={isPending}
         className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-neon-cyan/10 border border-neon-cyan/40 rounded-lg text-sm font-semibold text-neon-cyan hover:bg-neon-cyan/20 transition-colors disabled:opacity-50 mt-1"
       >
-        <Send className="w-4 h-4" />
+        <Save className="w-4 h-4" />
         {isPending ? 'Сохранение…' : isEdit ? 'Сохранить изменения' : 'Отправить'}
       </button>
     </form>

@@ -3,12 +3,17 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Zap, Star, Pencil, MessageSquarePlus, X } from 'lucide-react'
+import {
+  ChevronLeft, ChevronRight, Zap, Star, Pencil, MessageSquarePlus, X, Trash2,
+  Biohazard, Candy, Bubbles, FlaskConical, Shell, BadgeRussianRuble,
+  type LucideIcon,
+} from 'lucide-react'
 import type { Drink } from '@entities/drink'
 import type { Review } from '@entities/review'
 import { METRIC_LABELS, METRIC_KEYS, calcRating } from '@entities/review'
 import type { User } from '@entities/user'
 import { ReviewForm } from '@features/submit-review/ui/ReviewForm'
+import { deleteReviewAction } from '@features/submit-review/model/actions'
 import { ROUTES } from '@shared/config/routes'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
 
@@ -20,7 +25,8 @@ interface ReviewsPageProps {
   myReview: Review | null
 }
 
-const DOT_COLORS = ['bg-neon-cyan','bg-neon-blue','bg-neon-pink','bg-purple-400','bg-amber-400','bg-neon-green']
+const TEXT_COLORS = ['text-neon-cyan', 'text-neon-blue', 'text-neon-pink', 'text-purple-400', 'text-amber-400', 'text-neon-green']
+const METRIC_ICONS: LucideIcon[] = [Biohazard, Candy, Bubbles, FlaskConical, Shell, BadgeRussianRuble]
 
 function formatDate(iso: string | null) {
   if (!iso) return null
@@ -32,35 +38,49 @@ function isEdited(review: Review) {
   return Math.abs(new Date(review.updated_at).getTime() - new Date(review.created_at).getTime()) > 2000
 }
 
-function MetricBars({ review, label }: { review: Review; label: string }) {
+function MetricBars({ review, label, numeric = false }: { review: Review; label: string; numeric?: boolean }) {
   const rating = calcRating(review)
   return (
     <div className="glass-surface rounded-xl p-4 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-semibold text-[#f0f0f5]">{label}</h4>
-        <div className="flex items-center gap-1">
-          <Star className="w-3.5 h-3.5 fill-neon-cyan text-neon-cyan" />
-          <span className="text-sm font-bold text-neon-cyan">{rating}</span>
+        <div className="flex items-center gap-1 shrink-0">
+          <Star className="w-3.5 h-3.5 fill-neon-pink text-neon-pink" />
+          <span className="text-sm font-bold text-neon-pink">
+            {numeric ? review.rating.toFixed(1) : review.rating}
+          </span>
         </div>
       </div>
       <ul className="space-y-1.5">
-        {METRIC_KEYS.map((key, i) => (
-          <li key={key} className="flex items-center gap-2 text-xs">
-            <span className="w-28 text-[#9090a8] truncate">{METRIC_LABELS[key]}</span>
-            <span className="flex gap-0.5">
-              {Array.from({ length: 5 }).map((_, dot) => (
-                <span key={dot} className={`w-2 h-2 rounded-full ${dot < review[key] ? DOT_COLORS[i] : 'bg-white/10'}`} />
-              ))}
-            </span>
-            <span className="ml-auto text-[#9090a8]">{review[key]}/5</span>
-          </li>
-        ))}
+        {METRIC_KEYS.map((key, i) => {
+          const Icon = METRIC_ICONS[i]
+          return (
+            <li key={key} className="flex items-center gap-1.5 text-xs">
+              <span className="flex-1 min-w-0 text-[#9090a8] truncate">{METRIC_LABELS[key]}</span>
+              {numeric ? (
+                <span className={`shrink-0 font-semibold ${TEXT_COLORS[i]}`}>
+                  {review[key].toFixed(1)}
+                </span>
+              ) : (
+                <span className="shrink-0 flex gap-0.5">
+                  {Array.from({ length: 5 }).map((_, dot) => (
+                    <Icon key={dot} className={`w-2.5 h-2.5 ${dot < review[key] ? TEXT_COLORS[i] : 'text-white/15'}`} />
+                  ))}
+                </span>
+              )}
+            </li>
+          )
+        })}
       </ul>
+      <div className="flex items-center gap-1 text-xs text-[#9090a8] pt-1 border-t border-white/5">
+        <Star className="w-3 h-3 fill-neon-cyan text-neon-cyan" />
+        Средний балл: <span className="text-neon-cyan font-semibold ml-1">{rating}</span>
+      </div>
     </div>
   )
 }
 
-function MyReviewCard({ review, onEdit }: { review: Review; onEdit: () => void }) {
+function MyReviewCard({ review, onEdit, onDelete }: { review: Review; onEdit: () => void; onDelete: () => void }) {
   const edited = isEdited(review)
   const displayDate = edited ? review.updated_at : review.created_at
   const rating = calcRating(review)
@@ -68,20 +88,34 @@ function MyReviewCard({ review, onEdit }: { review: Review; onEdit: () => void }
   return (
     <div className="rounded-xl p-4 flex flex-col gap-3 border border-neon-blue/50 bg-neon-blue/8 backdrop-blur-sm">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-neon-cyan">Ваш отзыв</span>
-          <div className="flex items-center gap-1">
-            <Star className="w-3.5 h-3.5 fill-neon-pink text-neon-pink" />
-            <span className="text-sm font-bold text-neon-pink">{review.rating}</span>
-          </div>
+        <span className="text-sm font-semibold text-neon-cyan">Ваш отзыв</span>
+        <div className="flex items-center gap-1">
+          <Star className="w-3.5 h-3.5 fill-neon-pink text-neon-pink" />
+          <span className="text-sm font-bold text-neon-pink">{review.rating}</span>
         </div>
-        <div className="flex items-center gap-2">
-          {displayDate && (
-            <span className="text-[11px] text-[#9090a8]">
-              {edited ? 'Дата редактирования: ' : 'Дата публикации: '}
-              {formatDate(displayDate)}
-            </span>
-          )}
+      </div>
+
+      <ul className="space-y-1.5">
+        {METRIC_KEYS.map((key, i) => {
+          const Icon = METRIC_ICONS[i]
+          return (
+            <li key={key} className="flex items-center gap-1.5 text-xs">
+              <span className="flex-1 min-w-0 text-[#9090a8] truncate">{METRIC_LABELS[key]}</span>
+              <span className="shrink-0 flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, dot) => (
+                  <Icon key={dot} className={`w-2.5 h-2.5 ${dot < review[key] ? TEXT_COLORS[i] : 'text-white/15'}`} />
+                ))}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+
+      <div className="flex items-center justify-between pt-1 border-t border-white/5">
+        <span className="text-[11px] text-[#9090a8]">
+          {displayDate && `${edited ? 'Дата редактирования: ' : 'Дата публикации: '}${formatDate(displayDate)}`}
+        </span>
+        <div className="flex items-center gap-1">
           <button
             onClick={onEdit}
             className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 border border-white/10 hover:border-neon-cyan/30 transition-colors"
@@ -89,22 +123,15 @@ function MyReviewCard({ review, onEdit }: { review: Review; onEdit: () => void }
             <Pencil className="w-3 h-3" />
             Изменить
           </button>
+          <button
+            onClick={onDelete}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-[#9090a8] hover:text-red-400 hover:bg-red-400/5 border border-white/10 hover:border-red-400/30 transition-colors"
+          >
+            <Trash2 className="w-3 h-3" />
+            Удалить
+          </button>
         </div>
       </div>
-
-      <ul className="space-y-1.5">
-        {METRIC_KEYS.map((key, i) => (
-          <li key={key} className="flex items-center gap-2 text-xs">
-            <span className="w-28 text-[#9090a8] truncate">{METRIC_LABELS[key]}</span>
-            <span className="flex gap-0.5">
-              {Array.from({ length: 5 }).map((_, dot) => (
-                <span key={dot} className={`w-2 h-2 rounded-full ${dot < review[key] ? DOT_COLORS[i] : 'bg-white/10'}`} />
-              ))}
-            </span>
-            <span className="ml-auto text-[#9090a8]">{review[key]}/5</span>
-          </li>
-        ))}
-      </ul>
 
       <div className="flex items-center gap-1 text-xs text-[#9090a8] pt-1 border-t border-white/5">
         <Star className="w-3 h-3 fill-neon-cyan text-neon-cyan" />
@@ -129,16 +156,19 @@ function OtherReviewCard({ review }: { review: Review }) {
         </div>
       </div>
       <ul className="space-y-1 text-xs">
-        {METRIC_KEYS.map((key, i) => (
-          <li key={key} className="flex items-center gap-2">
-            <span className="w-28 text-[#9090a8] truncate">{METRIC_LABELS[key]}</span>
-            <span className="flex gap-0.5">
-              {Array.from({ length: 5 }).map((_, dot) => (
-                <span key={dot} className={`w-1.5 h-1.5 rounded-full ${dot < review[key] ? DOT_COLORS[i] : 'bg-white/10'}`} />
-              ))}
-            </span>
-          </li>
-        ))}
+        {METRIC_KEYS.map((key, i) => {
+          const Icon = METRIC_ICONS[i]
+          return (
+            <li key={key} className="flex items-center gap-1.5">
+              <span className="flex-1 min-w-0 text-[#9090a8] truncate">{METRIC_LABELS[key]}</span>
+              <span className="shrink-0 flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, dot) => (
+                  <Icon key={dot} className={`w-2.5 h-2.5 ${dot < review[key] ? TEXT_COLORS[i] : 'text-white/15'}`} />
+                ))}
+              </span>
+            </li>
+          )
+        })}
       </ul>
       {displayDate && (
         <span className="text-[11px] text-[#9090a8]">
@@ -146,6 +176,10 @@ function OtherReviewCard({ review }: { review: Review }) {
           {formatDate(displayDate)}
         </span>
       )}
+      <div className="flex items-center gap-1 text-xs text-[#9090a8] pt-1 border-t border-white/5">
+        <Star className="w-3 h-3 fill-neon-cyan text-neon-cyan" />
+        Средний балл: <span className="text-neon-cyan font-semibold ml-1">{calcRating(review)}</span>
+      </div>
     </div>
   )
 }
@@ -174,6 +208,12 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   function handleEdit() {
     setEditing(true)
     setFormOpen(true)
+  }
+
+  function handleDelete() {
+    if (!myReview || !activeDrink) return
+    if (!confirm('Удалить ваш отзыв?')) return
+    deleteReviewAction(myReview.id, activeDrink.id)
   }
 
   function handleClose() {
@@ -207,7 +247,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 sm:pb-0">
       {/* 1. Navigation + drink info */}
       <div className="glass rounded-xl p-5 flex items-center gap-4">
         <button
@@ -228,7 +268,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
             )}
           </div>
           <div className="min-w-0">
-            <h1 className="font-bold text-[#f0f0f5] text-lg leading-snug truncate">{activeDrink.name}</h1>
+            <h1 className="font-bold text-[#f0f0f5] text-lg leading-snug">{activeDrink.name}</h1>
             {activeDrink.price != null && (
               <p className="text-sm text-neon-pink">{activeDrink.price.toFixed(2)} ₽</p>
             )}
@@ -245,7 +285,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
       </div>
 
       {/* 2. Admin rating */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-[5px] sm:gap-4">
         {adminReview ? (
           <MetricBars review={adminReview} label="Оценка администратора" />
         ) : (
@@ -256,7 +296,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
 
         {/* Average other users (shown here only, beside admin) */}
         {avgReview ? (
-          <MetricBars review={avgReview} label={`Среднее пользователей (${userReviews.length})`} />
+          <MetricBars review={avgReview} label={`Средняя оценка пользователей (${userReviews.length})`} numeric />
         ) : userReviews.length === 0 ? (
           <div className="glass-surface rounded-xl p-4 text-sm text-[#9090a8]">
             Пользовательских отзывов пока нет.
@@ -267,11 +307,11 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
       {/* 3. My review / кнопка оставить отзыв */}
       {currentUser ? (
         myReview ? (
-          <MyReviewCard review={myReview} onEdit={handleEdit} />
+          <MyReviewCard review={myReview} onEdit={handleEdit} onDelete={handleDelete} />
         ) : (
           <button
             onClick={() => setFormOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 glass rounded-xl text-sm font-semibold text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/10 transition-colors"
+            className="fixed bottom-4 left-4 right-4 sm:static sm:w-full flex items-center justify-center gap-2 px-4 py-3 glass rounded-xl text-sm font-semibold text-neon-cyan border border-neon-cyan/30 hover:bg-neon-cyan/10 transition-colors z-30 sm:z-auto"
           >
             <MessageSquarePlus className="w-4 h-4" />
             Оставить отзыв
@@ -285,7 +325,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
 
       {/* 4. Other user reviews */}
       {otherReviews.length > 0 && (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-[5px] sm:gap-4">
           {otherReviews.map((r) => (
             <OtherReviewCard key={r.id} review={r} />
           ))}

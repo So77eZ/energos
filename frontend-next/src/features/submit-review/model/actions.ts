@@ -47,3 +47,14 @@ export async function saveReviewAction(
 
   redirect(`/reviews?id=${drinkId}`)
 }
+
+export async function deleteReviewAction(reviewId: number, drinkId: number): Promise<void> {
+  const token = await getToken()
+  if (!token) redirect('/auth/login')
+  try {
+    await reviewApi.remove(reviewId, token)
+  } catch {
+    // ignore
+  }
+  redirect(`/reviews?id=${drinkId}`)
+}
