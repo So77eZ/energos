@@ -54,9 +54,12 @@ async def update_review(
     id: int = Path(ge=1),
     current_user=Depends(get_current_user),
 ) -> EnergyDrinkReviewSchema:
-    result = await reviews.put(id, payload)
-    if not result:
+    existing = await reviews.get(id)
+    if not existing:
         raise HTTPException(status_code=404, detail="Review not found")
+    if existing.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not allowed")
+    result = await reviews.put(id, payload)
     return result
 
 
@@ -64,7 +67,9 @@ async def update_review(
 async def delete_review(
     id: int = Path(ge=1), current_user=Depends(get_current_user)
 ) -> EnergyDrinkReviewSchema:
-    review = await reviews.delete(id)
-    if not review:
+    existing = await reviews.get(id)
+    if not existing:
         raise HTTPException(status_code=404, detail="Review not found")
-    return review
+    if existing.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not allowed")
+    return await reviews.delete(id)

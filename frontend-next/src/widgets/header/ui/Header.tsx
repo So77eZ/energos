@@ -3,16 +3,18 @@ import { Suspense } from 'react'
 import { Zap, Map, MessageSquare, Settings, User } from 'lucide-react'
 import { ROUTES } from '@shared/config/routes'
 import { getToken } from '@shared/lib/session'
+import { authApi } from '@entities/user'
 import { HeaderSearchBar } from './HeaderSearchBar'
 
 const NAV_LINKS = [
   { href: ROUTES.tasteMap, label: 'Карта вкусов', icon: Map },
   { href: ROUTES.reviews(), label: 'Отзывы', icon: MessageSquare },
-  { href: ROUTES.admin.drinks, label: 'Управление', icon: Settings },
 ] as const
 
 export async function Header() {
   const token = await getToken()
+  const currentUser = token ? await authApi.me(token).catch(() => null) : null
+  const isAdmin = currentUser?.role === 'admin'
 
   return (
     <header className="sticky top-0 z-50 glass border-b border-neon-blue/20">
@@ -42,6 +44,16 @@ export async function Header() {
               <span className="hidden sm:inline">{label}</span>
             </Link>
           ))}
+
+          {isAdmin && (
+            <Link
+              href={ROUTES.admin.drinks}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Управление</span>
+            </Link>
+          )}
 
           {token ? (
             <Link
