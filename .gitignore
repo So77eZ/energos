@@ -223,3 +223,5 @@ uv.lock
 
 # data
 data/
+# Next.js shared/lib (not a Python lib directory)
+!frontend-next/src/shared/lib/
