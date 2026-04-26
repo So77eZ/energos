@@ -12,7 +12,10 @@ async function parseError(res: Response): Promise<string> {
     if (json.detail) {
       if (Array.isArray(json.detail)) {
         return json.detail
-          .map((d: { msg?: string }) => d.msg ?? JSON.stringify(d))
+          .map((d: { msg?: string; ctx?: { error?: unknown } }) => {
+            const raw = (d.ctx?.error != null ? String(d.ctx.error) : d.msg) ?? JSON.stringify(d)
+            return raw.replace(/^Value error,\s*/i, '')
+          })
           .join('; ')
       }
       return String(json.detail)

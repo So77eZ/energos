@@ -2,7 +2,8 @@ from datetime import datetime
 
 from sqlalchemy import Integer, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
-from pydantic import BaseModel, ConfigDict
+import re
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.base import Base
 
@@ -19,8 +20,24 @@ class User(Base):
 
 
 class UserCreate(BaseModel):
-    username: str
-    password: str
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=8, max_length=128)
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        errors = []
+        if not re.search(r'[A-Z]', v):
+            errors.append('хотя бы одну заглавную букву')
+        if not re.search(r'[a-z]', v):
+            errors.append('хотя бы одну строчную букву')
+        if not re.search(r'\d', v):
+            errors.append('хотя бы одну цифру')
+        if not re.search(r'[!@#$%^&*()\-_=+\[\]{};:\'",.<>?/\\|`~]', v):
+            errors.append('хотя бы один специальный символ')
+        if errors:
+            raise ValueError(f'Пароль должен содержать: {", ".join(errors)}')
+        return v
 
 
 class UserResponse(BaseModel):
