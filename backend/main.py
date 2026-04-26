@@ -9,7 +9,7 @@ from sqlalchemy import text
 from app.api.api import api_router
 from app.database import async_session_maker
 
-import uvicorn
+import uvicorn, os
 
 
 async def _sync_sequences() -> None:
@@ -37,15 +37,24 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
     root_path="/api",
 )
-origins = [
-    "http://127.0.0.1:8000/",
-    "http://localhost:8000/",
-    "*",
-]
+# CORS configuration !IMPORTANT!
+# Для продакшна заменить "*" на конкретные origin'ы, например:
+# origins = ["http://localhost:3000", "https://yourdomain.com"]
+#origins = [
+#    "http://127.0.0.1:3000",
+#    "http://localhost:3000",
+#    # "http://127.0.0.1:8000",
+#    # "http://localhost:8000",
+#    # "*",  # НЕБЕЗОПАСНО: запрещено вместе с allow_credentials=True
+#]
+
+_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+origins = [o.strip() for o in _raw.split(",") if o.strip()]
+# CORS configuration !IMPORTANT!
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["DELETE", "GET", "POST", "PUT"],
     allow_headers=["*"],
