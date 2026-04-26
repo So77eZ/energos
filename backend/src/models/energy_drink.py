@@ -2,9 +2,8 @@ from datetime import datetime
 
 from sqlalchemy import Integer, String, Float, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
-from pydantic import BaseModel, ConfigDict
 
-from app.models.base import Base
+from src.models.base import Base
 
 
 class EnergyDrink(Base):
@@ -17,15 +16,3 @@ class EnergyDrink(Base):
     no_sugar: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-
-
-class EnergyDrinkSchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int | None = None
-    name: str
-    price: float | None = None
-    image_url: str | None = None
-    no_sugar: bool = False
-    created_at: datetime | None = None
-    updated_at: datetime | None = None

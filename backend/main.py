@@ -1,62 +1,40 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from sqlalchemy import text
+from starlette.middleware.base import BaseHTTPMiddleware
+from config import settings
 
-from app.api.api import api_router
-from app.database import async_session_maker
+from src.api.base import api_router
 
-import uvicorn, os
+import uvicorn
 
 
-async def _sync_sequences() -> None:
-    """Reset PostgreSQL sequences to match the current max IDs after direct imports."""
-    tables = ["energy_drinks", "energy_drinks_reviews", "users"]
-    async with async_session_maker() as session:
-        for table in tables:
-            await session.execute(
-                text(
-                    f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), "
-                    f"COALESCE((SELECT MAX(id) FROM {table}), 1))"
+class NoDirectAccessMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        if settings.DEPLOY_ENV == "prod":
+            origin = request.headers.get("origin")
+            if not origin:
+                return JSONResponse(
+                    status_code=403, content={"detail": "Direct access not allowed"}
                 )
-            )
-        await session.commit()
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await _sync_sequences()
-    yield
+        return await call_next(request)
 
 
 app = FastAPI(
-    lifespan=lifespan,
-    openapi_url="/api/openapi.json",
     root_path="/api",
 )
-# CORS configuration !IMPORTANT!
-# Для продакшна заменить "*" на конкретные origin'ы, например:
-# origins = ["http://localhost:3000", "https://yourdomain.com"]
-#origins = [
-#    "http://127.0.0.1:3000",
-#    "http://localhost:3000",
-#    # "http://127.0.0.1:8000",
-#    # "http://localhost:8000",
-#    # "*",  # НЕБЕЗОПАСНО: запрещено вместе с allow_credentials=True
-#]
 
-_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
-origins = [o.strip() for o in _raw.split(",") if o.strip()]
-# CORS configuration !IMPORTANT!
+if settings.DEPLOY_ENV == "dev":
+    app.openapi_url = "/openapi.json"
 
+
+app.add_middleware(NoDirectAccessMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[o.strip() for o in settings.ALLOWED_ORIGINS.split(",")],
     allow_credentials=True,
-    allow_methods=["DELETE", "GET", "POST", "PUT"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 

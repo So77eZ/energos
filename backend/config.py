@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     SUPABASE_BUCKET_NAME: str = os.getenv("SUPABASE_BUCKET_NAME", "")
     SUPABASE_REGION: str = os.getenv("SUPABASE_REGION", "")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")
+    ALLOWED_ORIGINS: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost,http://server"
+    )
+    DEPLOY_ENV: str = os.getenv("DEPLOY_ENV", "dev")
 
 
 settings = Settings()

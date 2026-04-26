@@ -36,7 +36,9 @@ class SupabaseService:
             )
         content = await file.read()
         if len(content) > _MAX_SIZE:
-            raise HTTPException(status_code=400, detail="Файл слишком большой. Максимум 5 МБ")
+            raise HTTPException(
+                status_code=400, detail="Файл слишком большой. Максимум 5 МБ"
+            )
         file_name = f"{uuid.uuid4()}_{file.filename}"
         try:
             s3_client.put_object(

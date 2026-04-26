@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.endpoints import energy_drink, auth, reviews
+from src.api import energy_drink, auth, reviews
 
 api_router = APIRouter()
 api_router.include_router(

@@ -39,7 +39,7 @@ export function RegisterForm() {
           className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
         />
         <p className="text-[11px] text-[#9090a8] px-1">
-          Минимум 8 символов, заглавная и строчная буква, цифра, спецсимвол
+          Минимум 8 символов, заглавная и строчная буква, цифра
         </p>
       </div>
       <input

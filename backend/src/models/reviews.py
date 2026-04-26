@@ -1,18 +1,24 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, Float, DateTime, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
-from pydantic import BaseModel, Field, ConfigDict
+from sqlalchemy import Integer, Float, DateTime, Boolean, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base
+from src.models.base import Base
+from .energy_drink import EnergyDrink
+from .auth import User
 
 
 class EnergyDrinkReview(Base):
     __tablename__ = "energy_drinks_reviews"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    energy_drink_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    energy_drink_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("energy_drinks.id"), nullable=False
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    comment: Mapped[str | None] = mapped_column(String, nullable=True)
     rating: Mapped[float] = mapped_column(Float, nullable=False)  # рейтинг (1-5)
     acidity: Mapped[float] = mapped_column(Float, nullable=False)  # кислотность (1-5)
     sweetness: Mapped[float] = mapped_column(Float, nullable=False)  # сладость (1-5)
@@ -32,21 +38,6 @@ class EnergyDrinkReview(Base):
     created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-
-class EnergyDrinkReviewSchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int | None = None
-    energy_drink_id: int
-    user_id: int | None = None
-    rating: float = Field(..., ge=1, le=5)
-    acidity: float = Field(..., ge=1, le=5)
-    sweetness: float = Field(..., ge=1, le=5)
-    concentration: float = Field(..., ge=1, le=5)
-    carbonation: float = Field(..., ge=1, le=5)
-    aftertaste: float = Field(..., ge=1, le=5)
-    price_quality: float = Field(..., ge=1, le=5)
-    from_admin: bool = False
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-    username: str | None = None
+    # Relationships
+    energy_drink: Mapped[EnergyDrink] = relationship(backref="reviews")
+    user: Mapped[User] = relationship(backref="reviews")

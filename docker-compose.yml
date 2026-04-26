@@ -21,10 +21,11 @@ services:
 
   frontend:
     build:
-      context: ./frontend-next
+      context: ./frontend
       dockerfile: Dockerfile
     environment:
       API_ORIGIN: http://server
+      NEXT_PUBLIC_ORIGIN: http://server
     depends_on:
       - backend
     networks:
@@ -50,6 +51,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - frontend
       - backend
