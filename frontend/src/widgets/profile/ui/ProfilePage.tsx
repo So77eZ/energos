@@ -59,6 +59,9 @@ function ReviewCard({ review, drink }: { review: Review; drink: Drink | undefine
           </div>
         ))}
       </div>
+      {review.comment && (
+        <p className="px-4 text-sm text-[#f0f0f5] italic">"{review.comment}"</p>
+      )}
 
       <div className="px-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-1 text-xs text-[#9090a8]">

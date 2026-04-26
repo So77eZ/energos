@@ -54,6 +54,7 @@ export async function createDrinkAction(formData: FormData) {
         carbonation: metrics.carbonation ?? 3,
         aftertaste: metrics.aftertaste ?? 3,
         price_quality: metrics.price_quality ?? 3,
+        comment: null,
       },
       token,
     )

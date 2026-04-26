@@ -142,6 +142,18 @@ export function ReviewForm({ drinkId, editReview }: ReviewFormProps) {
         })}
       </div>
 
+      {/* Comment */}
+      <div className="flex flex-col gap-2 w-full">
+        <label className="text-sm text-[#9090a8]">Комментарий (необязательно)</label>
+        <textarea
+          name="comment"
+          defaultValue={editReview?.comment ?? ''}
+          placeholder="Оставьте ваш комментарий..."
+          className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-cyan/50 resize-none"
+          rows={3}
+        />
+      </div>
+
       <button
         type="submit"
         disabled={isPending}

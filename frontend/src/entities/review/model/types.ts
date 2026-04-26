@@ -13,6 +13,7 @@ export interface Review extends ReviewMetrics {
   user_id: number | null
   username: string | null
   rating: number        // 1–5, общая оценка
+  comment: string | null
   from_admin: boolean
   created_at: string | null
   updated_at: string | null

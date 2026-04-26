@@ -30,6 +30,7 @@ export async function saveReviewAction(
     carbonation:   getNum(formData, 'carbonation'),
     aftertaste:    getNum(formData, 'aftertaste'),
     price_quality: getNum(formData, 'price_quality'),
+    comment:       formData.get('comment')?.toString() || null,
   }
 
   try {

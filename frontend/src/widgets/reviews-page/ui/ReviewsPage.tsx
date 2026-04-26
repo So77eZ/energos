@@ -109,8 +109,9 @@ function MyReviewCard({ review, onEdit, onDelete }: { review: Review; onEdit: ()
             </li>
           )
         })}
-      </ul>
-
+      </ul>      {review.comment && (
+        <p className="text-sm text-[#f0f0f5] mt-2 italic">"{review.comment}"</p>
+      )}
       <div className="flex items-center justify-between pt-1 border-t border-white/5">
         <span className="text-[11px] text-[#9090a8]">
           {displayDate && `${edited ? 'Дата редактирования: ' : 'Дата публикации: '}${formatDate(displayDate)}`}
@@ -169,8 +170,9 @@ function OtherReviewCard({ review }: { review: Review }) {
             </li>
           )
         })}
-      </ul>
-      {displayDate && (
+      </ul>      {review.comment && (
+        <p className="text-sm text-[#f0f0f5] mt-2 italic">"{review.comment}"</p>
+      )}      {displayDate && (
         <span className="text-[11px] text-[#9090a8]">
           {edited ? 'Дата редактирования: ' : 'Дата публикации: '}
           {formatDate(displayDate)}

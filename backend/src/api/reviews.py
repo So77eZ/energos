@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Path, Depends
 from datetime import datetime, timezone
 
-from src.schemas.reviews import EnergyDrinkReviewSchema
+from src.schemas.reviews import EnergyDrinkReviewSchema, CreateEnergyDrinkReviewSchema
 from src.api.auth import get_current_user
 from src.database import async_session_maker
 from sqlalchemy import select
@@ -25,20 +25,11 @@ async def _attach_usernames(
 
 @router.post("/", response_model=EnergyDrinkReviewSchema, status_code=201)
 async def create_review(
-    payload: EnergyDrinkReviewSchema, current_user=Depends(get_current_user)
+    payload: CreateEnergyDrinkReviewSchema, current_user=Depends(get_current_user)
 ) -> EnergyDrinkReviewSchema:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     review = EnergyDrinkReview(
-        **payload.model_dump(
-            exclude={
-                "id",
-                "user_id",
-                "created_at",
-                "updated_at",
-                "from_admin",
-                "username",
-            }
-        ),
+        **payload.model_dump(exclude={"from_admin"}),
         user_id=current_user.id,
         from_admin=current_user.role == "admin",
         created_at=now,
@@ -133,7 +124,7 @@ async def update_review(
         update_data = payload.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             if (
-                key not in ["id", "created_at", "updated_at", "username"]
+                key not in ["id", "created_at", "updated_at", "username", "from_admin"]
                 and value is not None
             ):
                 setattr(existing, key, value)
