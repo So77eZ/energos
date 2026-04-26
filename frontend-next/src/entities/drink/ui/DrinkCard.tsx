@@ -19,7 +19,13 @@ export function DrinkCard({ drink, index = 0, rating, accentColor }: DrinkCardPr
     <motion.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: index * 0.05, ease: 'easeOut' }}
+      transition={{
+        duration: 0.35,
+        delay: index * 0.05,
+        ease: 'easeOut',
+        scale: { duration: 0.2, delay: 0, ease: 'easeOut' },
+        boxShadow: { duration: 0.2, delay: 0, ease: 'easeOut' },
+      }}
       whileHover={{
         scale: 1.02,
         boxShadow: `0 0 30px rgba(${rgb}, 0.35), 0 0 60px rgba(${rgb}, 0.12), 0 8px 32px rgba(0,0,0,0.55)`,
