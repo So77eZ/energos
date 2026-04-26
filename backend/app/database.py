@@ -22,10 +22,21 @@ s3_client = boto3.client(
 )
 
 
+_ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+_MAX_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
 class SupabaseService:
     @staticmethod
     async def upload_image(file: UploadFile) -> str:
+        if file.content_type not in _ALLOWED_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail="Недопустимый тип файла. Разрешены: JPEG, PNG, WebP, GIF",
+            )
         content = await file.read()
+        if len(content) > _MAX_SIZE:
+            raise HTTPException(status_code=400, detail="Файл слишком большой. Максимум 5 МБ")
         file_name = f"{uuid.uuid4()}_{file.filename}"
         try:
             s3_client.put_object(
