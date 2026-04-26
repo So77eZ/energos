@@ -15,8 +15,8 @@ export function Footer() {
         <div className="flex flex-col items-center gap-2 text-xs">
           <div className="flex items-center gap-1">
             <span className="text-[#9090a8]">Фронт:</span>
-            <a href="https://github.com/kakashkammm" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#f0f0f5] hover:text-neon-cyan transition-colors">
-              <Github className="w-3 h-3" /> kakashkammm
+            <a href="https://github.com/So77eZ" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#f0f0f5] hover:text-neon-cyan transition-colors">
+              <Github className="w-3 h-3" /> So77eZ
             </a>
           </div>
           <div className="flex items-center gap-1">
