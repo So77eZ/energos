@@ -10,9 +10,11 @@ interface DrinkCardProps {
   drink: Drink
   index?: number
   rating?: number | null
+  accentColor?: string | null
 }
 
-export function DrinkCard({ drink, index = 0, rating }: DrinkCardProps) {
+export function DrinkCard({ drink, index = 0, rating, accentColor }: DrinkCardProps) {
+  const rgb = accentColor ?? '0,102,204'
   return (
     <motion.article
       initial={{ opacity: 0, y: 20 }}
@@ -20,14 +22,16 @@ export function DrinkCard({ drink, index = 0, rating }: DrinkCardProps) {
       transition={{ duration: 0.35, delay: index * 0.05, ease: 'easeOut' }}
       whileHover={{
         scale: 1.02,
-        boxShadow:
-          '0 0 30px rgba(0, 229, 255, 0.35), 0 0 60px rgba(0, 229, 255, 0.12), 0 8px 32px rgba(0,0,0,0.55)',
+        boxShadow: `0 0 30px rgba(${rgb}, 0.35), 0 0 60px rgba(${rgb}, 0.12), 0 8px 32px rgba(0,0,0,0.55)`,
       }}
       className="glass rounded-xl overflow-hidden flex flex-col shadow-card"
     >
       <Link href={ROUTES.reviews(drink.id)} className="flex flex-col flex-1">
         {/* Image */}
-        <div className="relative h-36 sm:h-48 bg-gradient-to-b from-neon-blue/10 to-transparent flex items-center justify-center overflow-hidden">
+        <div
+          className="relative h-36 sm:h-48 flex items-center justify-center overflow-hidden"
+          style={{ background: `linear-gradient(to bottom, rgba(${rgb}, 0.12), transparent)` }}
+        >
           {drink.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

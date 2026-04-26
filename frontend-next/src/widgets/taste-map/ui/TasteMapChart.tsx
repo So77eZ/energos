@@ -27,6 +27,30 @@ interface TasteMapChartProps {
   points: Point[]
 }
 
+function fmt(v: number | null | undefined): string {
+  if (v == null) return '—'
+  const n = parseFloat(v.toFixed(1))
+  return String(n)
+}
+
+function wrapName(name: string, maxLen = 30): string[] {
+  if (name.length <= maxLen) return [name]
+  const words = name.split(' ')
+  const lines: string[] = []
+  let current = ''
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word
+    if (candidate.length > maxLen && current) {
+      lines.push(current)
+      current = word
+    } else {
+      current = candidate
+    }
+  }
+  if (current) lines.push(current)
+  return lines
+}
+
 export function TasteMapChart({ points }: TasteMapChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const chartRef = useRef<Chart | null>(null)
@@ -56,16 +80,19 @@ export function TasteMapChart({ points }: TasteMapChartProps) {
           pointRadius: 8,
           pointHoverRadius: 13,
           backgroundColor: `hsl(${(i * 360) / filteredPoints.length}, 70%, 55%)`,
+          clip: false,
         })),
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         animation: { duration: 400 },
+        layout: { padding: { top: 8, bottom: 8 } },
         plugins: {
           legend: {
             display: true,
-            labels: { color: '#f0f0f5', font: { size: 13 }, usePointStyle: true },
+            position: 'bottom',
+            labels: { color: '#f0f0f5', font: { size: 13 }, usePointStyle: true, padding: 20 },
             onHover(_e, item, legend) {
               legend.chart.data.datasets.forEach((ds, i) => {
                 (ds as { pointRadius: number }).pointRadius =
@@ -81,26 +108,28 @@ export function TasteMapChart({ points }: TasteMapChartProps) {
             },
           },
           tooltip: {
+            displayColors: false,
             callbacks: {
+              title: (items) => wrapName(items[0]?.dataset.label ?? ''),
               label: (ctx) =>
-                `${ctx.dataset.label}   сладость: ${ctx.parsed.x}   кислота: ${ctx.parsed.y}`,
+                `сладость: ${fmt(ctx.parsed.x)}   кислотность: ${fmt(ctx.parsed.y)}`,
             },
           },
         },
         scales: {
           x: {
             type: 'linear' as const,
-            min: 0.5,
-            max: 5.5,
-            title: { display: true, text: 'Сладость →', color: '#9090a8' },
+            min: 1,
+            max: 5,
+            title: { display: true, text: 'Сладость →', color: '#0066cc' },
             grid: { color: 'rgba(255,255,255,0.08)' },
             ticks: { color: '#9090a8', stepSize: 1 },
           },
           y: {
             type: 'linear' as const,
-            min: 0.5,
-            max: 5.5,
-            title: { display: true, text: 'Кислотность →', color: '#9090a8' },
+            min: 1,
+            max: 5,
+            title: { display: true, text: 'Кислотность →', color: '#00e5ff' },
             grid: { color: 'rgba(255,255,255,0.08)' },
             ticks: { color: '#9090a8', stepSize: 1 },
           },
