@@ -45,6 +45,8 @@ export function HeaderSearchBar() {
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9090a8] pointer-events-none" />
         <input
           type="search"
+          id="header-search"
+          name="search"
           placeholder={PLACEHOLDER}
           value={search}
           onChange={(e) => { setSearch(e.target.value); if (isReviews) setDropdownOpen(true) }}

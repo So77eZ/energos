@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  webpack(config, { dev }) {
+    if (dev) config.devtool = 'inline-source-map'
+    return config
+  },
   async rewrites() {
     return [
       {
