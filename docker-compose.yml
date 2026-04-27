@@ -25,7 +25,7 @@ services:
       dockerfile: Dockerfile
     environment:
       API_ORIGIN: http://server
-      NEXT_PUBLIC_ORIGIN: http://server
+      NEXT_PUBLIC_ORIGIN: ${PUBLIC_URL}
     depends_on:
       - backend
     networks:
