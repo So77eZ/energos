@@ -224,6 +224,3 @@ uv.lock
 # data
 data/
 BDBackup/
-
-# Next.js shared/lib (not a Python lib directory)
-!frontend-next/src/shared/lib/
