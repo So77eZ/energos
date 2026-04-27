@@ -11,7 +11,7 @@ export async function setToken(token: string): Promise<void> {
   const store = await cookies()
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NEXT_PUBLIC_ORIGIN?.startsWith('https://') || false,
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 7, // 7 дней
