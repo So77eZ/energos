@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Monocraft';
+  src: url('/fonts/Monocraft.ttc') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -10,7 +18,7 @@
   }
 
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Monocraft', 'Courier New', monospace;
     color-scheme: dark;
     scroll-behavior: smooth;
   }
