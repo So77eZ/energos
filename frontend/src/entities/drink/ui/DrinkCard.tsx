@@ -72,12 +72,16 @@ export function DrinkCard({ drink, index = 0, rating, accentColor }: DrinkCardPr
               <span />
             )}
 
-            <span className="flex items-center gap-1 text-xs text-[#9090a8]">
-              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-neon-pink text-neon-pink" />
-              <span className={rating != null ? 'text-neon-pink font-semibold' : ''}>
-                {rating != null ? rating : '—'}
+            {rating != null ? (
+              <span className="flex items-center gap-1 text-xs">
+                <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-neon-pink text-neon-pink" />
+                <span className="text-neon-pink font-semibold">{rating}</span>
               </span>
-            </span>
+            ) : (
+              <span className="text-[10px] sm:text-xs text-neon-cyan/70 font-medium">
+                Оцените первым!
+              </span>
+            )}
           </div>
         </div>
       </Link>
