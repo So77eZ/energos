@@ -1,11 +1,12 @@
 from src.models.reviews import EnergyDrinkReview
 from typing import List
-from fastapi import APIRouter, HTTPException, Path, Depends
+from fastapi import APIRouter, HTTPException, Path, Depends, Request
 from datetime import datetime, timezone
 
 from src.schemas.reviews import EnergyDrinkReviewSchema, CreateEnergyDrinkReviewSchema
 from src.api.auth import get_current_user
 from src.database import async_session_maker
+from src.rate_limit import limiter
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -24,8 +25,11 @@ async def _attach_usernames(
 
 
 @router.post("/", response_model=EnergyDrinkReviewSchema, status_code=201)
+@limiter.limit("10/minute")
 async def create_review(
-    payload: CreateEnergyDrinkReviewSchema, current_user=Depends(get_current_user)
+    request: Request,
+    payload: CreateEnergyDrinkReviewSchema,
+    current_user=Depends(get_current_user),
 ) -> EnergyDrinkReviewSchema:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     review = EnergyDrinkReview(

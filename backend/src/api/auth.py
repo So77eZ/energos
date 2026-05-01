@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timezone
 
@@ -6,6 +6,7 @@ from src.schemas.auth import UserCreate, UserResponse, Token
 from src.auth import create_access_token, verify_token, hash_password, verify_password
 from src.models.auth import User
 from src.database import async_session_maker
+from src.rate_limit import limiter
 from sqlalchemy import select
 
 router = APIRouter()
@@ -14,7 +15,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login/")
 
 
 @router.post("/register/", response_model=UserResponse, status_code=201)
-async def register_user(payload: UserCreate) -> UserResponse:
+@limiter.limit("5/minute")
+async def register_user(request: Request, payload: UserCreate) -> UserResponse:
     async with async_session_maker() as session:
         query = select(User).where(User.username == payload.username)
         result = await session.execute(query)
@@ -39,7 +41,9 @@ async def register_user(payload: UserCreate) -> UserResponse:
 
 
 @router.post("/login/", response_model=Token)
+@limiter.limit("10/minute")
 async def login_for_access_token(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> dict[str, str]:
     async with async_session_maker() as session:

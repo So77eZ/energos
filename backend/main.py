@@ -3,9 +3,13 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from config import settings
 
 from src.api.base import api_router
+from src.rate_limit import limiter
 
 import uvicorn
 
@@ -28,7 +32,10 @@ app = FastAPI(
 if settings.DEPLOY_ENV == "dev":
     app.openapi_url = "/openapi.json"
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(NoDirectAccessMiddleware)
 app.add_middleware(
     CORSMiddleware,
