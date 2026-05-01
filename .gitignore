@@ -183,6 +183,10 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+#Claude
+.claude
+./backend/energy_drink_rating.egg-info
+
 # Cursor
 #  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
 #  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
