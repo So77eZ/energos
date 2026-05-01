@@ -1,7 +1,7 @@
 'use client'
 
-import { useActionState } from 'react'
-import { Save } from 'lucide-react'
+import { useActionState, useRef, useState } from 'react'
+import { Save, ImagePlus, X } from 'lucide-react'
 import type { Drink } from '@entities/drink'
 import type { Review } from '@entities/review'
 import { METRIC_LABELS, METRIC_KEYS } from '@entities/review'
@@ -18,8 +18,20 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
     async (_: void, formData: FormData) => { await action(formData) },
     undefined,
   )
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [preview, setPreview] = useState<string | null>(drink?.image_url ?? null)
 
   const label = mode === 'create' ? 'Создать' : 'Сохранить'
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) setPreview(URL.createObjectURL(file))
+  }
+
+  function clearFile() {
+    setPreview(drink?.image_url ?? null)
+    if (fileRef.current) fileRef.current.value = ''
+  }
 
   return (
     <form action={formAction} className="glass rounded-xl p-6 flex flex-col gap-5 max-w-xl">
@@ -31,7 +43,41 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
       <section className="flex flex-col gap-3">
         <Field label="Название *" name="name" defaultValue={drink?.name} required />
         <Field label="Цена (₽)" name="price" type="number" step="0.01" defaultValue={drink?.price ?? ''} />
-        <Field label="URL изображения" name="image_url" defaultValue={drink?.image_url ?? ''} />
+
+        {/* Image upload */}
+        <div className="flex flex-col gap-1.5 text-sm">
+          <span className="text-[#9090a8]">Изображение</span>
+          <div className="flex items-center gap-3">
+            {preview && (
+              <div className="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-white/5 border border-white/10">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={preview} alt="" className="w-full h-full object-contain p-1" />
+                {preview !== drink?.image_url && (
+                  <button
+                    type="button"
+                    onClick={clearFile}
+                    className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-black/60 text-white hover:text-neon-red transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            )}
+            <label className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[#9090a8] hover:border-neon-blue/50 hover:text-neon-cyan transition-colors cursor-pointer">
+              <ImagePlus className="w-4 h-4 shrink-0" />
+              <span>{preview ? 'Заменить фото' : 'Загрузить фото'}</span>
+              <input
+                ref={fileRef}
+                type="file"
+                name="image"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleFile}
+              />
+            </label>
+          </div>
+        </div>
+
         <label className="flex items-center gap-2 text-sm text-[#9090a8] cursor-pointer select-none">
           <input
             type="checkbox"

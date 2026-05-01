@@ -14,8 +14,14 @@ function extractDrinkFields(formData: FormData) {
   return {
     name: formData.get('name') as string,
     price: formData.get('price') ? Number(formData.get('price')) : null,
-    image_url: (formData.get('image_url') as string) || null,
     no_sugar: formData.get('no_sugar') === 'on',
+  }
+}
+
+async function uploadImageIfPresent(drinkId: number, formData: FormData, token: string) {
+  const file = formData.get('image')
+  if (file instanceof File && file.size > 0) {
+    await drinkApi.uploadImage(drinkId, file, token)
   }
 }
 
@@ -40,6 +46,7 @@ export async function createDrinkAction(formData: FormData) {
   requireToken(token)
 
   const drink = await drinkApi.create(extractDrinkFields(formData), token)
+  await uploadImageIfPresent(drink.id!, formData, token)
   const metrics = extractMetrics(formData)
 
   if (metrics.acidity != null) {
@@ -68,6 +75,7 @@ export async function updateDrinkAction(id: number, formData: FormData) {
   requireToken(token)
 
   await drinkApi.update(id, extractDrinkFields(formData), token)
+  await uploadImageIfPresent(id, formData, token)
   redirect(ROUTES.admin.drinks)
 }
 
