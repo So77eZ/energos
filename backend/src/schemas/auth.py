@@ -8,6 +8,13 @@ class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=128)
 
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        if not re.fullmatch(r"[a-zA-Z0-9_-]+", v):
+            raise ValueError("Логин может содержать только буквы, цифры, _ и -")
+        return v
+
     @field_validator("password")
     @classmethod
     def validate_password_strength(cls, v: str) -> str:

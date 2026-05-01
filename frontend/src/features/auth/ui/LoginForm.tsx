@@ -23,6 +23,10 @@ export function LoginForm() {
         name="username"
         placeholder="Логин"
         required
+        minLength={3}
+        maxLength={50}
+        pattern="[a-zA-Z0-9_\-]+"
+        title="Только буквы, цифры, _ и -"
         autoComplete="username"
         className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
       />

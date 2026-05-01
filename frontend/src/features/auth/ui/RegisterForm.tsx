@@ -19,15 +19,22 @@ export function RegisterForm() {
         </p>
       )}
 
-      <input
-        name="username"
-        placeholder="Логин"
-        required
-        minLength={3}
-        maxLength={50}
-        autoComplete="username"
-        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
-      />
+      <div className="flex flex-col gap-1">
+        <input
+          name="username"
+          placeholder="Логин"
+          required
+          minLength={3}
+          maxLength={50}
+          pattern="[a-zA-Z0-9_\-]+"
+          title="Только буквы, цифры, _ и -"
+          autoComplete="username"
+          className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
+        />
+        <p className="text-[11px] text-[#9090a8] px-1">
+          Только буквы, цифры, _ и -
+        </p>
+      </div>
       <div className="flex flex-col gap-1">
         <input
           name="password"
