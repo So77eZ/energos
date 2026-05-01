@@ -1,8 +1,7 @@
-import { httpRequest } from '@shared/api/http'
+import { httpRequest, bearerHeaders } from '@shared/api/http'
 import type { Review, ReviewCreate } from '../model/types'
 
 const BASE = '/api/reviews'
-const bearer = (token: string) => ({ Authorization: `Bearer ${token}` })
 
 export const reviewApi = {
   list: () =>
@@ -14,25 +13,25 @@ export const reviewApi = {
   create: (body: ReviewCreate, token: string) =>
     httpRequest<Review>(`${BASE}/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...bearer(token) },
+      headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
       body: JSON.stringify(body),
     }),
 
   update: (id: number, body: Partial<ReviewCreate>, token: string) =>
     httpRequest<Review>(`${BASE}/${id}/`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...bearer(token) },
+      headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
       body: JSON.stringify(body),
     }),
 
   remove: (id: number, token: string) =>
     httpRequest<Review>(`${BASE}/${id}/`, {
       method: 'DELETE',
-      headers: bearer(token),
+      headers: bearerHeaders(token),
     }),
 
   myReviews: (token: string) =>
     httpRequest<Review[]>(`${BASE}/user/`, {
-      headers: bearer(token),
+      headers: bearerHeaders(token),
     }),
 }

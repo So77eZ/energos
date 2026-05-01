@@ -1,4 +1,4 @@
-import { httpRequest } from '@shared/api/http'
+import { httpRequest, bearerHeaders } from '@shared/api/http'
 import type { User, AuthToken } from '../model/types'
 
 export const authApi = {
@@ -22,6 +22,6 @@ export const authApi = {
 
   me: (token: string) =>
     httpRequest<User>('/api/auth/me/', {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: bearerHeaders(token),
     }),
 }
