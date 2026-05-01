@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { authApi } from '@entities/user'
 import { setToken, clearToken } from '@shared/lib/session'
+import { RateLimitError } from '@shared/api/http'
 
 export async function loginAction(
   _prev: { error: string } | null,
@@ -14,7 +15,8 @@ export async function loginAction(
   try {
     const { access_token } = await authApi.login(username, password)
     await setToken(access_token)
-  } catch {
+  } catch (e) {
+    if (e instanceof RateLimitError) return { error: e.message }
     return { error: 'Неверный логин или пароль' }
   }
 
@@ -36,6 +38,7 @@ export async function registerAction(
     const { access_token } = await authApi.login(username, password)
     await setToken(access_token)
   } catch (e) {
+    if (e instanceof RateLimitError) return { error: e.message }
     return { error: e instanceof Error ? e.message : 'Ошибка регистрации' }
   }
 

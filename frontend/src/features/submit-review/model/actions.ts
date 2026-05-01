@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
+import { RateLimitError } from '@shared/api/http'
 
 const getNum = (formData: FormData, name: string) => {
   const v = Number(formData.get(name))
@@ -43,10 +44,11 @@ export async function saveReviewAction(
       )
     }
   } catch (e) {
+    if (e instanceof RateLimitError) return { error: e.message }
     return { error: e instanceof Error ? e.message : 'Ошибка сохранения' }
   }
 
-  redirect(`/reviews?id=${drinkId}`)
+  redirect(`/drinks?id=${drinkId}`)
 }
 
 export async function deleteReviewAction(reviewId: number, drinkId: number): Promise<void> {

@@ -5,6 +5,13 @@ const BASE_URL =
     ? (process.env.API_ORIGIN ?? 'http://localhost')
     : ''
 
+export class RateLimitError extends Error {
+  constructor() {
+    super('Слишком много запросов. Пожалуйста, подождите немного.')
+    this.name = 'RateLimitError'
+  }
+}
+
 async function parseError(res: Response): Promise<string> {
   const text = await res.text()
   try {
@@ -38,6 +45,7 @@ export async function httpRequest<T>(path: string, options?: RequestInit): Promi
     headers,
     credentials: 'include', // httpOnly cookies for auth
   })
+  if (res.status === 429) throw new RateLimitError()
   if (!res.ok) throw new Error(await parseError(res))
   return res.json() as Promise<T>
 }
