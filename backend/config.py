@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = (
         "http://localhost:3000,http://127.0.0.1:3000,http://localhost,http://server"
     )
+    PUBLIC_URL: str = os.getenv("PUBLIC_URL", "http://localhost")
     DEPLOY_ENV: str = os.getenv("DEPLOY_ENV", "dev")
 
 
