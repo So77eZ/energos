@@ -189,7 +189,6 @@ graphify-out/
 
 # Node
 node_modules/
-.env.example
 package-lock.json
 package.json
 backend/energy_drink_rating.egg-info/
