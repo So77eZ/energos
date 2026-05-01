@@ -8,7 +8,7 @@ import { ROUTES } from '@shared/config/routes'
 
 const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/reviews', '/taste-map']
 
-const PLACEHOLDER = 'Поиск напитков…'
+const PLACEHOLDER = 'Поиск…'
 
 export function HeaderSearchBar() {
   const pathname = usePathname()
