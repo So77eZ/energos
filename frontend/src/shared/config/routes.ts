@@ -1,7 +1,7 @@
 export const ROUTES = {
   home: '/',
   tasteMap: '/taste-map',
-  reviews: (id?: number) => (id != null ? `/reviews?id=${id}` : '/reviews'),
+  reviews: (id?: number) => (id != null ? `/drinks?id=${id}` : '/drinks'),
   profile: '/profile',
   auth: {
     login: '/auth/login',
