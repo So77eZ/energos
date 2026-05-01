@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Zap, Droplets, Star } from 'lucide-react'
+import { Zap, Droplets, Star, CandyOff } from 'lucide-react'
 import { ROUTES } from '@shared/config/routes'
 import type { Drink } from '../model/types'
 
@@ -50,9 +50,14 @@ export function DrinkCard({ drink, index = 0, rating, accentColor }: DrinkCardPr
           )}
 
           {drink.no_sugar && (
-            <span className="absolute top-2 right-2 text-[10px] sm:text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-neon-green/15 text-neon-green border border-neon-green/40">
-              Без сахара
-            </span>
+            <>
+              <span className="absolute top-2 right-2 sm:hidden p-1 rounded-full bg-neon-green/15 border border-neon-green/40 text-neon-green">
+                <CandyOff className="w-3.5 h-3.5" />
+              </span>
+              <span className="absolute top-2 right-2 hidden sm:inline-flex text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-neon-green/15 text-neon-green border border-neon-green/40">
+                Без сахара
+              </span>
+            </>
           )}
         </div>
 
