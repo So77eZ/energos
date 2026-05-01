@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
 import { ROUTES } from '@shared/config/routes'
 
-const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/reviews', '/taste-map']
+const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/drinks', '/taste-map']
 
 const PLACEHOLDER = 'Поиск…'
 
@@ -19,7 +19,7 @@ export function HeaderSearchBar() {
 
   const isCatalog = pathname === '/'
   const isTasteMap = pathname === '/taste-map'
-  const isReviews = pathname === '/reviews'
+  const isReviews = pathname === '/drinks'
   const hasActiveFilters = noSugarOnly || sort !== 'name'
 
   useEffect(() => {
