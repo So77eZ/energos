@@ -27,7 +27,7 @@ export default async function ReviewsRoute({ searchParams }: Props) {
   ])
 
   const myReview = currentUser
-    ? (reviews.find((r) => !r.from_admin && r.user_id === currentUser.id) ?? null)
+    ? (reviews.find((r) => r.user_id === currentUser.id) ?? null)
     : null
 
   return (

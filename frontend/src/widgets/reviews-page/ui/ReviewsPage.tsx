@@ -90,7 +90,9 @@ function MyReviewCard({ review, onEdit, onDelete }: { review: Review; onEdit: ()
   return (
     <div className="rounded-xl p-4 flex flex-col gap-3 border border-neon-blue/50 bg-neon-blue/8 backdrop-blur-sm">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold text-neon-cyan">Ваш отзыв</span>
+        <span className="text-sm font-semibold text-neon-cyan">
+        {review.from_admin ? 'Ваш администраторский отзыв' : 'Ваш отзыв'}
+      </span>
         <div className="flex items-center gap-1">
           <Star className="w-3.5 h-3.5 fill-neon-pink text-neon-pink" />
           <span className="text-sm font-bold text-neon-pink">{review.rating}</span>
