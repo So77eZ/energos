@@ -1,4 +1,5 @@
-import { Zap, Github, Mail } from 'lucide-react'
+import { Zap, Github, Mail, Send } from 'lucide-react'
+import { siGithub } from 'simple-icons'
 
 export function Footer() {
   return (
@@ -9,7 +10,11 @@ export function Footer() {
             <Zap className="w-4 h-4 text-neon-cyan" />
             <span className="font-bold text-[#f0f0f5] tracking-wide">Energos</span>
           </div>
-          <p className="text-xs">Платформа рейтинга энергетических напитков</p>
+          <a href="https://github.com/So77eZ/energos" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#f0f0f5] hover:text-neon-cyan transition-colors">
+              <svg viewBox="0 0 24 24" role="img" aria-label={siGithub.title} className="w-3 h-3 fill-current text-[#f0f0f5]">
+                <path d={siGithub.path} />
+              </svg>Платформа рейтинга энергетических напитков
+            </a>
         </div>
 
         <div className="flex flex-col items-center gap-2 text-xs">
@@ -27,18 +32,19 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[#9090a8]">Боль:</span>
-            <span className="text-[#f0f0f5]">Даня ОйОйОйкин</span>
+            <a href="https://github.com/GeroiGorodskoyZastroiki" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#f0f0f5] hover:text-neon-cyan transition-colors">
+              <Github className="w-3 h-3" />Даня ОйОйОйкин</a>
           </div>
         </div>
 
         <div className="flex flex-col items-center sm:items-end gap-1 text-xs">
           <span className="text-[#f0f0f5] font-semibold">© 2026</span>
           <a
-            href="mailto:kakashkammm@gmail.com"
+            href="http://t.me/thisIsBananash"
             className="flex items-center gap-1 hover:text-neon-cyan transition-colors"
           >
-            <Mail className="w-3.5 h-3.5" />
-            kakashkammm@gmail.com
+            <Send className="w-3.5 h-3.5" />
+            @thisIsBananash
           </a>
         </div>
       </div>
