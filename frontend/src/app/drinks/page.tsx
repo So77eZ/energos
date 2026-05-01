@@ -8,11 +8,11 @@ export const metadata = { title: 'Отзывы — Energos' }
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  searchParams: Promise<{ id?: string }>
+  searchParams: Promise<{ id?: string; review?: string }>
 }
 
 export default async function ReviewsRoute({ searchParams }: Props) {
-  const { id } = await searchParams
+  const { id, review } = await searchParams
   const [drinks, token] = await Promise.all([
     drinkApi.list().catch(() => []),
     getToken(),
@@ -37,6 +37,7 @@ export default async function ReviewsRoute({ searchParams }: Props) {
       initialReviews={reviews}
       currentUser={currentUser}
       myReview={myReview}
+      autoOpenReview={review === '1'}
     />
   )
 }

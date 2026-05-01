@@ -162,7 +162,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
                     <li key={drink.id}>
                       <button
                         onClick={() => {
-                          router.push(ROUTES.reviews(drink.id))
+                          router.push(`${ROUTES.reviews(drink.id)}&review=1`)
                           setPopupOpen(false)
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"

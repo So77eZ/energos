@@ -25,6 +25,7 @@ interface ReviewsPageProps {
   initialReviews: Review[]
   currentUser: User | null
   myReview: Review | null
+  autoOpenReview?: boolean
 }
 
 const TEXT_COLORS = ['text-neon-cyan', 'text-neon-blue', 'text-neon-pink', 'text-purple-400', 'text-amber-400', 'text-neon-green']
@@ -190,11 +191,11 @@ function OtherReviewCard({ review }: { review: Review }) {
   )
 }
 
-export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, myReview }: ReviewsPageProps) {
+export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, myReview, autoOpenReview }: ReviewsPageProps) {
   const router = useRouter()
   const { setSearchItems } = useCatalogSearch()
   const [editing, setEditing] = useState(false)
-  const [formOpen, setFormOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(autoOpenReview ?? false)
   const [reviewPage, setReviewPage] = useState(1)
 
   useEffect(() => {
