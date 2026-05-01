@@ -185,6 +185,7 @@ cython_debug/
 
 #Claude
 .claude
+graphify-out/
 backend/energy_drink_rating.egg-info/
 
 # Cursor
