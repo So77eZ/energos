@@ -1,7 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+
+const REVIEWS_PER_PAGE = 6
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight, Zap, Star, Pencil, MessageSquarePlus, X, Trash2,
@@ -191,6 +193,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   const { setSearchItems } = useCatalogSearch()
   const [editing, setEditing] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
+  const [reviewPage, setReviewPage] = useState(1)
 
   useEffect(() => {
     setSearchItems(drinks.map((d) => ({ id: d.id, name: d.name, image_url: d.image_url })))
@@ -198,7 +201,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drinks])
 
-  useEffect(() => { setEditing(false); setFormOpen(false) }, [activeDrink?.id])
+  useEffect(() => { setEditing(false); setFormOpen(false); setReviewPage(1) }, [activeDrink?.id])
 
   function navigate(direction: -1 | 1) {
     if (!activeDrink || drinks.length === 0) return
@@ -226,6 +229,13 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   const adminReview = initialReviews.find((r) => r.from_admin) ?? null
   const userReviews = initialReviews.filter((r) => !r.from_admin)
   const otherReviews = myReview ? userReviews.filter((r) => r.id !== myReview.id) : userReviews
+
+  const reviewTotalPages = Math.max(1, Math.ceil(otherReviews.length / REVIEWS_PER_PAGE))
+  const safeReviewPage = Math.min(reviewPage, reviewTotalPages)
+  const paginatedReviews = useMemo(
+    () => otherReviews.slice((safeReviewPage - 1) * REVIEWS_PER_PAGE, safeReviewPage * REVIEWS_PER_PAGE),
+    [otherReviews, safeReviewPage],
+  )
 
   const avgReview = userReviews.length > 0
     ? {
@@ -327,10 +337,38 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
 
       {/* 4. Other user reviews */}
       {otherReviews.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-[5px] sm:gap-4">
-          {otherReviews.map((r) => (
-            <OtherReviewCard key={r.id} review={r} />
-          ))}
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-[5px] sm:gap-4">
+            {paginatedReviews.map((r) => (
+              <OtherReviewCard key={r.id} review={r} />
+            ))}
+          </div>
+
+          {reviewTotalPages > 1 && (
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setReviewPage((p) => Math.max(1, p - 1))}
+                disabled={safeReviewPage === 1}
+                className="p-2 rounded-lg text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 border border-white/10 hover:border-neon-cyan/30 transition-colors disabled:opacity-30"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <span className="text-sm text-[#9090a8]">
+                <span className="text-neon-cyan font-semibold">{safeReviewPage}</span>
+                {' / '}
+                {reviewTotalPages}
+              </span>
+
+              <button
+                onClick={() => setReviewPage((p) => Math.min(reviewTotalPages, p + 1))}
+                disabled={safeReviewPage === reviewTotalPages}
+                className="p-2 rounded-lg text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 border border-white/10 hover:border-neon-cyan/30 transition-colors disabled:opacity-30"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

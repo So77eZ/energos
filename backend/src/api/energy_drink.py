@@ -1,12 +1,12 @@
 from src.models.energy_drink import EnergyDrink
-from typing import List
-from fastapi import APIRouter, HTTPException, Path, UploadFile, File, Depends
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Path, Query, UploadFile, File, Depends
 from datetime import datetime, timezone
 
 from src.schemas.energy_drink import EnergyDrinkSchema
 from src.api.auth import get_current_user
 from src.database import async_session_maker, SupabaseService
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 router = APIRouter()
 
@@ -61,9 +61,14 @@ async def read_energy_drink(
 
 
 @router.get("/", response_model=List[EnergyDrinkSchema])
-async def read_all_energy_drinks() -> List[EnergyDrink]:
+async def read_all_energy_drinks(
+    limit: Optional[int] = Query(default=None, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> List[EnergyDrink]:
     async with async_session_maker() as session:
-        query = select(EnergyDrink)
+        query = select(EnergyDrink).offset(offset)
+        if limit is not None:
+            query = query.limit(limit)
         result = await session.execute(query)
         rows = result.scalars().all()
         return [row for row in rows]

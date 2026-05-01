@@ -1,12 +1,15 @@
 'use client'
 
-import { Frown } from 'lucide-react'
+import { useState } from 'react'
+import { Frown, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Drink } from '@entities/drink'
 import { DrinkCard } from '@entities/drink'
 import type { Review, ReviewMetrics } from '@entities/review'
 import { calcRating, METRIC_KEYS } from '@entities/review'
 import { FilterPanel } from '@features/filter-drinks/ui/FilterPanel'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
+
+const PAGE_SIZE = 12
 
 interface DrinkCatalogProps {
   initialDrinks: Drink[]
@@ -67,8 +70,13 @@ function buildRatingMap(drinks: Drink[], reviews: Review[]): Map<number, number 
 
 export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   const { filtered } = useFilterDrinks(initialDrinks)
+  const [page, setPage] = useState(1)
   const ratingMap = buildRatingMap(initialDrinks, allReviews)
   const colorMap = buildColorMap(initialDrinks, allReviews)
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   if (initialDrinks.length === 0) {
     return (
@@ -80,15 +88,43 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <FilterPanel />
 
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[5px] sm:gap-4">
-          {filtered.map((drink, i) => (
-            <DrinkCard key={drink.id} drink={drink} index={i} rating={ratingMap.get(drink.id) ?? null} accentColor={colorMap.get(drink.id) ?? null} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[5px] sm:gap-4">
+            {paginated.map((drink, i) => (
+              <DrinkCard key={drink.id} drink={drink} index={i} rating={ratingMap.get(drink.id) ?? null} accentColor={colorMap.get(drink.id) ?? null} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="p-2 rounded-lg text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 border border-white/10 hover:border-neon-cyan/30 transition-colors disabled:opacity-30"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <span className="text-sm text-[#9090a8]">
+                <span className="text-neon-cyan font-semibold">{safePage}</span>
+                {' / '}
+                {totalPages}
+              </span>
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="p-2 rounded-lg text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 border border-white/10 hover:border-neon-cyan/30 transition-colors disabled:opacity-30"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="flex flex-col items-center gap-3 py-20 text-[#9090a8]">
           <Frown className="w-10 h-10 opacity-40" />
