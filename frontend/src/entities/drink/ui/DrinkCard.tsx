@@ -69,7 +69,7 @@ export function DrinkCard({ drink, index = 0, rating, accentColor }: DrinkCardPr
 
           <div className="flex items-center justify-between mt-auto pt-1.5 sm:pt-2">
             {drink.price != null ? (
-              <p className="text-neon-pink font-semibold text-xs sm:text-sm flex items-center gap-1">
+              <p className="shrink-0 text-neon-pink font-semibold text-xs sm:text-sm flex items-center gap-1">
                 <Droplets className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-70" />
                 {drink.price.toFixed(2)} ₽
               </p>
@@ -78,12 +78,12 @@ export function DrinkCard({ drink, index = 0, rating, accentColor }: DrinkCardPr
             )}
 
             {rating != null ? (
-              <span className="flex items-center gap-1 text-xs">
+              <span className="flex items-center gap-1 text-xs shrink-0">
                 <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-neon-pink text-neon-pink" />
                 <span className="text-neon-pink font-semibold">{rating}</span>
               </span>
             ) : (
-              <span className="text-[10px] sm:text-xs text-neon-cyan/70 font-medium">
+              <span className="ml-auto text-[10px] sm:text-xs text-neon-cyan/70 font-medium text-right leading-tight max-w-[4rem] sm:max-w-none">
                 Оцените первым!
               </span>
             )}
