@@ -185,7 +185,7 @@ cython_debug/
 
 #Claude
 .claude
-./backend/energy_drink_rating.egg-info
+backend/energy_drink_rating.egg-info/
 
 # Cursor
 #  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
