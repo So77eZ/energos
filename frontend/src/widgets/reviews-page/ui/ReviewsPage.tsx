@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 
 const REVIEWS_PER_PAGE = 6
 import { AnimatePresence, motion } from 'framer-motion'
@@ -197,6 +197,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   const [editing, setEditing] = useState(false)
   const [formOpen, setFormOpen] = useState(autoOpenReview ?? false)
   const [reviewPage, setReviewPage] = useState(1)
+  const isMounted = useRef(false)
 
   useEffect(() => {
     setSearchItems(drinks.map((d) => ({ id: d.id, name: d.name, image_url: d.image_url })))
@@ -204,7 +205,10 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drinks])
 
-  useEffect(() => { setEditing(false); setFormOpen(false); setReviewPage(1) }, [activeDrink?.id])
+  useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return }
+    setEditing(false); setFormOpen(false); setReviewPage(1)
+  }, [activeDrink?.id])
 
   function navigate(direction: -1 | 1) {
     if (!activeDrink || drinks.length === 0) return
