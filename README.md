@@ -79,19 +79,19 @@ Energos — платформа для просмотра и ранжирован
 
 Каждый напиток содержит:
 
-| Поле            | Тип     | Описание                     |
-| --------------- | ------- | ---------------------------- |
-| `name`          | string  | Название                     |
-| `image_url`     | string  | URL изображения (заполняется через upload) |
-| `price`         | float   | Цена                         |
-| `no_sugar`      | boolean | Флаг «Без сахара»            |
-| `acidity`       | 1–5     | Кислотность                  |
-| `sweetness`     | 1–5     | Сладость                     |
-| `concentration` | 1–5     | Концентрация / интенсивность |
-| `carbonation`   | 1–5     | Газированность               |
-| `aftertaste`    | 1–5     | Сила послевкусия             |
-| `price_quality` | 1–5     | Соотношение цена/качество    |
-| `rating`        | float   | Средний балл (вычисляется)   |
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `name` | string | Название |
+| `image_url` | string | URL изображения (заполняется через upload) |
+| `price` | float | Цена |
+| `no_sugar` | boolean | Флаг «Без сахара» |
+| `acidity` | 1–5 | Кислотность |
+| `sweetness` | 1–5 | Сладость |
+| `concentration` | 1–5 | Концентрация / интенсивность |
+| `carbonation` | 1–5 | Газированность |
+| `aftertaste` | 1–5 | Сила послевкусия |
+| `price_quality` | 1–5 | Соотношение цена/качество |
+| `rating` | float | Средний балл (вычисляется) |
 
 ---
 
@@ -143,17 +143,17 @@ Energos — платформа для просмотра и ранжирован
 
 ## Технологии
 
-| Слой           | Стек                                                        |
-| -------------- | ----------------------------------------------------------- |
-| Frontend       | Next.js 15 (App Router), React 19, TypeScript               |
-| Стили          | Tailwind CSS v3, Framer Motion, шрифт Monocraft             |
-| Архитектура    | Feature-Sliced Design (FSD)                                 |
-| Backend        | FastAPI (Python), slowapi (rate limiting)                   |
-| База данных    | PostgreSQL + SQLAlchemy async                               |
-| Аутентификация | JWT (httpOnly cookie)                                       |
-| Хранилище файлов | Supabase Storage                                          |
-| Диаграммы      | Chart.js                                                    |
-| Аналитика      | Яндекс.Метрика (webvisor, clickmap)                         |
+| Слой | Стек |
+| --- | --- |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript |
+| Стили | Tailwind CSS v3, Framer Motion, шрифты: JetBrains Mono / Orbitron / Rajdhani / Share Tech Mono / Monocraft |
+| Архитектура | Feature-Sliced Design (FSD) |
+| Backend | FastAPI (Python), slowapi (rate limiting) |
+| База данных | PostgreSQL + SQLAlchemy async |
+| Аутентификация | JWT (httpOnly cookie) |
+| Хранилище файлов | Supabase Storage |
+| Диаграммы | Chart.js |
+| Аналитика | Яндекс.Метрика (webvisor, clickmap) |
 
 ---
 
