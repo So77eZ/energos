@@ -187,6 +187,9 @@ cython_debug/
 .claude
 graphify-out/
 
+# Git worktrees
+.worktrees/
+
 # Node
 node_modules/
 package-lock.json
