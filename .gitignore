@@ -186,6 +186,8 @@ cython_debug/
 #Claude
 .claude
 graphify-out/
+memory/
+docs/superpowers/
 
 # Git worktrees
 .worktrees/
