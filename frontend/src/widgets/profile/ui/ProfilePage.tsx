@@ -122,7 +122,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   return (
     <div className="space-y-6">
       {/* User info */}
-      <div className="glass rounded-xl px-5 py-4 flex items-center gap-4">
+      <div className={`glass rounded-xl px-5 py-4 flex items-center gap-4${fontMenuOpen ? ' relative z-30' : ''}`}>
         <div className="w-12 h-12 rounded-full bg-neon-blue/20 border border-neon-blue/40 flex items-center justify-center shrink-0">
           <UserIcon className="w-6 h-6 text-neon-cyan" />
         </div>

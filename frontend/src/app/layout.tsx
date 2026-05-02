@@ -15,7 +15,7 @@ const FONT_INIT_SCRIPT = `(function(){try{var p=JSON.parse(localStorage.getItem(
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: FONT_INIT_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
