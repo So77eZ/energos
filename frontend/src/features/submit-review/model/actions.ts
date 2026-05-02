@@ -36,7 +36,8 @@ export async function saveReviewAction(
 
   try {
     if (reviewId) {
-      await reviewApi.update(reviewId, payload, token)
+      const userId = Number(formData.get('user_id'))
+      await reviewApi.update(reviewId, { ...payload, energy_drink_id: drinkId, user_id: userId }, token)
     } else {
       await reviewApi.create(
         { ...payload, energy_drink_id: drinkId, from_admin: false },
@@ -59,5 +60,5 @@ export async function deleteReviewAction(reviewId: number, drinkId: number): Pro
   } catch {
     // ignore
   }
-  redirect(`/reviews?id=${drinkId}`)
+  redirect(`/drinks?id=${drinkId}`)
 }

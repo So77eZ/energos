@@ -17,7 +17,7 @@ export const reviewApi = {
       body: JSON.stringify(body),
     }),
 
-  update: (id: number, body: Partial<ReviewCreate>, token: string) =>
+  update: (id: number, body: Partial<ReviewCreate> & { energy_drink_id?: number; user_id?: number }, token: string) =>
     httpRequest<Review>(`${BASE}/${id}/`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
