@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 export const FONTS = [
   { id: 'JetBrains Mono', label: 'JetBrains Mono' },
@@ -27,6 +27,10 @@ function readPrefs(): Prefs {
     if (!raw) return { v: SCHEMA_VERSION, font: DEFAULT_FONT }
     const parsed = JSON.parse(raw) as Partial<Prefs>
     if (parsed.v !== SCHEMA_VERSION) return { v: SCHEMA_VERSION, font: DEFAULT_FONT }
+    const validFontIds = FONTS.map(f => f.id) as readonly string[]
+    if (!validFontIds.includes(parsed.font as string)) {
+      return { v: SCHEMA_VERSION, font: DEFAULT_FONT }
+    }
     return parsed as Prefs
   } catch {
     return { v: SCHEMA_VERSION, font: DEFAULT_FONT }
@@ -42,6 +46,7 @@ function writePrefs(prefs: Prefs): void {
 }
 
 export function applyFont(font: FontId): void {
+  if (typeof document === 'undefined') return
   document.documentElement.style.setProperty('--font-sans', `"${font}"`)
 }
 
@@ -54,11 +59,11 @@ export function useUserPreferences() {
     applyFont(prefs.font)
   }, [])
 
-  function setFont(newFont: FontId) {
+  const setFont = useCallback((newFont: FontId) => {
     setFontState(newFont)
     applyFont(newFont)
     writePrefs({ v: SCHEMA_VERSION, font: newFont })
-  }
+  }, [])
 
   return { font, setFont }
 }
