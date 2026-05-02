@@ -11,9 +11,20 @@ export const metadata: Metadata = {
   description: 'Каталог, сравнение и оценки энергетических напитков',
 }
 
+const FONT_INIT_SCRIPT = `(function(){try{var p=JSON.parse(localStorage.getItem('energos_prefs')||'{}');var f=p.font||'JetBrains Mono';document.documentElement.style.setProperty('--font-sans','"'+f+'"');}catch(e){}})();`
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: FONT_INIT_SCRIPT }} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@400;600;700&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
         <Script
           id="yandex-metrika"
