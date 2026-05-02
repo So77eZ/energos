@@ -4,6 +4,13 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useMemo } from 'react'
 
 const REVIEWS_PER_PAGE = 6
+type ReviewSort = 'date_desc' | 'date_asc' | 'rating_desc' | 'rating_asc'
+const REVIEW_SORT_LABELS: Record<ReviewSort, string> = {
+  date_desc:   'Сначала новые',
+  date_asc:    'Сначала старые',
+  rating_desc: 'Высокая оценка',
+  rating_asc:  'Низкая оценка',
+}
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ChevronLeft, ChevronRight, Zap, Star, Pencil, MessageSquarePlus, X, Trash2,
@@ -197,6 +204,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   const [editing, setEditing] = useState(false)
   const [formOpen, setFormOpen] = useState(autoOpenReview ?? false)
   const [reviewPage, setReviewPage] = useState(1)
+  const [reviewSort, setReviewSort] = useState<ReviewSort>('date_desc')
   const isMounted = useRef(false)
 
   useEffect(() => {
@@ -207,7 +215,7 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
 
   useEffect(() => {
     if (!isMounted.current) { isMounted.current = true; return }
-    setEditing(false); setFormOpen(false); setReviewPage(1)
+    setEditing(false); setFormOpen(false); setReviewPage(1); setReviewSort('date_desc')
   }, [activeDrink?.id])
 
   function navigate(direction: -1 | 1) {
@@ -237,11 +245,20 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
   const userReviews = initialReviews.filter((r) => !r.from_admin)
   const otherReviews = myReview ? userReviews.filter((r) => r.id !== myReview.id) : userReviews
 
-  const reviewTotalPages = Math.max(1, Math.ceil(otherReviews.length / REVIEWS_PER_PAGE))
+  const sortedReviews = useMemo(() => {
+    const arr = [...otherReviews]
+    if (reviewSort === 'date_desc') arr.sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
+    else if (reviewSort === 'date_asc') arr.sort((a, b) => (a.created_at ?? '').localeCompare(b.created_at ?? ''))
+    else if (reviewSort === 'rating_desc') arr.sort((a, b) => b.rating - a.rating)
+    else arr.sort((a, b) => a.rating - b.rating)
+    return arr
+  }, [otherReviews, reviewSort])
+
+  const reviewTotalPages = Math.max(1, Math.ceil(sortedReviews.length / REVIEWS_PER_PAGE))
   const safeReviewPage = Math.min(reviewPage, reviewTotalPages)
   const paginatedReviews = useMemo(
-    () => otherReviews.slice((safeReviewPage - 1) * REVIEWS_PER_PAGE, safeReviewPage * REVIEWS_PER_PAGE),
-    [otherReviews, safeReviewPage],
+    () => sortedReviews.slice((safeReviewPage - 1) * REVIEWS_PER_PAGE, safeReviewPage * REVIEWS_PER_PAGE),
+    [sortedReviews, safeReviewPage],
   )
 
   const avgReview = userReviews.length > 0
@@ -345,6 +362,19 @@ export function ReviewsPage({ drinks, activeDrink, initialReviews, currentUser, 
       {/* 4. Other user reviews */}
       {otherReviews.length > 0 && (
         <div className="flex flex-col gap-4">
+          {otherReviews.length > 1 && (
+            <div className="flex items-center justify-end">
+              <select
+                value={reviewSort}
+                onChange={(e) => { setReviewSort(e.target.value as ReviewSort); setReviewPage(1) }}
+                className="px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
+              >
+                {(Object.keys(REVIEW_SORT_LABELS) as ReviewSort[]).map((k) => (
+                  <option key={k} value={k}>{REVIEW_SORT_LABELS[k]}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-[5px] sm:gap-4">
             {paginatedReviews.map((r) => (
               <OtherReviewCard key={r.id} review={r} />

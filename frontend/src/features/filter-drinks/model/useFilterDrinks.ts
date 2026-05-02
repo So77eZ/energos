@@ -26,8 +26,10 @@ export function useFilterDrinks(drinks: Drink[]) {
       result = result.filter((d) => d.name.toLowerCase().includes(q))
     }
     if (noSugarOnly) result = result.filter((d) => d.no_sugar)
-    if (sort === 'price') {
+    if (sort === 'price_asc') {
       result = [...result].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity))
+    } else if (sort === 'price_desc') {
+      result = [...result].sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity))
     } else {
       result = [...result].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
     }

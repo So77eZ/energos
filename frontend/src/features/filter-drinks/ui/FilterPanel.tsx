@@ -51,7 +51,8 @@ export function FilterPanel() {
                     className="w-full px-3 py-2 bg-[#1a1a2e] border border-white/10 rounded-lg text-sm text-[#f0f0f5] focus:outline-none focus:border-neon-blue/50 transition-colors"
                   >
                     <option value="name">По названию</option>
-                    <option value="price">По цене</option>
+                    <option value="price_asc">Сначала дешевле</option>
+                    <option value="price_desc">Сначала дороже</option>
                   </select>
                 </div>
 
