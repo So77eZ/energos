@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Star, User as UserIcon, MessageSquare, Zap, Plus, LogOut, X } from 'lucide-react'
+import { Star, User as UserIcon, MessageSquare, Zap, Plus, LogOut, X, Ligature } from 'lucide-react'
+import { useUserPreferences, FONTS } from '@shared/lib/user-preferences'
+import type { FontId } from '@shared/lib/user-preferences'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
 
 import type { User } from '@entities/user'
@@ -84,6 +86,10 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   const [popupOpen, setPopupOpen] = useState(false)
   const popupRef = useRef<HTMLDivElement>(null)
 
+  const { font: activeFont, setFont } = useUserPreferences()
+  const [fontMenuOpen, setFontMenuOpen] = useState(false)
+  const fontMenuRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (!popupOpen) return
     function onClickOutside(e: MouseEvent) {
@@ -94,6 +100,17 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
     document.addEventListener('mousedown', onClickOutside)
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [popupOpen])
+
+  useEffect(() => {
+    if (!fontMenuOpen) return
+    function onClickOutside(e: MouseEvent) {
+      if (fontMenuRef.current && !fontMenuRef.current.contains(e.target as Node)) {
+        setFontMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [fontMenuOpen])
 
   const { search } = useCatalogSearch()
   const reviewedIds = new Set(reviews.map((r) => r.energy_drink_id))
@@ -117,6 +134,44 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           <div className="flex items-center gap-2 text-sm text-[#9090a8]">
             <MessageSquare className="w-4 h-4" />
             {reviews.length} {reviews.length === 1 ? 'отзыв' : reviews.length < 5 ? 'отзыва' : 'отзывов'}
+          </div>
+          {/* Font switcher */}
+          <div className="relative" ref={fontMenuRef}>
+            <button
+              type="button"
+              onClick={() => setFontMenuOpen((v) => !v)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 transition-colors"
+            >
+              <Ligature className="w-4 h-4" />
+              <span className="hidden sm:inline">Шрифты</span>
+            </button>
+
+            {fontMenuOpen && (
+              <div className="absolute right-0 mt-2 w-52 glass rounded-xl shadow-lg z-50 overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-white/5">
+                  <span className="text-xs font-semibold text-[#9090a8] uppercase tracking-wider">Шрифт интерфейса</span>
+                </div>
+                <ul className="py-1">
+                  {FONTS.map(({ id, label }) => (
+                    <li key={id}>
+                      <button
+                        type="button"
+                        onClick={() => { setFont(id as FontId); setFontMenuOpen(false) }}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm text-left transition-colors hover:bg-white/5 ${
+                          activeFont === id ? 'text-neon-cyan' : 'text-[#f0f0f5]'
+                        }`}
+                        style={{ fontFamily: `"${id}", monospace` }}
+                      >
+                        {label}
+                        {activeFont === id && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan shrink-0" />
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
           <form action={logoutAction}>
             <button
