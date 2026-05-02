@@ -108,7 +108,7 @@ export function ReviewForm({ drinkId, editReview }: ReviewFormProps) {
 
       <input type="hidden" name="drink_id" value={drinkId} />
       {isEdit && <input type="hidden" name="review_id" value={editReview.id} />}
-      {isEdit && <input type="hidden" name="user_id" value={editReview.user_id} />}
+      {isEdit && <input type="hidden" name="user_id" value={editReview.user_id ?? undefined} />}
 
       {state?.error && (
         <p className="w-full text-sm text-neon-red bg-neon-red/10 border border-neon-red/30 rounded-lg px-3 py-2">
