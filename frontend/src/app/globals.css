@@ -18,7 +18,7 @@
   }
 
   html {
-    font-family: 'Monocraft', 'Courier New', monospace;
+    font-family: var(--font-sans, "JetBrains Mono"), monospace;
     font-size: 14px;
     color-scheme: dark;
     scroll-behavior: smooth;
