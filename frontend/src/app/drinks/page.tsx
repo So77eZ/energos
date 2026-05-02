@@ -5,7 +5,6 @@ import { authApi } from '@entities/user'
 import { ReviewsPage } from '@widgets/reviews-page/ui/ReviewsPage'
 
 export const metadata = { title: 'Отзывы — Energos' }
-export const dynamic = 'force-dynamic'
 
 interface Props {
   searchParams: Promise<{ id?: string; review?: string }>

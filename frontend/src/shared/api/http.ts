@@ -35,7 +35,9 @@ async function parseError(res: Response): Promise<string> {
 
 export const bearerHeaders = (token: string) => ({ Authorization: `Bearer ${token}` })
 
-export async function httpRequest<T>(path: string, options?: RequestInit): Promise<T> {
+type HttpOptions = RequestInit & { next?: { revalidate?: number | false; tags?: string[] } }
+
+export async function httpRequest<T>(path: string, options?: HttpOptions): Promise<T> {
   const headers = {
     ...options?.headers,
     ...(typeof window === 'undefined' ? { 'Origin': process.env.NEXT_PUBLIC_ORIGIN ?? 'http://localhost:3000' } : {}),

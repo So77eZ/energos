@@ -3,7 +3,6 @@ import { reviewApi } from '@entities/review'
 import { TasteMapChart } from '@widgets/taste-map/ui/TasteMapChart'
 
 export const metadata = { title: 'Карта вкусов — Energos' }
-export const dynamic = 'force-dynamic'
 
 export default async function TasteMapPage() {
   const [drinks, allReviews] = await Promise.all([

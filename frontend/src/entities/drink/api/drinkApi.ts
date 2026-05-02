@@ -5,10 +5,10 @@ const BASE = '/api/energy-drinks'
 
 export const drinkApi = {
   list: () =>
-    httpRequest<Drink[]>(`${BASE}/`),
+    httpRequest<Drink[]>(`${BASE}/`, { next: { revalidate: 60, tags: ['drinks'] } }),
 
   get: (id: number) =>
-    httpRequest<Drink>(`${BASE}/${id}/`),
+    httpRequest<Drink>(`${BASE}/${id}/`, { next: { revalidate: 60, tags: ['drinks'] } }),
 
   create: (body: DrinkCreate, token: string) =>
     httpRequest<Drink>(`${BASE}/`, {

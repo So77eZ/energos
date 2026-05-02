@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { revalidateTag } from 'next/cache'
 import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
@@ -49,6 +50,7 @@ export async function saveReviewAction(
     return { error: e instanceof Error ? e.message : 'Ошибка сохранения' }
   }
 
+  revalidateTag('reviews')
   redirect(`/drinks?id=${drinkId}`)
 }
 
@@ -60,5 +62,6 @@ export async function deleteReviewAction(reviewId: number, drinkId: number): Pro
   } catch {
     // ignore
   }
+  revalidateTag('reviews')
   redirect(`/drinks?id=${drinkId}`)
 }

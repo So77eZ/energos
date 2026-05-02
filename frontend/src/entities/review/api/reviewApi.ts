@@ -5,10 +5,10 @@ const BASE = '/api/reviews'
 
 export const reviewApi = {
   list: () =>
-    httpRequest<Review[]>(`${BASE}/`),
+    httpRequest<Review[]>(`${BASE}/`, { next: { revalidate: 60, tags: ['reviews'] } }),
 
   byDrink: (drinkId: number) =>
-    httpRequest<Review[]>(`${BASE}/energy-drink/${drinkId}/`),
+    httpRequest<Review[]>(`${BASE}/energy-drink/${drinkId}/`, { next: { revalidate: 60, tags: ['reviews'] } }),
 
   create: (body: ReviewCreate, token: string) =>
     httpRequest<Review>(`${BASE}/`, {

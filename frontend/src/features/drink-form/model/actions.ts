@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { revalidateTag } from 'next/cache'
 import { drinkApi } from '@entities/drink'
 import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
@@ -67,6 +68,8 @@ export async function createDrinkAction(formData: FormData) {
     )
   }
 
+  revalidateTag('drinks')
+  revalidateTag('reviews')
   redirect(ROUTES.admin.drinks)
 }
 
@@ -76,6 +79,7 @@ export async function updateDrinkAction(id: number, formData: FormData) {
 
   await drinkApi.update(id, extractDrinkFields(formData), token)
   await uploadImageIfPresent(id, formData, token)
+  revalidateTag('drinks')
   redirect(ROUTES.admin.drinks)
 }
 
@@ -84,5 +88,7 @@ export async function deleteDrinkAction(id: number) {
   requireToken(token)
 
   await drinkApi.remove(id, token)
+  revalidateTag('drinks')
+  revalidateTag('reviews')
   redirect(ROUTES.admin.drinks)
 }
