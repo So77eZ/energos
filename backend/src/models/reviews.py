@@ -13,7 +13,7 @@ class EnergyDrinkReview(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     energy_drink_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("energy_drinks.id"), nullable=False
+        Integer, ForeignKey(column="energy_drinks.id"), nullable=False
     )
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False
@@ -39,5 +39,5 @@ class EnergyDrinkReview(Base):
     updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
-    energy_drink: Mapped[EnergyDrink] = relationship(backref="reviews")
-    user: Mapped[User] = relationship(backref="reviews")
+    energy_drink: Mapped[EnergyDrink] = relationship(back_populates="reviews")
+    user: Mapped[User] = relationship(back_populates="reviews")

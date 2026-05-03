@@ -1,9 +1,13 @@
 from datetime import datetime
 
 from sqlalchemy import Integer, String, Float, Boolean, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import List, TYPE_CHECKING
 
 from src.models.base import Base
+
+if TYPE_CHECKING:
+    from .reviews import EnergyDrinkReview
 
 
 class EnergyDrink(Base):
@@ -16,3 +20,8 @@ class EnergyDrink(Base):
     no_sugar: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # Relationship
+    reviews: Mapped[List["EnergyDrinkReview"]] = relationship(
+        back_populates="energy_drink"
+    )
