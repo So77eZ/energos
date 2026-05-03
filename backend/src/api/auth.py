@@ -22,7 +22,7 @@ async def register_user(request: Request, payload: UserCreate) -> UserResponse:
         result = await session.execute(query)
         existing_user = result.scalar_one_or_none()
         if existing_user:
-            raise HTTPException(status_code=400, detail="Username already registered")
+            raise HTTPException(status_code=400, detail="Пользователь с таким именем уже существует")
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     hashed_password = hash_password(payload.password)
@@ -53,13 +53,13 @@ async def login_for_access_token(
         if not user:
             raise HTTPException(
                 status_code=401,
-                detail="Incorrect username or password",
+                detail="Неверное имя пользователя или пароль",
                 headers={"WWW-Authenticate": "Bearer"},
             )
         if not verify_password(form_data.password, user.password_hash):
             raise HTTPException(
                 status_code=401,
-                detail="Incorrect username or password",
+                detail="Неверное имя пользователя или пароль",
                 headers={"WWW-Authenticate": "Bearer"},
             )
     access_token = create_access_token(data={"sub": user.username})
@@ -70,14 +70,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
     username = verify_token(token)
     if username is None:
         raise HTTPException(
-            status_code=401, detail="Invalid authentication credentials"
+            status_code=401, detail="Недействительные учётные данные"
         )
     async with async_session_maker() as session:
         query = select(User).where(User.username == username)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
         if user is None:
-            raise HTTPException(status_code=401, detail="User not found")
+            raise HTTPException(status_code=401, detail="Пользователь не найден")
         return user
 
 
