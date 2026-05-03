@@ -7,6 +7,7 @@ from src.auth import create_access_token, verify_token, hash_password, verify_pa
 from src.models.auth import User
 from src.database import async_session_maker
 from src.rate_limit import limiter
+from src.i18n import t
 from sqlalchemy import select
 
 router = APIRouter()
@@ -22,7 +23,7 @@ async def register_user(request: Request, payload: UserCreate) -> UserResponse:
         result = await session.execute(query)
         existing_user = result.scalar_one_or_none()
         if existing_user:
-            raise HTTPException(status_code=400, detail="Пользователь с таким именем уже существует")
+            raise HTTPException(status_code=400, detail=t("username_taken", request))
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     hashed_password = hash_password(payload.password)
@@ -53,31 +54,34 @@ async def login_for_access_token(
         if not user:
             raise HTTPException(
                 status_code=401,
-                detail="Неверное имя пользователя или пароль",
+                detail=t("invalid_credentials", request),
                 headers={"WWW-Authenticate": "Bearer"},
             )
         if not verify_password(form_data.password, user.password_hash):
             raise HTTPException(
                 status_code=401,
-                detail="Неверное имя пользователя или пароль",
+                detail=t("invalid_credentials", request),
                 headers={"WWW-Authenticate": "Bearer"},
             )
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
+async def get_current_user(
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+) -> UserResponse:
     username = verify_token(token)
     if username is None:
         raise HTTPException(
-            status_code=401, detail="Недействительные учётные данные"
+            status_code=401, detail=t("auth_error", request)
         )
     async with async_session_maker() as session:
         query = select(User).where(User.username == username)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
         if user is None:
-            raise HTTPException(status_code=401, detail="Пользователь не найден")
+            raise HTTPException(status_code=401, detail=t("user_not_found", request))
         return user
 
 

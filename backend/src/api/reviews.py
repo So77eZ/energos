@@ -7,6 +7,7 @@ from src.schemas.reviews import EnergyDrinkReviewSchema, CreateEnergyDrinkReview
 from src.api.auth import get_current_user
 from src.database import async_session_maker
 from src.rate_limit import limiter
+from src.i18n import t
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -90,6 +91,7 @@ async def read_reviews_by_energy_drink(
 
 @router.get("/{id}/", response_model=EnergyDrinkReviewSchema)
 async def read_review(
+    request: Request,
     id: int = Path(ge=1),
 ) -> EnergyDrinkReviewSchema:
     async with async_session_maker() as session:
@@ -101,7 +103,7 @@ async def read_review(
         result = await session.execute(query)
         row = result.scalar_one_or_none()
         if row is None:
-            raise HTTPException(status_code=404, detail="Review not found")
+            raise HTTPException(status_code=404, detail=t("review_not_found", request))
         schema = EnergyDrinkReviewSchema.model_validate(row)
         schema.username = row.user.username if row.user else None
         return schema
@@ -109,6 +111,7 @@ async def read_review(
 
 @router.put("/{id}/", response_model=EnergyDrinkReviewSchema)
 async def update_review(
+    request: Request,
     payload: EnergyDrinkReviewSchema,
     id: int = Path(ge=1),
     current_user=Depends(get_current_user),
@@ -122,9 +125,9 @@ async def update_review(
         result = await session.execute(query)
         existing = result.scalar_one_or_none()
         if not existing:
-            raise HTTPException(status_code=404, detail="Review not found")
+            raise HTTPException(status_code=404, detail=t("review_not_found", request))
         if existing.user_id != current_user.id and current_user.role != "admin":
-            raise HTTPException(status_code=403, detail="Not allowed")
+            raise HTTPException(status_code=403, detail=t("not_allowed", request))
         update_data = payload.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             if (
@@ -141,7 +144,9 @@ async def update_review(
 
 @router.delete("/{id}/", response_model=EnergyDrinkReviewSchema)
 async def delete_review(
-    id: int = Path(ge=1), current_user=Depends(get_current_user)
+    request: Request,
+    id: int = Path(ge=1),
+    current_user=Depends(get_current_user),
 ) -> EnergyDrinkReviewSchema:
     async with async_session_maker() as session:
         query = (
@@ -152,9 +157,9 @@ async def delete_review(
         result = await session.execute(query)
         existing = result.scalar_one_or_none()
         if not existing:
-            raise HTTPException(status_code=404, detail="Review not found")
+            raise HTTPException(status_code=404, detail=t("review_not_found", request))
         if existing.user_id != current_user.id and current_user.role != "admin":
-            raise HTTPException(status_code=403, detail="Not allowed")
+            raise HTTPException(status_code=403, detail=t("not_allowed", request))
         schema = EnergyDrinkReviewSchema.model_validate(existing)
         schema.username = existing.user.username if existing.user else None
         await session.delete(existing)
