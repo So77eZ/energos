@@ -9,6 +9,7 @@ import { CatalogSearchProvider } from '@shared/lib/catalog-search'
 export const metadata: Metadata = {
   title: 'Energos — рейтинг энергетиков',
   description: 'Каталог, сравнение и оценки энергетических напитков',
+  verification: { yandex: '8e9eed80219a0095' },
 }
 
 const FONT_INIT_SCRIPT = `(function(){try{var p=JSON.parse(localStorage.getItem('energos_prefs')||'{}');var f=p.font||'JetBrains Mono';document.documentElement.style.setProperty('--font-sans','"'+f+'"');}catch(e){}})();`
