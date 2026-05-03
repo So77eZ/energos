@@ -1,27 +1,32 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from starlette.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
+from fastapi.middleware.cors import CORSMiddleware
+
 from config import settings
 
 from src.api.base import api_router
 from src.rate_limit import limiter
+from slowapi.errors import RateLimitExceeded
+from src.rate_limit import rate_limit_exceeded_handler
 
 import uvicorn
 
 
-class NoDirectAccessMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        if settings.DEPLOY_ENV == "prod":
+class NoDirectAccessMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and settings.DEPLOY_ENV == "prod":
+            request = Request(scope, receive)
             origin = request.headers.get("origin")
             if not origin:
-                return JSONResponse(
+                response = JSONResponse(
                     status_code=403, content={"detail": "Direct access not allowed"}
                 )
-        return await call_next(request)
+                await response(scope, receive, send)
+                return
+        await self.app(scope, receive, send)
 
 
 app = FastAPI(
@@ -29,11 +34,6 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
-
-
-async def rate_limit_exceeded_handler(request: Request, exc: Exception):
-    assert isinstance(exc, RateLimitExceeded)
-    return _rate_limit_exceeded_handler(request, exc)
 
 
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)

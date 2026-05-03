@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from src.schemas.energy_drink import EnergyDrinkSchema
 from src.api.auth import get_current_user
 from src.database import async_session_maker, SupabaseService
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 router = APIRouter()
 
