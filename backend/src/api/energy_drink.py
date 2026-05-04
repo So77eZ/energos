@@ -1,12 +1,21 @@
 from src.models.energy_drink import EnergyDrink
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Path, Query, UploadFile, File, Depends, Request
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Path,
+    Query,
+    UploadFile,
+    File,
+    Depends,
+    Request,
+)
 from datetime import datetime, timezone
 
 from src.schemas.energy_drink import EnergyDrinkSchema
 from src.api.auth import get_current_user
 from src.database import async_session_maker, SupabaseService
-from src.i18n import t
+from src.localization import localize_text
 from sqlalchemy import select
 
 router = APIRouter()
@@ -22,7 +31,7 @@ async def upload_image_to_drink(
     async with async_session_maker() as session:
         drink = await query_energy_drink_by_id(session, id)
         if drink is None:
-            raise HTTPException(status_code=404, detail=t("drink_not_found", request))
+            raise HTTPException(status_code=404, detail=localize_text("drink_not_found", request))
         if drink.image_url:
             SupabaseService.delete_image(drink.image_url)
         image_url = await SupabaseService.upload_image(file)
@@ -59,7 +68,7 @@ async def read_energy_drink(
         result = await session.execute(query)
         row = result.scalar_one_or_none()
         if row is None:
-            raise HTTPException(status_code=404, detail=t("drink_not_found", request))
+            raise HTTPException(status_code=404, detail=localize_text("drink_not_found", request))
         return row
 
 
@@ -89,7 +98,7 @@ async def update_energy_drink(
         result = await session.execute(query)
         row = result.scalar_one_or_none()
         if row is None:
-            raise HTTPException(status_code=404, detail=t("drink_not_found", request))
+            raise HTTPException(status_code=404, detail=localize_text("drink_not_found", request))
         update_data = payload.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             if key not in ["id", "created_at", "updated_at"] and value is not None:
@@ -110,7 +119,7 @@ async def delete_energy_drink(
         result = await session.execute(query)
         row = result.scalar_one_or_none()
         if row is None:
-            raise HTTPException(status_code=404, detail=t("drink_not_found", request))
+            raise HTTPException(status_code=404, detail=localize_text("drink_not_found", request))
         if row.image_url:
             SupabaseService.delete_image(row.image_url)
         deleted_drink = row
