@@ -46,6 +46,13 @@ export function Footer() {
             <Send className="w-3.5 h-3.5" />
             @thisIsBananash
           </a>
+          <a
+            href="http://t.me/its_a_magic_time"
+            className="flex items-center gap-1 hover:text-neon-cyan transition-colors"
+          >
+            <Send className="w-3.5 h-3.5" />
+            @its_a_magic_time
+          </a>
         </div>
       </div>
     </footer>
