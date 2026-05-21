@@ -31,6 +31,26 @@ export const METRIC_LABELS: Record<keyof ReviewMetrics, string> = {
   price_quality: 'Цена/качество',
 }
 
+/** Compact axis labels for radar/mini-metrics. */
+export const METRIC_SHORT: Record<keyof ReviewMetrics, string> = {
+  acidity: 'КИС',
+  sweetness: 'СЛАД',
+  carbonation: 'ГАЗ',
+  concentration: 'КОНЦ',
+  aftertaste: 'ПОСЛ',
+  price_quality: 'Ц/К',
+}
+
+/** CSS var name per metric — keep in sync with --c-* tokens in globals.css. */
+export const METRIC_COLOR_VARS: Record<keyof ReviewMetrics, string> = {
+  acidity: 'var(--c-cyan)',
+  sweetness: 'var(--c-blue)',
+  carbonation: 'var(--c-pink)',
+  concentration: 'var(--c-purple)',
+  aftertaste: 'var(--c-amber)',
+  price_quality: 'var(--c-green)',
+}
+
 export const METRIC_KEYS = Object.keys(METRIC_LABELS) as Array<keyof ReviewMetrics>
 
 export function calcRating(metrics: ReviewMetrics): number {

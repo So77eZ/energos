@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { Drink } from '@entities/drink'
+import type { EnrichedDrink } from '@entities/drink'
 import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
 
 export type { SortOption }
@@ -10,7 +10,16 @@ export interface DrinkFilters {
   noSugarOnly: boolean
 }
 
-export function useFilterDrinks(drinks: Drink[]) {
+const RATING_FOR_SORT = (d: EnrichedDrink, asc: boolean) =>
+  d.rating ?? (asc ? Infinity : -Infinity)
+
+const PRICE_FOR_SORT = (d: EnrichedDrink, asc: boolean) =>
+  d.price ?? (asc ? Infinity : -Infinity)
+
+const CREATED_FOR_SORT = (d: EnrichedDrink) =>
+  d.created_at ? Date.parse(d.created_at) : 0
+
+export function useFilterDrinks(drinks: EnrichedDrink[]) {
   const { search, sort, noSugarOnly, setSort, setNoSugarOnly } = useCatalogSearch()
   const filters: DrinkFilters = { search, sort, noSugarOnly }
 
@@ -26,14 +35,37 @@ export function useFilterDrinks(drinks: Drink[]) {
       result = result.filter((d) => d.name.toLowerCase().includes(q))
     }
     if (noSugarOnly) result = result.filter((d) => d.no_sugar)
-    if (sort === 'price_asc') {
-      result = [...result].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity))
-    } else if (sort === 'price_desc') {
-      result = [...result].sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity))
-    } else {
-      result = [...result].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+
+    const arr = [...result]
+    switch (sort) {
+      case 'price_asc':
+        arr.sort((a, b) => PRICE_FOR_SORT(a, true) - PRICE_FOR_SORT(b, true))
+        break
+      case 'price_desc':
+        arr.sort((a, b) => PRICE_FOR_SORT(b, false) - PRICE_FOR_SORT(a, false))
+        break
+      case 'rating_desc':
+        arr.sort((a, b) => RATING_FOR_SORT(b, false) - RATING_FOR_SORT(a, false))
+        break
+      case 'rating_asc':
+        arr.sort((a, b) => RATING_FOR_SORT(a, true) - RATING_FOR_SORT(b, true))
+        break
+      case 'fresh_desc':
+        arr.sort((a, b) => CREATED_FOR_SORT(b) - CREATED_FOR_SORT(a))
+        break
+      case 'fresh_asc':
+        arr.sort((a, b) => CREATED_FOR_SORT(a) - CREATED_FOR_SORT(b))
+        break
+      case 'reviews_desc':
+        arr.sort((a, b) => b.reviewCount - a.reviewCount)
+        break
+      case 'reviews_asc':
+        arr.sort((a, b) => a.reviewCount - b.reviewCount)
+        break
+      default:
+        arr.sort((a, b) => a.name.localeCompare(b.name, 'ru'))
     }
-    return result
+    return arr
   }, [drinks, search, sort, noSugarOnly])
 
   return { filters, setFilter, filtered }

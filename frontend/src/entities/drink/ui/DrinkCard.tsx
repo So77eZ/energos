@@ -1,95 +1,113 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Zap, Droplets, Star, CandyOff } from 'lucide-react'
+import type { CSSProperties } from 'react'
 import { ROUTES } from '@shared/config/routes'
-import type { Drink } from '../model/types'
+import { Icons } from '@shared/ui/icons'
+import { MiniMetrics } from '@entities/review'
+import { EnergyCan } from './EnergyCan'
+import { TierBadge } from './TierBadge'
+import type { EnrichedDrink } from '../lib/enrich'
 
 interface DrinkCardProps {
-  drink: Drink
-  index?: number
-  rating?: number | null
-  accentColor?: string | null
+  drink: EnrichedDrink
+  rank?: number | null
+  /** Brand displayed before the variant name. Falls back to first name token. */
+  brand?: string
 }
 
-export function DrinkCard({ drink, index = 0, rating, accentColor }: DrinkCardProps) {
-  const rgb = accentColor ?? '0,102,204'
+function splitBrand(name: string, override?: string): { brand: string; variant: string } {
+  if (override && override.trim()) {
+    const lower = name.toLowerCase()
+    const variant = lower.startsWith(override.toLowerCase())
+      ? name.slice(override.length).trim()
+      : name
+    return { brand: override.toUpperCase(), variant: variant || name }
+  }
+  const firstSpace = name.indexOf(' ')
+  if (firstSpace === -1) return { brand: name.toUpperCase(), variant: name }
+  return {
+    brand: name.slice(0, firstSpace).toUpperCase(),
+    variant: name.slice(firstSpace + 1).trim(),
+  }
+}
+
+export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
+  const { brand: brandLbl, variant } = splitBrand(drink.name, brand)
+  const blend = drink.blend
+  const style: CSSProperties & { '--blend'?: string } = { '--blend': blend }
+
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.35,
-        delay: index * 0.05,
-        ease: 'easeOut',
-        scale: { duration: 0.2, delay: 0, ease: 'easeOut' },
-        boxShadow: { duration: 0.2, delay: 0, ease: 'easeOut' },
-      }}
-      whileHover={{
-        scale: 1.02,
-        boxShadow: `0 0 30px rgba(${rgb}, 0.35), 0 0 60px rgba(${rgb}, 0.12), 0 8px 32px rgba(0,0,0,0.55)`,
-      }}
-      className="glass rounded-xl overflow-hidden flex flex-col shadow-card"
-    >
-      <Link href={ROUTES.reviews(drink.id)} className="flex flex-col flex-1">
-        {/* Image */}
-        <div
-          className="relative h-36 sm:h-48 flex items-center justify-center overflow-hidden"
-          style={{ background: `linear-gradient(to bottom, rgba(${rgb}, 0.12), transparent)` }}
-        >
-          {drink.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={drink.image_url}
-              alt={drink.name}
-              className="absolute inset-0 w-full h-full object-contain p-3 sm:p-4"
-            />
-          ) : (
-            <Zap className="w-10 h-10 sm:w-14 sm:h-14 text-neon-cyan/20" />
-          )}
-
-          {drink.no_sugar && (
-            <>
-              <span className="absolute top-2 right-2 sm:hidden p-1 rounded-full bg-neon-green/15 border border-neon-green/40 text-neon-green">
-                <CandyOff className="w-3.5 h-3.5" />
-              </span>
-              <span className="absolute top-2 right-2 hidden sm:inline-flex text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-neon-green/15 text-neon-green border border-neon-green/40">
-                Без сахара
-              </span>
-            </>
-          )}
+    <Link href={ROUTES.reviews(drink.id)} className="card card-glass" style={style}>
+      <div className="card-top">
+        {rank != null && (
+          <div className="card-rank">
+            <span className="rank-hash">#</span>
+            <span className="rank-num">{String(rank).padStart(2, '0')}</span>
+          </div>
+        )}
+        <div className="card-tags">
+          {drink.tier && <TierBadge tier={drink.tier} size="xs" />}
+          {drink.isNew && <span className="micro-tag micro-amber">NEW</span>}
+          {drink.no_sugar && <span className="micro-tag micro-lime">ZERO</span>}
         </div>
+      </div>
 
-        {/* Body */}
-        <div className="p-2.5 sm:p-4 flex flex-col gap-1.5 sm:gap-2 flex-1">
-          <h3 className="text-sm sm:text-base font-semibold text-[#f0f0f5] leading-snug line-clamp-2">
-            {drink.name}
-          </h3>
+      <div
+        className="card-vis"
+        style={{ background: `radial-gradient(ellipse at center 60%, rgba(${blend},0.28), transparent 70%)` }}
+      >
+        {drink.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={drink.image_url}
+            alt={drink.name}
+            className="max-h-[180px] w-auto object-contain"
+          />
+        ) : (
+          <EnergyCan can={drink.can} w={110} h={240} />
+        )}
+      </div>
 
-          <div className="flex items-center justify-between mt-auto pt-1.5 sm:pt-2">
+      <div className="card-body">
+        <div className="card-brand">
+          <span className="card-brand-name">{brandLbl}</span>
+          <span className="card-brand-sep">/</span>
+          <span className="card-brand-code">{drink.can.code}</span>
+        </div>
+        <h3 className="card-name">{variant || drink.name}</h3>
+
+        {drink.metrics && <MiniMetrics metrics={drink.metrics} />}
+
+        <div className="card-foot">
+          <div className="card-price">
             {drink.price != null ? (
-              <p className="shrink-0 text-neon-pink font-semibold text-xs sm:text-sm flex items-center gap-1">
-                <Droplets className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-70" />
-                {drink.price.toFixed(2)} ₽
-              </p>
+              <>
+                <span className="card-price-val">{drink.price.toFixed(2)}</span>
+                <span className="card-price-cur">₽</span>
+              </>
             ) : (
-              <span />
+              <span className="card-price-val" style={{ color: 'var(--txt-quiet)', fontSize: '11px' }}>—</span>
             )}
-
-            {rating != null ? (
-              <span className="flex items-center gap-1 text-xs shrink-0">
-                <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-neon-pink text-neon-pink" />
-                <span className="text-neon-pink font-semibold">{rating}</span>
-              </span>
+          </div>
+          <div className="card-rate">
+            {drink.rating != null ? (
+              <>
+                <Icons.star w={12} />
+                <span>{drink.rating.toFixed(1)}</span>
+                <span className="card-rev">· {drink.reviewCount}</span>
+              </>
             ) : (
-              <span className="ml-auto text-[10px] sm:text-xs text-neon-cyan/70 font-medium text-right leading-tight max-w-[4rem] sm:max-w-none">
-                Оцените первым!
-              </span>
+              <span className="card-rev" style={{ color: 'var(--accent)' }}>Оцените первым</span>
             )}
           </div>
         </div>
-      </Link>
-    </motion.article>
+      </div>
+
+      <div
+        className="card-hover-line"
+        style={{ background: `linear-gradient(90deg, transparent, rgba(${blend},0.9), transparent)` }}
+      />
+    </Link>
   )
 }

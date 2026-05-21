@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { Frown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { DrinkCard, enrichDrinks } from '@entities/drink'
 import type { Drink } from '@entities/drink'
-import { DrinkCard } from '@entities/drink'
-import type { Review, ReviewMetrics } from '@entities/review'
-import { calcRating, METRIC_KEYS } from '@entities/review'
+import type { Review } from '@entities/review'
+import { Icons } from '@shared/ui/icons'
 import { FilterPanel } from '@features/filter-drinks/ui/FilterPanel'
+import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
+import { StatsStrip } from '@widgets/stats-strip/ui/StatsStrip'
 
 const PAGE_SIZE = 12
 
@@ -16,63 +17,10 @@ interface DrinkCatalogProps {
   allReviews: Review[]
 }
 
-// RGB values matching the metric icon colors used in ReviewsPage
-const METRIC_RGB: [number, number, number][] = [
-  [0, 229, 255],   // acidity — cyan
-  [0, 102, 204],   // sweetness — blue
-  [255, 46, 136],  // carbonation — pink
-  [192, 132, 252], // concentration — purple
-  [251, 191, 36],  // aftertaste — amber
-  [0, 255, 157],   // price_quality — green
-]
-
-function blendMetricColor(m: ReviewMetrics): string {
-  let r = 0, g = 0, b = 0, w = 0
-  METRIC_KEYS.forEach((key, i) => {
-    const v = m[key]
-    r += METRIC_RGB[i][0] * v
-    g += METRIC_RGB[i][1] * v
-    b += METRIC_RGB[i][2] * v
-    w += v
-  })
-  return `${Math.round(r / w)},${Math.round(g / w)},${Math.round(b / w)}`
-}
-
-function buildColorMap(drinks: Drink[], reviews: Review[]): Map<number, string | null> {
-  const map = new Map<number, string | null>()
-  for (const drink of drinks) {
-    const dr = reviews.filter((r) => r.energy_drink_id === drink.id)
-    if (dr.length === 0) { map.set(drink.id, null); continue }
-    const source: ReviewMetrics = dr.find((r) => r.from_admin) ?? (() => {
-      const avg = (key: keyof ReviewMetrics) => dr.reduce((s, r) => s + r[key], 0) / dr.length
-      return { acidity: avg('acidity'), sweetness: avg('sweetness'), carbonation: avg('carbonation'), concentration: avg('concentration'), aftertaste: avg('aftertaste'), price_quality: avg('price_quality') }
-    })()
-    map.set(drink.id, blendMetricColor(source))
-  }
-  return map
-}
-
-function buildRatingMap(drinks: Drink[], reviews: Review[]): Map<number, number | null> {
-  const map = new Map<number, number | null>()
-  for (const drink of drinks) {
-    const dr = reviews.filter((r) => r.energy_drink_id === drink.id)
-    if (dr.length === 0) { map.set(drink.id, null); continue }
-    const admin = dr.find((r) => r.from_admin)
-    if (admin) {
-      map.set(drink.id, calcRating(admin))
-    } else {
-      const avg = dr.reduce((s, r) => s + calcRating(r), 0) / dr.length
-      map.set(drink.id, Math.round(avg * 10) / 10)
-    }
-  }
-  return map
-}
-
 export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
-  const { filtered } = useFilterDrinks(initialDrinks)
+  const enriched = useMemo(() => enrichDrinks(initialDrinks, allReviews), [initialDrinks, allReviews])
+  const { filtered } = useFilterDrinks(enriched)
   const [page, setPage] = useState(1)
-  const ratingMap = buildRatingMap(initialDrinks, allReviews)
-  const colorMap = buildColorMap(initialDrinks, allReviews)
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -80,55 +28,60 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
 
   if (initialDrinks.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-[#9090a8]">
-        <Frown className="w-12 h-12 opacity-40" />
+      <div className="empty">
+        <Icons.beaker />
         <p>Не удалось загрузить напитки. Проверьте подключение к API.</p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="page page-home">
+      <StatsStrip drinks={enriched} />
+
+      <SortBar />
       <FilterPanel />
 
       {filtered.length > 0 ? (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[5px] sm:gap-4">
-            {paginated.map((drink, i) => (
-              <DrinkCard key={drink.id} drink={drink} index={i} rating={ratingMap.get(drink.id) ?? null} accentColor={colorMap.get(drink.id) ?? null} />
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={safePage === 1}
-                className="p-2 rounded-lg text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 border border-white/10 hover:border-neon-cyan/30 transition-colors disabled:opacity-30"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              <span className="text-sm text-[#9090a8]">
-                <span className="text-neon-cyan font-semibold">{safePage}</span>
-                {' / '}
-                {totalPages}
-              </span>
-
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={safePage === totalPages}
-                className="p-2 rounded-lg text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 border border-white/10 hover:border-neon-cyan/30 transition-colors disabled:opacity-30"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </>
+        <div className="grid grid-regular">
+          {paginated.map((drink, i) => (
+            <DrinkCard
+              key={drink.id}
+              drink={drink}
+              rank={(safePage - 1) * PAGE_SIZE + i + 1}
+            />
+          ))}
+        </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-20 text-[#9090a8]">
-          <Frown className="w-10 h-10 opacity-40" />
-          <p className="text-sm">Ничего не найдено — попробуйте изменить фильтры.</p>
+        <div className="empty">
+          <Icons.flask />
+          <p>Ничего не найдено — попробуйте изменить фильтры.</p>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="pager">
+          <button
+            type="button"
+            className="pager-btn"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            aria-label="Предыдущая страница"
+          >
+            <Icons.arrowL />
+          </button>
+          <span className="pager-text">
+            <span className="pager-text-cur">{safePage}</span> / {totalPages}
+          </span>
+          <button
+            type="button"
+            className="pager-btn"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            aria-label="Следующая страница"
+          >
+            <Icons.arrow />
+          </button>
         </div>
       )}
     </div>

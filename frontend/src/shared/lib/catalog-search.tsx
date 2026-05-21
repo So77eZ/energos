@@ -3,7 +3,16 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 
-export type SortOption = 'name' | 'price_asc' | 'price_desc'
+export type SortOption =
+  | 'name'
+  | 'price_asc'
+  | 'price_desc'
+  | 'rating_desc'
+  | 'rating_asc'
+  | 'fresh_desc'
+  | 'fresh_asc'
+  | 'reviews_desc'
+  | 'reviews_asc'
 export type SearchItem = { id: number; name: string; image_url?: string | null }
 
 interface PageSearchCtx {

@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AppShell>
             <CatalogSearchProvider>
               <Header />
-              <main className="max-w-[1200px] mx-auto px-[5px] py-[5px] sm:px-4 sm:py-6">{children}</main>
+              <main className="main">{children}</main>
               <Footer />
               <ScrollToTop />
             </CatalogSearchProvider>
