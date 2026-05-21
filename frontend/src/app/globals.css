@@ -857,6 +857,211 @@ body::before {
 .tier-mini-count { font-family: var(--font-mono); font-size: 11px; color: var(--txt-dim); text-align: right; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   DRINK PAGE — nav, hero, reviews, similar rail
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Nav: back + prev/next ────────────────────────────────────── */
+.drink-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0;
+}
+.dn-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--txt-dim); font-size: 12px;
+  padding: 6px 10px; border-radius: var(--r-sm);
+}
+.dn-back:hover { color: var(--accent); background: var(--bg-input); }
+.dn-arrows {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px; background: var(--bg-card);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+}
+.dn-arrows button {
+  padding: 6px 8px; border-radius: var(--r-sm);
+  color: var(--txt-dim);
+}
+.dn-arrows button:hover:not(:disabled) { color: var(--accent); background: var(--bg-input); }
+.dn-arrows button:disabled { opacity: 0.3; cursor: not-allowed; }
+.dn-counter {
+  font-family: var(--font-mono); font-size: 11px; color: var(--txt-dim);
+  padding: 0 8px; letter-spacing: 1px;
+}
+
+/* ─── Drink hero ───────────────────────────────────────────────── */
+.drink-hero {
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: 280px 1fr 320px;
+  gap: 28px; padding: 28px;
+  background: linear-gradient(135deg, rgba(var(--blend), 0.10), var(--bg-card) 50%, rgba(0,0,0,0.3));
+  border: 1px solid rgba(var(--blend), 0.35);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 60px rgba(var(--blend), 0.08), 0 12px 40px rgba(0,0,0,0.4);
+}
+.drink-hero-vis { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.drink-hero-code {
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--txt-quiet); letter-spacing: 1.5px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+}
+.drink-hero-info { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.drink-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.drink-brand { font-family: var(--font-mono); font-size: 11.5px; color: var(--txt-dim); letter-spacing: 3px; }
+.drink-name {
+  font-family: var(--font-title); font-weight: 700;
+  font-size: 36px; line-height: 1.05; letter-spacing: -0.5px;
+  color: var(--txt);
+}
+.drink-blurb { font-size: 13.5px; color: var(--txt-dim); max-width: 56ch; line-height: 1.6; }
+.drink-meta {
+  display: grid; grid-template-columns: repeat(4, auto);
+  gap: 24px; padding: 12px 0;
+  border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line);
+}
+.drink-cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.drink-hero-radar {
+  background: rgba(0,0,0,0.3); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+:root[data-theme="light"] .drink-hero-radar { background: rgba(0,0,0,0.04); }
+
+/* ─── Review cards ─────────────────────────────────────────────── */
+.reviews-section { display: flex; flex-direction: column; gap: 14px; }
+.rev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.rev-card {
+  background: var(--bg-card); backdrop-filter: blur(12px);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 18px; display: flex; flex-direction: column; gap: 12px;
+}
+.rev-admin { border-color: rgba(192,132,252,0.35); background: linear-gradient(135deg, rgba(192,132,252,0.06), var(--bg-card)); }
+.rev-avg { border-color: rgba(0,229,255,0.25); }
+.rev-mine { border-color: rgba(var(--accent-rgb),0.45); background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08), var(--bg-card)); }
+
+.rev-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.rev-head-l { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rev-badge {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 1.5px;
+  padding: 3px 8px; border-radius: 4px;
+  background: rgba(192,132,252,0.12); color: var(--c-purple);
+  border: 1px solid rgba(192,132,252,0.35);
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.rev-badge-avg { background: rgba(0,229,255,0.10); color: var(--c-cyan); border-color: rgba(0,229,255,0.3); }
+.rev-badge-mine { background: rgba(var(--accent-rgb),0.10); color: var(--accent); border-color: rgba(var(--accent-rgb),0.4); }
+
+.rev-meta-author { font-family: var(--font-mono); font-size: 11px; color: var(--txt-dim); letter-spacing: 1px; }
+.rev-rating {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 22px; color: var(--c-pink);
+}
+.rev-rating svg { fill: var(--c-pink); }
+
+.rev-body { display: flex; flex-direction: column; gap: 10px; }
+.rev-metrics { display: flex; flex-direction: column; gap: 6px; }
+.rev-comment {
+  font-size: 13px; color: var(--txt); font-style: italic;
+  padding: 10px 12px; border-left: 2px solid var(--accent);
+  background: var(--bg-input); border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+.rev-foot {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--txt-quiet); padding-top: 6px;
+  border-top: 1px dashed var(--line);
+}
+.rev-date { font-family: var(--font-mono); font-size: 10.5px; color: var(--txt-quiet); }
+.rev-dim { color: var(--txt-quiet); }
+.rev-username { font-weight: 600; color: var(--txt); font-size: 13px; }
+.rev-avatar {
+  width: 32px; height: 32px; border-radius: var(--r-sm);
+  display: grid; place-items: center;
+  color: var(--bg-deep); font-family: var(--font-display); font-weight: 700; font-size: 13px;
+}
+.rev-actions { display: flex; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
+
+/* dot-row (read-only metric display) */
+.dot-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dot-row-numeric { padding: 4px 0; }
+.dot-row-label { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; }
+.dot-row-icon { width: 14px; height: 14px; flex-shrink: 0; display: inline-flex; }
+.dot-row-icon svg { width: 100%; height: 100%; }
+.dot-row-name { font-size: 12px; color: var(--txt-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dot-row-dots { display: inline-flex; align-items: center; gap: 4px; }
+.dot-row-dot {
+  width: 14px; height: 14px; opacity: 0.18;
+  color: var(--txt-quiet); display: inline-flex; align-items: center; justify-content: center;
+}
+.dot-row-dot svg { width: 100%; height: 100%; }
+.dot-row-dot.on { opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
+.dot-row-val {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 13px; min-width: 16px; text-align: right; margin-left: 4px;
+}
+.dot-row-bar { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 60%; }
+.dot-row-bar-track { flex: 1; height: 5px; background: var(--bg-input); border-radius: 2px; overflow: hidden; }
+.dot-row-bar-fill { height: 100%; }
+
+/* ─── Others' reviews layout ─────────────────────────────────── */
+.my-review-section { display: flex; flex-direction: column; }
+.other-reviews-section { display: flex; flex-direction: column; gap: 12px; }
+.other-rev-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.select-min {
+  padding: 6px 10px; background: var(--bg-input);
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  color: var(--txt-dim); font-size: 11px;
+  cursor: pointer;
+}
+
+/* ─── Similar rail ─────────────────────────────────────────────── */
+.similar-rail {
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 18px;
+}
+.similar-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 14px;
+}
+.similar-title {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--accent); letter-spacing: 2px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.similar-sub { font-family: var(--font-mono); font-size: 10px; color: var(--txt-quiet); letter-spacing: 1px; }
+.similar-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+.sim-card {
+  display: flex; gap: 10px;
+  padding: 10px; border-radius: var(--r-sm);
+  background: var(--bg-input); border: 1px solid var(--line);
+  cursor: pointer; transition: border-color .15s, transform .15s;
+  text-decoration: none; color: inherit;
+}
+.sim-card:hover { transform: translateY(-2px); border-color: rgba(var(--accent-rgb), 0.4); }
+.sim-can-wrap {
+  position: relative;
+  display: grid; place-items: center;
+  width: 60px; flex-shrink: 0;
+}
+.sim-info { min-width: 0; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
+.sim-name {
+  font-family: var(--font-title); font-weight: 600;
+  font-size: 13px; line-height: 1.2; color: var(--txt);
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.sim-row { display: flex; justify-content: space-between; align-items: center; }
+.sim-match { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--txt-dim); }
+.sim-match-bar { width: 50px; height: 4px; background: var(--bg-input); border-radius: 2px; overflow: hidden; }
+.sim-match-fill { height: 100%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.sim-rating { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--c-amber); display: inline-flex; align-items: center; gap: 3px; }
+.sim-rating svg { fill: var(--c-amber); }
+
+/* ═══════════════════════════════════════════════════════════════════
    RESPONSIVE — minimal breakpoints (catalog + header)
    Per-page breakpoints land here as pages migrate.
    ═══════════════════════════════════════════════════════════════════ */
@@ -866,6 +1071,13 @@ body::before {
   .hero-radar { grid-column: 1 / -1; }
   .side-rail { position: static; }
 }
+@media (max-width: 1200px) {
+  .drink-hero { grid-template-columns: 220px 1fr; }
+  .drink-hero-radar { grid-column: 1 / -1; }
+  .other-rev-grid { grid-template-columns: repeat(2, 1fr); }
+  .similar-grid { grid-template-columns: repeat(2, 1fr); }
+  .rev-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 800px) {
   .hdr-inner { grid-template-columns: 1fr; gap: 10px; }
   .stats { grid-template-columns: repeat(2, 1fr); }
@@ -874,6 +1086,11 @@ body::before {
   .hero-grid { grid-template-columns: 1fr; padding: 20px; gap: 20px; }
   .hero-name { font-size: 28px; }
   .hero-meta { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .drink-hero { grid-template-columns: 1fr; padding: 20px; gap: 20px; }
+  .drink-name { font-size: 28px; }
+  .drink-meta { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .other-rev-grid { grid-template-columns: 1fr; }
+  .similar-grid { grid-template-columns: 1fr; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

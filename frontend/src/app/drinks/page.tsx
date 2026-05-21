@@ -2,7 +2,7 @@ import { drinkApi } from '@entities/drink'
 import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { authApi } from '@entities/user'
-import { ReviewsPage } from '@widgets/reviews-page/ui/ReviewsPage'
+import { DrinkPage } from '@widgets/drink-page/ui/DrinkPage'
 
 export const metadata = { title: 'Отзывы — Energos' }
 
@@ -10,7 +10,7 @@ interface Props {
   searchParams: Promise<{ id?: string; review?: string }>
 }
 
-export default async function ReviewsRoute({ searchParams }: Props) {
+export default async function DrinkRoute({ searchParams }: Props) {
   const { id, review } = await searchParams
   const [drinks, token] = await Promise.all([
     drinkApi.list().catch(() => []),
@@ -20,8 +20,16 @@ export default async function ReviewsRoute({ searchParams }: Props) {
   const activeDrink =
     (id ? drinks.find((d) => String(d.id) === id) : null) ?? drinks[0] ?? null
 
+  if (!activeDrink) {
+    return (
+      <div className="empty">
+        <p>Не удалось загрузить напитки. Проверьте подключение к API.</p>
+      </div>
+    )
+  }
+
   const [reviews, currentUser] = await Promise.all([
-    activeDrink ? reviewApi.byDrink(activeDrink.id).catch(() => []) : Promise.resolve([]),
+    reviewApi.byDrink(activeDrink.id).catch(() => []),
     token ? authApi.me(token).catch(() => null) : Promise.resolve(null),
   ])
 
@@ -30,7 +38,7 @@ export default async function ReviewsRoute({ searchParams }: Props) {
     : null
 
   return (
-    <ReviewsPage
+    <DrinkPage
       drinks={drinks}
       activeDrink={activeDrink}
       initialReviews={reviews}
