@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useMemo, useState } from 'react'
 import { DrinkCard, enrichDrinks } from '@entities/drink'
 import type { Drink, EnrichedDrink } from '@entities/drink'
@@ -11,6 +12,16 @@ import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
 import { StatsStrip } from '@widgets/stats-strip/ui/StatsStrip'
 import { HomeHero } from '@widgets/home-hero/ui/HomeHero'
 import { HomeSideRail } from '@widgets/home-side-rail/ui/HomeSideRail'
+
+// Three.js is ~150 KB gzipped — load only on the client and only when the
+// catalog actually mounts. The component renders nothing below 1440px (CSS
+// `.three-bg` is `display: none`), so the bundle is wasted on small screens.
+// If that bothers us later, gate the dynamic import on a `window.matchMedia`
+// check; for now the JS cost is the only penalty.
+const ThreeCans = dynamic(() => import('@widgets/three-cans/ui/ThreeCans').then((m) => m.ThreeCans), {
+  ssr: false,
+  loading: () => null,
+})
 
 const PAGE_SIZE = 12
 
@@ -55,6 +66,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
 
   return (
     <div className="page page-home">
+      <ThreeCans />
       <StatsStrip drinks={enriched} />
       {hero && <HomeHero drink={hero} rank={1} />}
 
