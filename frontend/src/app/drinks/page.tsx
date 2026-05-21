@@ -28,11 +28,12 @@ export default async function DrinkRoute({ searchParams }: Props) {
     )
   }
 
-  const [reviews, currentUser] = await Promise.all([
-    reviewApi.byDrink(activeDrink.id).catch(() => []),
+  const [allReviews, currentUser] = await Promise.all([
+    reviewApi.list().catch(() => []),
     token ? authApi.me(token).catch(() => null) : Promise.resolve(null),
   ])
 
+  const reviews = allReviews.filter((r) => r.energy_drink_id === activeDrink.id)
   const myReview = currentUser
     ? (reviews.find((r) => r.user_id === currentUser.id) ?? null)
     : null
@@ -42,6 +43,7 @@ export default async function DrinkRoute({ searchParams }: Props) {
       drinks={drinks}
       activeDrink={activeDrink}
       initialReviews={reviews}
+      allReviews={allReviews}
       currentUser={currentUser}
       myReview={myReview}
       autoOpenReview={review === '1'}

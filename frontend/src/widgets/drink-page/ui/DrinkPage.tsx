@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Drink } from '@entities/drink'
-import { enrichDrink } from '@entities/drink'
+import { enrichDrink, enrichDrinks, findSimilarDrinks } from '@entities/drink'
 import {
   AdminReviewCard,
   AvgReviewCard,
@@ -20,11 +20,15 @@ import { deleteReviewAction } from '@features/submit-review/model/actions'
 import { ReviewForm } from '@features/submit-review/ui/ReviewForm'
 import { DrinkNav } from './DrinkNav'
 import { DrinkHero } from './DrinkHero'
+import { SimilarRail } from './SimilarRail'
 
 interface DrinkPageProps {
   drinks: Drink[]
   activeDrink: Drink
   initialReviews: Review[]
+  /** All reviews across the catalog — used to enrich every drink for the
+   *  SimilarRail. Falls back to initialReviews if not provided. */
+  allReviews?: Review[]
   currentUser: User | null
   myReview: Review | null
   autoOpenReview?: boolean
@@ -76,6 +80,7 @@ export function DrinkPage({
   drinks,
   activeDrink,
   initialReviews,
+  allReviews,
   currentUser,
   myReview,
   autoOpenReview = false,
@@ -100,6 +105,11 @@ export function DrinkPage({
   }, [formOpen])
 
   const enriched = useMemo(() => enrichDrink(activeDrink, initialReviews), [activeDrink, initialReviews])
+  const similar = useMemo(() => {
+    if (!enriched.metrics) return []
+    const pool = enrichDrinks(drinks, allReviews ?? initialReviews)
+    return findSimilarDrinks(enriched, pool, 4)
+  }, [enriched, drinks, allReviews, initialReviews])
 
   const adminReview = useMemo(() => initialReviews.find((r) => r.from_admin) ?? null, [initialReviews])
   const userReviews = useMemo(() => initialReviews.filter((r) => !r.from_admin), [initialReviews])
@@ -187,6 +197,8 @@ export function DrinkPage({
           </div>
         </section>
       )}
+
+      <SimilarRail matches={similar} />
 
       {!currentUser && initialReviews.length === 0 && (
         <div className="empty">

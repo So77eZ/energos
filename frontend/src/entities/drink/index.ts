@@ -13,3 +13,5 @@ export {
 } from './lib/enrich'
 export type { EnrichedDrink, Tier } from './lib/enrich'
 export { cleanDrinkName, splitDrinkBrand } from './lib/format'
+export { findSimilarDrinks } from './lib/similar'
+export type { SimilarMatch } from './lib/similar'
