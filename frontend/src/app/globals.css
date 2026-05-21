@@ -1337,6 +1337,65 @@ body::before {
 .auth-link:hover { text-decoration: underline; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   TASTE MAP — 2D scatter projection with X/Y axis pickers
+   ═══════════════════════════════════════════════════════════════════ */
+.tm-head {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 24px;
+  flex-wrap: wrap;
+}
+.tm-axis-pickers { display: flex; gap: 12px; flex-wrap: wrap; }
+.axis-pick { display: flex; flex-direction: column; gap: 4px; }
+.axis-pick-lbl {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--txt-quiet); letter-spacing: 1.2px;
+}
+.axis-pick select {
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: 8px 12px; min-width: 200px;
+  color: var(--txt); font-size: 13px; cursor: pointer;
+}
+.axis-pick select:focus { border-color: rgba(var(--accent-rgb), 0.5); }
+
+.tm-stage {
+  background: var(--bg-card); backdrop-filter: blur(12px);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 16px;
+}
+
+.tm-legend {
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.tm-legend-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--font-mono); font-size: 11px; color: var(--accent);
+  letter-spacing: 1.5px;
+}
+.tm-legend-head svg { width: 14px; height: 14px; transform: translateY(2px); }
+.tm-dim { color: var(--txt-quiet); }
+.tm-legend-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.tm-legend-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: var(--r-sm);
+  cursor: pointer; transition: background .12s;
+  text-decoration: none; color: inherit; border: 0; background: transparent;
+  width: 100%; text-align: left;
+}
+.tm-legend-item:hover, .tm-legend-item.hovered { background: var(--bg-input); }
+.tm-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.tm-legend-name {
+  flex: 1; font-size: 12px; color: var(--txt);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tm-legend-dim { font-family: var(--font-mono); font-size: 10px; color: var(--txt-quiet); }
+
+/* ═══════════════════════════════════════════════════════════════════
    RESPONSIVE — minimal breakpoints (catalog + header)
    Per-page breakpoints land here as pages migrate.
    ═══════════════════════════════════════════════════════════════════ */
@@ -1377,6 +1436,8 @@ body::before {
   .auth-vis { min-height: 240px; }
   .auth-form { padding: 28px 24px; }
   .auth-title { font-size: 24px; }
+  .tm-head { flex-direction: column; align-items: stretch; }
+  .axis-pick select { min-width: 0; width: 100%; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
