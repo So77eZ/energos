@@ -14,10 +14,23 @@ import { ACCENT_MAP, useTheme } from '@shared/lib/theme'
  */
 
 type Side = 'left' | 'right'
+type Shade = 'dark' | 'light'
 type State = 'idle' | 'spinUp' | 'maxed' | 'spinDown' | 'burst' | 'hidden' | 'fadeIn'
 
-function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string): () => void {
+interface CanPalette {
+  body: number
+  capTop: number
+  capBot: number
+}
+
+const PALETTES: Record<Shade, CanPalette> = {
+  dark:  { body: 0x0d1d36, capTop: 0x2a2a36, capBot: 0x18181f },
+  light: { body: 0xe6ecf3, capTop: 0xc8d0dc, capBot: 0xa8b2c0 },
+}
+
+function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string, shade: Shade): () => void {
   const isLeft = side === 'left'
+  const palette = PALETTES[shade]
 
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
   renderer.setClearColor(0x000000, 0)
@@ -53,11 +66,11 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string)
   const H = 2.85
   const SEG = 8
 
-  const matBody    = new THREE.MeshLambertMaterial({ color: 0x0d1d36, flatShading: true, transparent: true, opacity: 1 })
+  const matBody    = new THREE.MeshLambertMaterial({ color: palette.body, flatShading: true, transparent: true, opacity: 1 })
   const matStripe1 = new THREE.MeshLambertMaterial({ color: new THREE.Color(`rgb(${accentRgb})`), flatShading: true, transparent: true, opacity: 1 })
   const matStripe2 = new THREE.MeshLambertMaterial({ color: 0xff2e88, flatShading: true, transparent: true, opacity: 1 })
-  const matCapTop  = new THREE.MeshLambertMaterial({ color: 0x2a2a36, flatShading: true, transparent: true, opacity: 1 })
-  const matCapBot  = new THREE.MeshLambertMaterial({ color: 0x18181f, flatShading: true, transparent: true, opacity: 1 })
+  const matCapTop  = new THREE.MeshLambertMaterial({ color: palette.capTop, flatShading: true, transparent: true, opacity: 1 })
+  const matCapBot  = new THREE.MeshLambertMaterial({ color: palette.capBot, flatShading: true, transparent: true, opacity: 1 })
   const canMats = [matBody, matStripe1, matStripe2, matCapTop, matCapBot]
 
   canGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(R, R, H, SEG, 1), matBody))
@@ -340,8 +353,8 @@ export function ThreeCans() {
 
   useEffect(() => {
     const cleanups: Array<() => void> = []
-    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent))
-    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent))
+    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent, 'dark'))
+    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent, 'light'))
     return () => cleanups.forEach((c) => c())
   }, [leftAccent, rightAccent])
 
