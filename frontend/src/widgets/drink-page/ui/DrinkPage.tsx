@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Drink } from '@entities/drink'
 import { enrichDrink } from '@entities/drink'
@@ -83,11 +83,21 @@ export function DrinkPage({
   const router = useRouter()
   const [formOpen, setFormOpen] = useState(autoOpenReview)
   const [sort, setSort] = useState<ReviewSort>('date_desc')
+  const formRef = useRef<HTMLDivElement>(null)
 
   // Reset form-open when drink changes.
   useEffect(() => {
     setFormOpen(autoOpenReview)
   }, [activeDrink.id, autoOpenReview])
+
+  // Scroll the form into view when it opens — keeps focus near the can-rating
+  // controls instead of leaving them below the fold after the hero CTA fires.
+  useEffect(() => {
+    if (!formOpen) return
+    const el = formRef.current
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [formOpen])
 
   const enriched = useMemo(() => enrichDrink(activeDrink, initialReviews), [activeDrink, initialReviews])
 
@@ -135,12 +145,14 @@ export function DrinkPage({
 
       {currentUser && (
         formOpen ? (
-          <ReviewForm
-            drinkId={activeDrink.id}
-            drinkName={activeDrink.name}
-            editReview={myReview}
-            onClose={() => setFormOpen(false)}
-          />
+          <div ref={formRef}>
+            <ReviewForm
+              drinkId={activeDrink.id}
+              drinkName={activeDrink.name}
+              editReview={myReview}
+              onClose={() => setFormOpen(false)}
+            />
+          </div>
         ) : myReview ? (
           <section className="my-review-section">
             <MyReviewCard
