@@ -8,3 +8,4 @@ export {
 } from './model/types'
 export { reviewApi } from './api/reviewApi'
 export { MiniMetrics } from './ui/MiniMetrics'
+export { HexRadar } from './ui/HexRadar'
