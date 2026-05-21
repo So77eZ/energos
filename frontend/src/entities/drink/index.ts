@@ -1,3 +1,5 @@
 export type { Drink, DrinkCreate, DrinkUpdate } from './model/types'
 export { DrinkCard } from './ui/DrinkCard'
+export { EnergyCan } from './ui/EnergyCan'
+export type { CanSpec } from './ui/EnergyCan'
 export { drinkApi } from './api/drinkApi'
