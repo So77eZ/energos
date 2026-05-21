@@ -9,12 +9,10 @@
   },
   "dependencies": {
     "@types/three": "^0.184.1",
-    "chart.js": "^4.4.0",
     "framer-motion": "^12.0.0",
     "lucide-react": "^0.493.0",
     "next": "^15.3.4",
     "react": "19.0.0",
-    "react-chartjs-2": "^5.2.0",
     "react-dom": "19.0.0",
     "simple-icons": "^16.18.0",
     "three": "^0.184.0"
