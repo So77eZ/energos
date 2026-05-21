@@ -1,78 +1,61 @@
 'use client'
 
 import { useActionState } from 'react'
-import Link from 'next/link'
-import { UserPlus } from 'lucide-react'
+import { Icons } from '@shared/ui/icons'
 import { registerAction } from '../model/actions'
-import { ROUTES } from '@shared/config/routes'
 
 export function RegisterForm() {
   const [state, formAction, isPending] = useActionState(registerAction, null)
 
   return (
-    <form action={formAction} className="glass rounded-xl p-8 w-full max-w-sm mx-auto flex flex-col gap-4">
-      <h1 className="text-xl font-bold text-[#f0f0f5] text-center">Регистрация</h1>
+    <form action={formAction} className="auth-fields">
+      {state?.error && <p className="auth-error">{state.error}</p>}
 
-      {state?.error && (
-        <p className="text-sm text-neon-red bg-neon-red/10 border border-neon-red/30 rounded-lg px-3 py-2 text-center">
-          {state.error}
-        </p>
-      )}
-
-      <div className="flex flex-col gap-1">
+      <div className="auth-field">
+        <label htmlFor="register-username">Имя пользователя</label>
         <input
+          id="register-username"
           name="username"
-          placeholder="Логин"
+          placeholder="например: neon_drift"
           required
           minLength={3}
           maxLength={50}
           pattern="[a-zA-Z0-9_\-]+"
           title="Только буквы, цифры, _ и -"
           autoComplete="username"
-          className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
         />
-        <p className="text-[11px] text-[#9090a8] px-1">
-          Только буквы, цифры, _ и -
-        </p>
+        <span className="auth-field-hint">3–50 символов: буквы, цифры, <code>_</code> и <code>-</code></span>
       </div>
-      <div className="flex flex-col gap-1">
+
+      <div className="auth-field">
+        <label htmlFor="register-password">Пароль</label>
         <input
+          id="register-password"
           name="password"
           type="password"
-          placeholder="Пароль"
+          placeholder="••••••••"
           required
           minLength={8}
           autoComplete="new-password"
-          className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
         />
-        <p className="text-[11px] text-[#9090a8] px-1">
-          Минимум 8 символов, заглавная и строчная буква, цифра
-        </p>
+        <span className="auth-field-hint">Минимум 8 символов, заглавная и строчная буква, цифра</span>
       </div>
-      <input
-        name="confirm"
-        type="password"
-        placeholder="Повторите пароль"
-        required
-        autoComplete="new-password"
-        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
-      />
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="flex items-center justify-center gap-2 px-4 py-2 bg-neon-blue/20 border border-neon-blue/50 rounded-lg text-sm font-semibold text-neon-cyan hover:bg-neon-blue/30 transition-colors disabled:opacity-50"
-      >
-        <UserPlus className="w-4 h-4" />
-        {isPending ? 'Регистрация…' : 'Зарегистрироваться'}
+      <div className="auth-field">
+        <label htmlFor="register-confirm">Подтверждение пароля</label>
+        <input
+          id="register-confirm"
+          name="confirm"
+          type="password"
+          placeholder="••••••••"
+          required
+          autoComplete="new-password"
+        />
+      </div>
+
+      <button type="submit" className="cta-primary auth-submit" disabled={isPending}>
+        {isPending ? 'Регистрация…' : (<>Создать аккаунт <Icons.arrow w={14} /></>)}
       </button>
-
-      <p className="text-center text-xs text-[#9090a8]">
-        Уже есть аккаунт?{' '}
-        <Link href={ROUTES.auth.login} className="text-neon-cyan hover:underline">
-          Войти
-        </Link>
-      </p>
     </form>
   )
 }

@@ -1218,6 +1218,125 @@ body::before {
 .prof-rev-edit:hover { color: var(--accent); border-color: rgba(var(--accent-rgb),0.4); }
 
 /* ═══════════════════════════════════════════════════════════════════
+   AUTH PAGE — split visual + form
+   ═══════════════════════════════════════════════════════════════════ */
+.page-auth { min-height: 70vh; }
+.auth-stage {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-lg); overflow: hidden;
+  min-height: 600px;
+}
+.auth-vis {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15), var(--bg-deep) 70%);
+  display: grid; place-items: center;
+}
+.auth-vis-glow {
+  position: absolute; width: 400px; height: 400px;
+  border-radius: 50%; filter: blur(80px);
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.5), transparent 70%);
+  animation: blob1 18s ease-in-out infinite;
+}
+.auth-vis-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 80%);
+          mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 80%);
+}
+:root[data-theme="light"] .auth-vis-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+}
+.auth-vis-can {
+  position: relative; z-index: 1;
+  animation: authCanSpin 18s linear infinite;
+  transform-style: preserve-3d;
+}
+@keyframes authCanSpin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+.auth-vis-lines { position: absolute; inset: 0; pointer-events: none; }
+.auth-line {
+  position: absolute; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.5;
+}
+.auth-line:nth-child(1) { width: 100%; top: 25%; animation: linePulse 4s ease-in-out infinite; }
+.auth-line:nth-child(2) { width: 70%; top: 50%; left: 30%; animation: linePulse 5s 1s ease-in-out infinite; }
+.auth-line:nth-child(3) { width: 60%; top: 75%; animation: linePulse 4s 2s ease-in-out infinite; }
+@keyframes linePulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; } }
+
+.auth-form {
+  padding: 40px 48px;
+  display: flex; flex-direction: column; gap: 18px;
+  justify-content: center;
+}
+.auth-form-head { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.auth-eyebrow {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--accent); letter-spacing: 2.5px; margin-top: 14px;
+}
+.auth-title {
+  font-family: var(--font-title); font-weight: 700;
+  font-size: 32px; color: var(--txt); line-height: 1.1;
+}
+.auth-blurb {
+  font-size: 13px; color: var(--txt-dim);
+  line-height: 1.5; max-width: 36ch;
+}
+
+.auth-tabs {
+  display: flex; gap: 4px; padding: 4px;
+  background: var(--bg-input); border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.auth-tab {
+  flex: 1; padding: 8px; border-radius: var(--r-sm);
+  color: var(--txt-dim); font-size: 12.5px; font-weight: 600;
+  letter-spacing: 0.3px; text-align: center;
+  text-decoration: none; transition: background .15s, color .15s;
+}
+.auth-tab:hover { color: var(--txt); }
+.auth-tab.active {
+  background: var(--accent); color: var(--bg-deep);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.4);
+}
+
+.auth-fields { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+.auth-field { display: flex; flex-direction: column; gap: 4px; position: relative; }
+.auth-field label {
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--txt-dim); letter-spacing: 1.2px; text-transform: uppercase;
+}
+.auth-field input {
+  padding: 12px 14px; background: var(--bg-input);
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  color: var(--txt); font-size: 13.5px;
+}
+.auth-field input:focus { border-color: rgba(var(--accent-rgb), 0.5); }
+.auth-field-hint {
+  font-family: var(--font-sans); font-size: 11px;
+  color: var(--txt-quiet); letter-spacing: 0;
+}
+
+.auth-error {
+  font-size: 12px; color: var(--c-pink);
+  padding: 10px 12px; border: 1px solid rgba(255,46,136,0.3);
+  background: rgba(255,46,136,0.06); border-radius: var(--r-sm);
+}
+
+.auth-submit { width: 100%; justify-content: center; margin-top: 6px; }
+.auth-foot { font-size: 12px; color: var(--txt-dim); text-align: center; margin-top: 8px; }
+.auth-link { color: var(--accent); font-size: 11.5px; cursor: pointer; }
+.auth-link:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════════════
    RESPONSIVE — minimal breakpoints (catalog + header)
    Per-page breakpoints land here as pages migrate.
    ═══════════════════════════════════════════════════════════════════ */
@@ -1254,6 +1373,10 @@ body::before {
   .prof-actions { flex-direction: row; justify-content: center; }
   .prof-rev { grid-template-columns: 50px 1fr; }
   .prof-rev-metrics, .prof-rev-edit { display: none; }
+  .auth-stage { grid-template-columns: 1fr; min-height: auto; }
+  .auth-vis { min-height: 240px; }
+  .auth-form { padding: 28px 24px; }
+  .auth-title { font-size: 24px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
