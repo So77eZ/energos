@@ -5,6 +5,8 @@ import { Header } from '@widgets/header/ui/Header'
 import { Footer } from '@widgets/footer/ui/Footer'
 import { ScrollToTop } from '@widgets/scroll-to-top/ui/ScrollToTop'
 import { CatalogSearchProvider } from '@shared/lib/catalog-search'
+import { ThemeProvider, THEME_INIT_SCRIPT } from '@shared/lib/theme'
+import { AppShell } from '@shared/ui/app-shell/AppShell'
 
 export const metadata: Metadata = {
   title: 'Energos — рейтинг энергетиков',
@@ -12,17 +14,15 @@ export const metadata: Metadata = {
   verification: { yandex: '8e9eed80219a0095' },
 }
 
-const FONT_INIT_SCRIPT = `(function(){try{var p=JSON.parse(localStorage.getItem('energos_prefs')||'{}');var f=p.font||'JetBrains Mono';document.documentElement.style.setProperty('--font-sans','"'+f+'"');}catch(e){}})();`
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: FONT_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@400;600;700&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Russo+One&family=Exo+2:wght@400;600;700&family=Share+Tech+Mono&display=swap"
           rel="stylesheet"
         />
       </head>
@@ -46,12 +46,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="https://mc.yandex.ru/watch/109003264" style={{ position: 'absolute', left: -9999 }} alt="" />
         </noscript>
-        <CatalogSearchProvider>
-          <Header />
-          <main className="max-w-[1200px] mx-auto px-[5px] py-[5px] sm:px-4 sm:py-6">{children}</main>
-          <Footer />
-          <ScrollToTop />
-        </CatalogSearchProvider>
+        <ThemeProvider>
+          <AppShell>
+            <CatalogSearchProvider>
+              <Header />
+              <main className="max-w-[1200px] mx-auto px-[5px] py-[5px] sm:px-4 sm:py-6">{children}</main>
+              <Footer />
+              <ScrollToTop />
+            </CatalogSearchProvider>
+          </AppShell>
+        </ThemeProvider>
       </body>
     </html>
   )
