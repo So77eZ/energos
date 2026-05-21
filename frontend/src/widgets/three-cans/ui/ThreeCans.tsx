@@ -327,18 +327,23 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string)
   }
 }
 
+const ACCENT_CYCLE: Array<keyof typeof ACCENT_MAP> = ['cyan', 'pink', 'lime', 'amber', 'purple']
+
 export function ThreeCans() {
   const { accent } = useTheme()
-  const accentRgb = ACCENT_MAP[accent].rgb
+  // Left can uses the active accent; right can uses the next one in the cycle
+  // so the pair always reads as two distinct hues no matter the theme choice.
+  const leftAccent = ACCENT_MAP[accent].rgb
+  const rightAccent = ACCENT_MAP[ACCENT_CYCLE[(ACCENT_CYCLE.indexOf(accent) + 1) % ACCENT_CYCLE.length]].rgb
   const leftRef = useRef<HTMLCanvasElement>(null)
   const rightRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const cleanups: Array<() => void> = []
-    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', accentRgb))
-    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', accentRgb))
+    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent))
+    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent))
     return () => cleanups.forEach((c) => c())
-  }, [accentRgb])
+  }, [leftAccent, rightAccent])
 
   return (
     <div className="three-bg" aria-hidden="true">
