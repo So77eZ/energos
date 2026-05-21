@@ -220,3 +220,4 @@ uv.lock
 # data
 data/
 BDBackup/
+dumps/
