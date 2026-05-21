@@ -45,10 +45,6 @@ export function HomeHero({ drink, rank }: HomeHeroProps) {
             )}
           </div>
           <div className="hero-code">
-            <span>{drink.can.code}</span>
-            <span className="dot" />
-            <span>0.45L</span>
-            <span className="dot" />
             <span>{brand}</span>
           </div>
         </div>
@@ -113,7 +109,6 @@ export function HomeHero({ drink, rank }: HomeHeroProps) {
           <div className="hero-radar">
             <div className="radar-header">
               <span className="radar-title">ВКУСОВОЙ ПРОФИЛЬ</span>
-              <span>{drink.can.code}</span>
             </div>
             <HexRadar metrics={drink.metrics} size={240} />
             <div className="radar-legend">

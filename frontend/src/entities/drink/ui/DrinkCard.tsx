@@ -60,8 +60,6 @@ export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
       <div className="card-body">
         <div className="card-brand">
           <span className="card-brand-name">{split.brand}</span>
-          <span className="card-brand-sep">/</span>
-          <span className="card-brand-code">{drink.can.code}</span>
         </div>
         <h3 className="card-name">{split.variant}</h3>
 
