@@ -7,33 +7,21 @@ import { Icons } from '@shared/ui/icons'
 import { MiniMetrics } from '@entities/review'
 import { EnergyCan } from './EnergyCan'
 import { TierBadge } from './TierBadge'
+import { cleanDrinkName, splitDrinkBrand } from '../lib/format'
 import type { EnrichedDrink } from '../lib/enrich'
 
 interface DrinkCardProps {
   drink: EnrichedDrink
   rank?: number | null
-  /** Brand displayed before the variant name. Falls back to first name token. */
+  /** Brand displayed before the variant name. Overrides the heuristic split. */
   brand?: string
 }
 
-function splitBrand(name: string, override?: string): { brand: string; variant: string } {
-  if (override && override.trim()) {
-    const lower = name.toLowerCase()
-    const variant = lower.startsWith(override.toLowerCase())
-      ? name.slice(override.length).trim()
-      : name
-    return { brand: override.toUpperCase(), variant: variant || name }
-  }
-  const firstSpace = name.indexOf(' ')
-  if (firstSpace === -1) return { brand: name.toUpperCase(), variant: name }
-  return {
-    brand: name.slice(0, firstSpace).toUpperCase(),
-    variant: name.slice(firstSpace + 1).trim(),
-  }
-}
-
 export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
-  const { brand: brandLbl, variant } = splitBrand(drink.name, brand)
+  const cleaned = cleanDrinkName(drink.name)
+  const split = brand
+    ? { brand: brand.toUpperCase(), variant: cleaned }
+    : splitDrinkBrand(cleaned)
   const blend = drink.blend
   const style: CSSProperties & { '--blend'?: string } = { '--blend': blend }
 
@@ -71,11 +59,11 @@ export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
 
       <div className="card-body">
         <div className="card-brand">
-          <span className="card-brand-name">{brandLbl}</span>
+          <span className="card-brand-name">{split.brand}</span>
           <span className="card-brand-sep">/</span>
           <span className="card-brand-code">{drink.can.code}</span>
         </div>
-        <h3 className="card-name">{variant || drink.name}</h3>
+        <h3 className="card-name">{split.variant}</h3>
 
         {drink.metrics && <MiniMetrics metrics={drink.metrics} />}
 

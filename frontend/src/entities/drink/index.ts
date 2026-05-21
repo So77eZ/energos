@@ -12,3 +12,4 @@ export {
   isFreshDrink,
 } from './lib/enrich'
 export type { EnrichedDrink, Tier } from './lib/enrich'
+export { cleanDrinkName, splitDrinkBrand } from './lib/format'

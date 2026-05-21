@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { CSSProperties } from 'react'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
-import { EnergyCan, TierBadge } from '@entities/drink'
+import { cleanDrinkName, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
 import type { EnrichedDrink } from '@entities/drink'
 import { HexRadar, METRIC_COLOR_VARS, METRIC_KEYS, METRIC_LABELS } from '@entities/review'
 
@@ -13,14 +13,9 @@ interface HomeHeroProps {
   rank: number
 }
 
-function splitBrand(name: string): { brand: string; variant: string } {
-  const i = name.indexOf(' ')
-  if (i === -1) return { brand: name.toUpperCase(), variant: name }
-  return { brand: name.slice(0, i).toUpperCase(), variant: name.slice(i + 1).trim() }
-}
-
 export function HomeHero({ drink, rank }: HomeHeroProps) {
-  const { brand, variant } = splitBrand(drink.name)
+  const cleaned = cleanDrinkName(drink.name)
+  const { brand, variant } = splitDrinkBrand(cleaned)
   const blend = drink.blend
   const style: CSSProperties & { '--blend'?: string } = { '--blend': blend }
 

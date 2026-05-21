@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
-import { EnergyCan } from '@entities/drink'
+import { cleanDrinkName, EnergyCan } from '@entities/drink'
 import type { EnrichedDrink, Tier } from '@entities/drink'
 
 interface HomeSideRailProps {
@@ -53,7 +53,7 @@ export function HomeSideRail({ drinks }: HomeSideRailProps) {
                   )}
                 </div>
                 <div className="rail-info">
-                  <div className="rail-name">{d.name}</div>
+                  <div className="rail-name">{cleanDrinkName(d.name)}</div>
                   <div className="rail-meta">
                     <span className="rail-match">★ {d.rating?.toFixed(1) ?? '—'}</span>
                     <span className="rail-dim">{d.reviewCount} отзывов</span>
