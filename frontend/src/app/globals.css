@@ -1016,6 +1016,88 @@ body::before {
   cursor: pointer;
 }
 
+/* ─── Review form (clickable rating buttons) ──────────────────── */
+.rev-form {
+  background: var(--bg-card); backdrop-filter: blur(12px);
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 36px rgba(var(--accent-rgb), 0.18), 0 12px 40px rgba(0,0,0,0.5);
+  padding: 24px;
+}
+.rev-form-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 16px; padding-bottom: 14px;
+  border-bottom: 1px dashed var(--line);
+}
+.rev-form-title { font-family: var(--font-title); font-weight: 700; font-size: 22px; color: var(--txt); }
+.rev-form-sub { font-size: 12px; color: var(--txt-dim); margin-top: 2px; }
+.rev-form-close {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: var(--r-sm); color: var(--txt-dim);
+}
+.rev-form-close:hover { color: var(--txt); background: var(--bg-input); }
+
+.rev-form-progress {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px;
+}
+.rfp-track { flex: 1; height: 4px; background: var(--bg-input); border-radius: 2px; overflow: hidden; }
+.rfp-fill { height: 100%; background: var(--accent); box-shadow: 0 0 8px var(--accent); transition: width 0.3s ease; }
+.rfp-text { font-family: var(--font-mono); font-size: 10.5px; color: var(--txt-dim); letter-spacing: 1px; white-space: nowrap; }
+.rfp-text b { color: var(--accent); font-weight: 700; }
+
+.rev-form-body { display: flex; flex-direction: column; gap: 18px; }
+
+.rate-row { display: flex; flex-direction: column; gap: 8px; }
+.rate-row-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px;
+}
+.rate-row-icon { width: 14px; height: 14px; }
+.rate-row-icon svg { width: 100%; height: 100%; }
+.rate-row-label { flex: 1; color: var(--txt); font-weight: 500; }
+.rate-row-val {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 14px; color: var(--txt-quiet);
+}
+.rate-row-val .of { font-size: 10px; opacity: 0.5; margin-left: 2px; }
+.rate-row-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.rate-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 6px;
+  background: var(--bg-input);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--txt-quiet);
+  transition: transform .12s, color .12s, border-color .12s, background .12s;
+}
+.rate-btn:hover { transform: translateY(-1px); }
+.rate-btn.on {
+  background: rgba(var(--accent-rgb), 0.08);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.3);
+}
+.rate-btn-num { font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+.rate-btn-icon { width: 14px; height: 14px; opacity: 0.7; }
+.rate-btn-icon svg { width: 100%; height: 100%; }
+.rate-btn.on .rate-btn-icon { opacity: 1; filter: drop-shadow(0 0 6px currentColor); }
+
+.rev-form-field { display: flex; flex-direction: column; gap: 6px; }
+.rev-form-label { font-size: 11px; color: var(--txt-dim); font-family: var(--font-mono); letter-spacing: 1.2px; text-transform: uppercase; }
+.rev-form-label .opt { font-family: var(--font-sans); text-transform: none; letter-spacing: 0; color: var(--txt-quiet); }
+.rev-form-textarea {
+  background: var(--bg-input); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: 12px; resize: vertical;
+  font-family: var(--font-sans); font-size: 13px; color: var(--txt);
+}
+.rev-form-textarea:focus { border-color: rgba(var(--accent-rgb), 0.5); }
+.rev-form-error {
+  font-size: 12px; color: var(--c-pink);
+  padding: 10px 12px; border: 1px solid rgba(255,46,136,0.3);
+  background: rgba(255,46,136,0.06); border-radius: var(--r-sm);
+}
+.rev-form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+
 /* ─── Similar rail ─────────────────────────────────────────────── */
 .similar-rail {
   background: var(--bg-card); border: 1px solid var(--line);

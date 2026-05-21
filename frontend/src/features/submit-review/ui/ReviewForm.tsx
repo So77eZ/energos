@@ -1,168 +1,135 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { Save, Star, Biohazard, Candy, Bubbles, FlaskConical, Shell, BadgeRussianRuble, type LucideIcon } from 'lucide-react'
+import { Icons } from '@shared/ui/icons'
+import { METRIC_KEYS, MetricRatingInput, type Review, type ReviewMetrics } from '@entities/review'
 import { saveReviewAction } from '../model/actions'
-import { METRIC_LABELS, METRIC_KEYS, type Review } from '@entities/review'
 
 interface ReviewFormProps {
   drinkId: number
+  drinkName: string
   editReview?: Review | null
+  onClose?: () => void
 }
 
-const METRIC_ICONS: LucideIcon[] = [Biohazard, Candy, Bubbles, FlaskConical, Shell, BadgeRussianRuble]
-const METRIC_ICON_COLORS = ['text-neon-cyan', 'text-neon-blue', 'text-neon-pink', 'text-purple-400', 'text-amber-400', 'text-neon-green']
-
-function IconRatingSelector({
-  name,
-  defaultValue = 3,
-  icon: Icon,
-  activeColor,
-}: {
-  name: string
-  defaultValue?: number
-  icon: LucideIcon
-  activeColor: string
-}) {
-  const [value, setValue] = useState(defaultValue)
-  const [hover, setHover] = useState<number | null>(null)
-  const display = hover ?? value
-
-  return (
-    <div className="flex gap-1.5">
-      {[1, 2, 3, 4, 5].map((val) => (
-        <label
-          key={val}
-          className="cursor-pointer"
-          onMouseEnter={() => setHover(val)}
-          onMouseLeave={() => setHover(null)}
-        >
-          <input
-            type="radio"
-            name={name}
-            value={val}
-            checked={val === value}
-            onChange={() => setValue(val)}
-            className="sr-only"
-            required
-          />
-          <Icon
-            className={`w-6 h-6 transition-colors ${val <= display ? activeColor : 'text-white/20'}`}
-          />
-        </label>
-      ))}
-    </div>
-  )
+const EMPTY_METRICS: ReviewMetrics = {
+  acidity: 0,
+  sweetness: 0,
+  carbonation: 0,
+  concentration: 0,
+  aftertaste: 0,
+  price_quality: 0,
 }
 
-function StarRatingSelector({
-  name,
-  defaultValue = 3,
-}: {
-  name: string
-  defaultValue?: number
-}) {
-  const [value, setValue] = useState(defaultValue)
-  const [hover, setHover] = useState<number | null>(null)
-  const display = hover ?? value
-
-  return (
-    <div className="flex gap-1.5">
-      {[1, 2, 3, 4, 5].map((val) => (
-        <label
-          key={val}
-          className="cursor-pointer"
-          onMouseEnter={() => setHover(val)}
-          onMouseLeave={() => setHover(null)}
-        >
-          <input
-            type="radio"
-            name={name}
-            value={val}
-            checked={val === value}
-            onChange={() => setValue(val)}
-            className="sr-only"
-            required
-          />
-          <Star
-            className={`w-6 h-6 transition-colors ${val <= display ? 'fill-neon-cyan text-neon-cyan' : 'text-white/20'}`}
-          />
-        </label>
-      ))}
-    </div>
-  )
+function pickInitialMetrics(review: Review | null | undefined): ReviewMetrics {
+  if (!review) return EMPTY_METRICS
+  return {
+    acidity: review.acidity,
+    sweetness: review.sweetness,
+    carbonation: review.carbonation,
+    concentration: review.concentration,
+    aftertaste: review.aftertaste,
+    price_quality: review.price_quality,
+  }
 }
 
-export function ReviewForm({ drinkId, editReview }: ReviewFormProps) {
+export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFormProps) {
   const [state, formAction, isPending] = useActionState(saveReviewAction, null)
+  const [metrics, setMetrics] = useState<ReviewMetrics>(() => pickInitialMetrics(editReview))
+  const [comment, setComment] = useState(editReview?.comment ?? '')
+
   const isEdit = !!editReview
-  const title = isEdit ? 'Редактировать отзыв' : 'Оставить отзыв'
+  const title = isEdit ? 'Изменить отзыв' : 'Оставить отзыв'
+  const filled = METRIC_KEYS.filter((k) => metrics[k] > 0).length
+  const sum = METRIC_KEYS.reduce((s, k) => s + metrics[k], 0)
+  const avg = filled > 0 ? sum / filled : 0
+  // Overall rating sent to backend — average across all 6 metrics, rounded to int 1–5.
+  const rating = filled === 6 ? Math.max(1, Math.min(5, Math.round(sum / 6))) : 0
+  const canSubmit = filled === 6 && !isPending
+
+  const setM = (k: keyof ReviewMetrics, v: number) => {
+    setMetrics((m) => ({ ...m, [k]: v }))
+  }
 
   return (
     <form
       key={editReview?.id ?? 'new'}
       action={formAction}
-      className="glass rounded-xl p-5 flex flex-col gap-5 items-center"
+      className="rev-form"
     >
-      <h3 className="font-semibold text-[#f0f0f5] w-full text-center">{title}</h3>
+      <header className="rev-form-head">
+        <div>
+          <h3 className="rev-form-title">{title}</h3>
+          <div className="rev-form-sub">на «{drinkName}»</div>
+        </div>
+        {onClose && (
+          <button type="button" className="rev-form-close" onClick={onClose} aria-label="Закрыть форму">
+            <Icons.x w={16} />
+          </button>
+        )}
+      </header>
 
       <input type="hidden" name="drink_id" value={drinkId} />
+      <input type="hidden" name="rating" value={rating} />
       {isEdit && <input type="hidden" name="review_id" value={editReview.id} />}
-      {isEdit && <input type="hidden" name="user_id" value={editReview.user_id ?? undefined} />}
-
-      {state?.error && (
-        <p className="w-full text-sm text-neon-red bg-neon-red/10 border border-neon-red/30 rounded-lg px-3 py-2">
-          {state.error}
-        </p>
+      {isEdit && editReview.user_id != null && (
+        <input type="hidden" name="user_id" value={editReview.user_id} />
       )}
 
-      {/* Overall rating */}
-      <div className="flex flex-col gap-2 items-center">
-        <span className="text-sm text-[#9090a8]">Общая оценка</span>
-        <StarRatingSelector name="rating" defaultValue={editReview?.rating ?? 3} />
+      <div className="rev-form-progress">
+        <div className="rfp-track">
+          <div className="rfp-fill" style={{ width: `${(filled / 6) * 100}%` }} />
+        </div>
+        <span className="rfp-text">
+          {filled}/6 метрик · среднее <b>{avg.toFixed(1)}</b>
+        </span>
       </div>
 
-      {/* Metrics */}
-      <div className="flex flex-col gap-3 w-full">
-        {METRIC_KEYS.map((key, i) => {
-          const Icon = METRIC_ICONS[i]
-          return (
-            <div key={key} className="flex items-center justify-between gap-3">
-              <span className="flex items-center gap-1.5 text-xs text-[#9090a8] w-24 shrink-0">
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${METRIC_ICON_COLORS[i]}`} />
-                {METRIC_LABELS[key]}
-              </span>
-              <IconRatingSelector
-                name={key}
-                defaultValue={editReview?.[key] ?? 3}
-                icon={Icon}
-                activeColor={METRIC_ICON_COLORS[i]}
-              />
-            </div>
-          )
-        })}
-      </div>
+      <div className="rev-form-body">
+        {state?.error && <p className="rev-form-error">{state.error}</p>}
 
-      {/* Comment */}
-      <div className="flex flex-col gap-2 w-full">
-        <label className="text-sm text-[#9090a8]">Комментарий (необязательно)</label>
-        <textarea
-          name="comment"
-          defaultValue={editReview?.comment ?? ''}
-          placeholder="Оставьте ваш комментарий..."
-          className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-cyan/50 resize-none"
-          rows={3}
-        />
-      </div>
+        {METRIC_KEYS.map((k) => (
+          <MetricRatingInput
+            key={k}
+            metricKey={k}
+            value={metrics[k]}
+            onChange={(v) => setM(k, v)}
+            name={k}
+          />
+        ))}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-neon-cyan/10 border border-neon-cyan/40 rounded-lg text-sm font-semibold text-neon-cyan hover:bg-neon-cyan/20 transition-colors disabled:opacity-50 mt-1"
-      >
-        <Save className="w-4 h-4" />
-        {isPending ? 'Сохранение…' : isEdit ? 'Сохранить изменения' : 'Отправить'}
-      </button>
+        <div className="rev-form-field">
+          <label className="rev-form-label" htmlFor="review-comment">
+            Комментарий <span className="opt">(необязательно)</span>
+          </label>
+          <textarea
+            id="review-comment"
+            name="comment"
+            className="rev-form-textarea"
+            placeholder="Что зашло? Что не зашло? Любые ощущения…"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={3}
+          />
+        </div>
+
+        <div className="rev-form-actions">
+          {onClose && (
+            <button type="button" className="cta-ghost" onClick={onClose} disabled={isPending}>
+              Отменить
+            </button>
+          )}
+          <button type="submit" className="cta-primary" disabled={!canSubmit}>
+            {isPending ? (
+              <>Сохранение…</>
+            ) : (
+              <>
+                {isEdit ? 'Сохранить изменения' : 'Опубликовать отзыв'} <Icons.check w={14} />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </form>
   )
 }

@@ -135,24 +135,12 @@ export function DrinkPage({
 
       {currentUser && (
         formOpen ? (
-          // ReviewForm currently still on legacy Tailwind styling — restyled in Phase B.
-          <section className="rev-form">
-            <header className="rev-form-head">
-              <div>
-                <h3 className="rev-form-title">{myReview ? 'Изменить отзыв' : 'Оставить отзыв'}</h3>
-                <div className="rev-form-sub">на «{activeDrink.name}»</div>
-              </div>
-              <button
-                type="button"
-                className="rev-form-close"
-                onClick={() => setFormOpen(false)}
-                aria-label="Закрыть форму"
-              >
-                <Icons.x w={16} />
-              </button>
-            </header>
-            <ReviewForm drinkId={activeDrink.id} editReview={myReview} />
-          </section>
+          <ReviewForm
+            drinkId={activeDrink.id}
+            drinkName={activeDrink.name}
+            editReview={myReview}
+            onClose={() => setFormOpen(false)}
+          />
         ) : myReview ? (
           <section className="my-review-section">
             <MyReviewCard
