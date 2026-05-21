@@ -1,19 +1,16 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Star, User as UserIcon, MessageSquare, Zap, Plus, LogOut, X, Ligature } from 'lucide-react'
-import { useUserPreferences, FONTS } from '@shared/lib/user-preferences'
-import type { FontId } from '@shared/lib/user-preferences'
-import { useCatalogSearch } from '@shared/lib/catalog-search'
-
-import type { User } from '@entities/user'
-import type { Review } from '@entities/review'
+import { useMemo } from 'react'
 import type { Drink } from '@entities/drink'
-import { METRIC_LABELS, METRIC_KEYS, calcRating } from '@entities/review'
-import { ROUTES } from '@shared/config/routes'
+import { cleanDrinkName, EnergyCan, enrichDrinks } from '@entities/drink'
+import type { Review } from '@entities/review'
+import { calcRating, MiniMetrics } from '@entities/review'
+import type { User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
+import { ROUTES } from '@shared/config/routes'
+import { Icons } from '@shared/ui/icons'
 
 interface ProfilePageProps {
   user: User
@@ -21,238 +18,184 @@ interface ProfilePageProps {
   drinks: Drink[]
 }
 
-const DOT_COLORS = ['bg-neon-cyan','bg-neon-blue','bg-neon-pink','bg-purple-400','bg-amber-400','bg-neon-green']
+const AVATAR_COLORS = ['var(--c-cyan)', 'var(--c-pink)', 'var(--c-green)', 'var(--c-amber)', 'var(--c-purple)']
 
-function ReviewCard({ review, drink }: { review: Review; drink: Drink | undefined }) {
-  const rating = calcRating(review)
-  return (
-    <div className="glass rounded-xl overflow-hidden flex flex-col">
-      <Link
-        href={ROUTES.reviews(review.energy_drink_id)}
-        className="flex items-center gap-3 px-4 py-3 border-b border-white/5 hover:bg-white/3 transition-colors"
-      >
-        <div className="w-10 h-10 shrink-0 flex items-center justify-center bg-white/5 rounded-lg overflow-hidden">
-          {drink?.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={drink.image_url} alt={drink.name} className="w-full h-full object-contain p-0.5" />
-          ) : (
-            <Zap className="w-5 h-5 text-neon-cyan/30" />
-          )}
-        </div>
-        <span className="text-sm font-semibold text-[#f0f0f5] truncate">
-          {drink?.name ?? `Напиток #${review.energy_drink_id}`}
-        </span>
-        <div className="flex items-center gap-1 ml-auto shrink-0">
-          <Star className="w-3.5 h-3.5 fill-neon-pink text-neon-pink" />
-          <span className="text-sm font-bold text-neon-pink">{review.rating}</span>
-        </div>
-      </Link>
+function pickAvatarColor(seed: string | number): string {
+  const s = String(seed)
+  let hash = 0
+  for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
+}
 
-      <div className="px-4 py-3 flex flex-col gap-1.5">
-        {METRIC_KEYS.map((key, i) => (
-          <div key={key} className="flex items-center gap-2 text-xs">
-            <span className="w-28 text-[#9090a8] truncate">{METRIC_LABELS[key]}</span>
-            <span className="flex gap-0.5">
-              {Array.from({ length: 5 }).map((_, dot) => (
-                <span key={dot} className={`w-1.5 h-1.5 rounded-full ${dot < review[key] ? DOT_COLORS[i] : 'bg-white/10'}`} />
-              ))}
-            </span>
-            <span className="ml-auto text-[#9090a8]">{review[key]}/5</span>
-          </div>
-        ))}
-      </div>
-      {review.comment && (
-        <p className="px-4 text-sm text-[#f0f0f5] italic">"{review.comment}"</p>
-      )}
+function pluralize(n: number, one: string, few: string, many: string): string {
+  const last = n % 10
+  const lastTwo = n % 100
+  if (lastTwo >= 11 && lastTwo <= 14) return many
+  if (last === 1) return one
+  if (last >= 2 && last <= 4) return few
+  return many
+}
 
-      <div className="px-4 pb-3 flex items-center justify-between">
-        <div className="flex items-center gap-1 text-xs text-[#9090a8]">
-          <Star className="w-3 h-3 fill-neon-cyan text-neon-cyan" />
-          Средний балл: <span className="text-neon-cyan font-semibold ml-1">{rating}</span>
-        </div>
-        {review.created_at && (
-          <span className="text-[11px] text-[#9090a8]">
-            {new Date(review.created_at).toLocaleDateString('ru-RU')}
-          </span>
-        )}
-      </div>
-    </div>
-  )
+function formatDate(iso: string | null): string {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('ru-RU')
 }
 
 export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
-  const drinkMap = new Map(drinks.map((d) => [d.id, d]))
   const router = useRouter()
-  const [popupOpen, setPopupOpen] = useState(false)
-  const popupRef = useRef<HTMLDivElement>(null)
+  const drinkMap = useMemo(() => new Map(drinks.map((d) => [d.id, d])), [drinks])
+  const enrichedMap = useMemo(() => {
+    const enriched = enrichDrinks(drinks, [])
+    return new Map(enriched.map((d) => [d.id, d]))
+  }, [drinks])
 
-  const { font: activeFont, setFont } = useUserPreferences()
-  const [fontMenuOpen, setFontMenuOpen] = useState(false)
-  const fontMenuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!popupOpen) return
-    function onClickOutside(e: MouseEvent) {
-      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
-        setPopupOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [popupOpen])
-
-  useEffect(() => {
-    if (!fontMenuOpen) return
-    function onClickOutside(e: MouseEvent) {
-      if (fontMenuRef.current && !fontMenuRef.current.contains(e.target as Node)) {
-        setFontMenuOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [fontMenuOpen])
-
-  const { search } = useCatalogSearch()
-  const reviewedIds = new Set(reviews.map((r) => r.energy_drink_id))
-  const unreviewedDrinks = drinks.filter((d) => !reviewedIds.has(d.id))
-  const filteredReviews = search
-    ? reviews.filter((r) => drinkMap.get(r.energy_drink_id)?.name.toLowerCase().includes(search.toLowerCase()))
-    : reviews
+  const avgRating = reviews.length > 0
+    ? reviews.reduce((s, r) => s + calcRating(r), 0) / reviews.length
+    : 0
+  const ratedDrinkIds = new Set(reviews.map((r) => r.energy_drink_id))
+  const maxRated = reviews.filter((r) => r.rating === 5).length
+  const avatarColor = pickAvatarColor(user.id)
+  const isAdmin = user.role === 'admin'
+  const letter = user.username.charAt(0).toUpperCase()
 
   return (
-    <div className="space-y-6">
-      {/* User info */}
-      <div className={`glass rounded-xl px-5 py-4 flex items-center gap-4${fontMenuOpen ? ' relative z-30' : ''}`}>
-        <div className="w-12 h-12 rounded-full bg-neon-blue/20 border border-neon-blue/40 flex items-center justify-center shrink-0">
-          <UserIcon className="w-6 h-6 text-neon-cyan" />
+    <div className="page page-profile">
+      <section className="prof-hero">
+        <div
+          className="prof-hero-bg"
+          style={{ background: `radial-gradient(ellipse at 30% 50%, ${avatarColor}22, transparent 60%)` }}
+        />
+        <div className="prof-avatar" style={{ background: avatarColor }}>
+          <span className="prof-avatar-letter">{letter}</span>
         </div>
-        <div>
-          <p className="font-bold text-[#f0f0f5] text-lg">{user.username}</p>
-          <p className="text-xs text-[#9090a8]">Роль: {user.role}</p>
+        <div className="prof-info">
+          <div className="prof-eyebrow">
+            <span className={`prof-role-tag${isAdmin ? '' : ' prof-role-user'}`}>
+              {isAdmin ? 'АДМИНИСТРАТОР' : 'ПОЛЬЗОВАТЕЛЬ'}
+            </span>
+          </div>
+          <h1 className="prof-name">{user.username}</h1>
+          <div className="prof-meta">
+            <span>
+              <Icons.msg w={12} /> {reviews.length} {pluralize(reviews.length, 'отзыв', 'отзыва', 'отзывов')}
+            </span>
+            <span>
+              <Icons.beaker w={12} /> {ratedDrinkIds.size} из {drinks.length}
+            </span>
+          </div>
         </div>
-        <div className="ml-auto flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-[#9090a8]">
-            <MessageSquare className="w-4 h-4" />
-            {reviews.length} {reviews.length === 1 ? 'отзыв' : reviews.length < 5 ? 'отзыва' : 'отзывов'}
-          </div>
-          {/* Font switcher */}
-          <div className="relative" ref={fontMenuRef}>
-            <button
-              type="button"
-              onClick={() => setFontMenuOpen((v) => !v)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-[#9090a8] hover:text-neon-cyan hover:bg-white/5 transition-colors"
-            >
-              <Ligature className="w-4 h-4" />
-              <span className="hidden sm:inline">Шрифты</span>
-            </button>
-
-            {fontMenuOpen && (
-              <div className="absolute right-0 mt-2 w-52 glass rounded-xl shadow-lg z-50 overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-white/5">
-                  <span className="text-xs font-semibold text-[#9090a8] uppercase tracking-wider">Шрифт интерфейса</span>
-                </div>
-                <ul className="py-1">
-                  {FONTS.map(({ id, label }) => (
-                    <li key={id}>
-                      <button
-                        type="button"
-                        onClick={() => { setFont(id as FontId); setFontMenuOpen(false) }}
-                        className={`w-full flex items-center justify-between px-4 py-2.5 text-sm text-left transition-colors hover:bg-white/5 ${
-                          activeFont === id ? 'text-neon-cyan' : 'text-[#f0f0f5]'
-                        }`}
-                        style={{ fontFamily: `"${id}", monospace` }}
-                      >
-                        {label}
-                        {activeFont === id && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan shrink-0" />
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+        <div className="prof-actions">
           <form action={logoutAction}>
-            <button
-              type="submit"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-neon-red/70 hover:text-neon-red hover:bg-white/5 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Выйти</span>
+            <button type="submit" className="cta-ghost cta-danger">
+              <Icons.lock /> Выйти
             </button>
           </form>
         </div>
-      </div>
+      </section>
 
-      {/* Reviews section header */}
-      <div className={`glass rounded-xl px-4 py-3 flex items-center justify-between relative${popupOpen ? ' z-20' : ''}`}>
-        <h2 className="text-sm font-semibold text-[#f0f0f5] uppercase tracking-wider">Мои отзывы</h2>
-        <div className="relative" ref={popupRef}>
-          <button
-            onClick={() => setPopupOpen((v) => !v)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-neon-blue/20 border border-neon-blue/50 rounded-lg text-sm font-semibold text-neon-cyan hover:bg-neon-blue/30 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Добавить
-          </button>
+      <section className="prof-stats">
+        <div className="stat-card stat-cyan">
+          <div className="stat-icon"><Icons.msg /></div>
+          <div className="stat-lbl">ОТЗЫВОВ</div>
+          <div className="stat-val">{reviews.length}</div>
+          <div className="stat-sub">всего</div>
+          <div className="stat-corner" />
+        </div>
+        <div className="stat-card stat-pink">
+          <div className="stat-icon"><Icons.star /></div>
+          <div className="stat-lbl">СРЕДНЯЯ ОЦЕНКА</div>
+          <div className="stat-val">{reviews.length > 0 ? avgRating.toFixed(1) : '—'}</div>
+          <div className="stat-sub">по моим отзывам</div>
+          <div className="stat-corner" />
+        </div>
+        <div className="stat-card stat-purple">
+          <div className="stat-icon"><Icons.beaker /></div>
+          <div className="stat-lbl">НАПИТКОВ ОЦЕНЕНО</div>
+          <div className="stat-val">{ratedDrinkIds.size}</div>
+          <div className="stat-sub">из {drinks.length}</div>
+          <div className="stat-corner" />
+        </div>
+        <div className="stat-card stat-amber">
+          <div className="stat-icon"><Icons.trophy /></div>
+          <div className="stat-lbl">МАКС. ОЦЕНОК</div>
+          <div className="stat-val">{maxRated}</div>
+          <div className="stat-sub">пятёрок</div>
+          <div className="stat-corner" />
+        </div>
+      </section>
 
-          {popupOpen && (
-            <div className="absolute right-0 mt-2 w-64 glass rounded-xl shadow-lg z-50 overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#9090a8] uppercase tracking-wider">
-                  Выберите напиток
-                </span>
-                <button onClick={() => setPopupOpen(false)} className="text-[#9090a8] hover:text-white transition-colors">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              {unreviewedDrinks.length === 0 ? (
-                <p className="px-4 py-5 text-sm text-[#9090a8] text-center">
-                  Вы уже оставили отзыв на все напитки
-                </p>
-              ) : (
-                <ul className="max-h-64 overflow-y-auto py-1">
-                  {unreviewedDrinks.map((drink) => (
-                    <li key={drink.id}>
-                      <button
-                        onClick={() => {
-                          router.push(`${ROUTES.reviews(drink.id)}&review=1`)
-                          setPopupOpen(false)
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
-                      >
-                        <div className="w-7 h-7 shrink-0 flex items-center justify-center bg-white/5 rounded overflow-hidden">
-                          {drink.image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={drink.image_url} alt={drink.name} className="w-full h-full object-contain" />
-                          ) : (
-                            <Zap className="w-3.5 h-3.5 text-neon-cyan/40" />
-                          )}
-                        </div>
-                        <span className="text-sm text-[#f0f0f5] truncate">{drink.name}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+      <section className="prof-section">
+        <div className="section-head">
+          <h2 className="section-title">
+            <Icons.msg /> Мои отзывы
+          </h2>
+          <Link href={ROUTES.home} className="section-link">
+            + Добавить <Icons.arrow w={10} />
+          </Link>
         </div>
-      </div>
 
-      {/* Reviews grid */}
-      {reviews.length === 0 ? (
-        <div className="glass rounded-xl p-10 text-center text-[#9090a8] text-sm">
-          Вы ещё не оставили ни одного отзыва — нажмите «Добавить», чтобы выбрать напиток.
-        </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredReviews.map((r) => (
-            <ReviewCard key={r.id} review={r} drink={drinkMap.get(r.energy_drink_id)} />
-          ))}
-        </div>
-      )}
+        {reviews.length === 0 ? (
+          <div className="empty">
+            <Icons.beaker />
+            <p>
+              Вы ещё не оставили ни одного отзыва — <Link href={ROUTES.home} style={{ color: 'var(--accent)' }}>выберите напиток</Link>, чтобы начать.
+            </p>
+          </div>
+        ) : (
+          <div className="prof-rev-list">
+            {reviews.map((r) => {
+              const drink = drinkMap.get(r.energy_drink_id)
+              const enriched = enrichedMap.get(r.energy_drink_id)
+              const cleanedName = drink ? cleanDrinkName(drink.name) : `Напиток #${r.energy_drink_id}`
+              const openDrink = () => router.push(ROUTES.reviews(r.energy_drink_id))
+              const openEdit = (e: React.MouseEvent) => {
+                e.stopPropagation()
+                router.push(`${ROUTES.reviews(r.energy_drink_id)}&review=1`)
+              }
+              return (
+                <div
+                  key={r.id}
+                  className="prof-rev"
+                  role="link"
+                  tabIndex={0}
+                  onClick={openDrink}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openDrink()}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="prof-rev-can">
+                    {drink?.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={drink.image_url} alt={drink.name} style={{ maxHeight: 108, width: 'auto', objectFit: 'contain' }} />
+                    ) : enriched ? (
+                      <EnergyCan can={enriched.can} w={50} h={108} />
+                    ) : null}
+                  </div>
+                  <div className="prof-rev-info">
+                    <div className="prof-rev-name">{cleanedName}</div>
+                    <div className="prof-rev-meta">
+                      <span>{formatDate(r.updated_at ?? r.created_at)}</span>
+                      <span>·</span>
+                      <Icons.star w={10} /> {r.rating.toFixed(1)}
+                    </div>
+                    {r.comment && <p className="prof-rev-comment">«{r.comment}»</p>}
+                  </div>
+                  <div className="prof-rev-metrics">
+                    <MiniMetrics metrics={r} />
+                  </div>
+                  <button
+                    type="button"
+                    className="prof-rev-edit"
+                    aria-label="Изменить отзыв"
+                    onClick={openEdit}
+                  >
+                    <Icons.edit />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

@@ -1144,6 +1144,80 @@ body::before {
 .sim-rating svg { fill: var(--c-amber); }
 
 /* ═══════════════════════════════════════════════════════════════════
+   PROFILE PAGE — hero, stats, my-reviews list
+   ═══════════════════════════════════════════════════════════════════ */
+.prof-hero {
+  position: relative; overflow: hidden;
+  background: var(--bg-card); backdrop-filter: blur(12px);
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: 28px;
+  display: grid; grid-template-columns: 120px 1fr auto;
+  gap: 24px; align-items: center;
+}
+.prof-hero-bg { position: absolute; inset: 0; pointer-events: none; }
+.prof-avatar {
+  width: 120px; height: 120px; border-radius: var(--r-md);
+  display: grid; place-items: center;
+  color: var(--bg-deep);
+  box-shadow: 0 0 32px currentColor, inset 0 -8px 16px rgba(0,0,0,0.3);
+}
+.prof-avatar-letter { font-family: var(--font-display); font-weight: 900; font-size: 56px; }
+.prof-info { position: relative; display: flex; flex-direction: column; gap: 10px; }
+.prof-eyebrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.prof-role-tag {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--c-pink); letter-spacing: 2px;
+  border: 1px solid rgba(255,46,136,0.4);
+  background: rgba(255,46,136,0.06);
+  padding: 3px 8px; border-radius: 4px;
+}
+.prof-role-tag.prof-role-user {
+  color: var(--c-cyan); border-color: rgba(0,229,255,0.4); background: rgba(0,229,255,0.06);
+}
+.prof-name {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 36px; letter-spacing: 0.5px; color: var(--txt); line-height: 1;
+}
+.prof-meta {
+  display: flex; gap: 18px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 11px; color: var(--txt-dim); letter-spacing: 0.5px;
+}
+.prof-meta span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.prof-actions { display: flex; flex-direction: column; gap: 8px; }
+
+.prof-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.prof-section { display: flex; flex-direction: column; gap: 14px; }
+
+.prof-rev-list { display: flex; flex-direction: column; gap: 10px; }
+.prof-rev {
+  display: grid; grid-template-columns: 50px 1fr 220px 32px;
+  gap: 16px; align-items: center;
+  padding: 12px 14px;
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  transition: border-color .15s, transform .15s;
+  text-decoration: none; color: inherit;
+}
+.prof-rev:hover { border-color: rgba(var(--accent-rgb),0.4); transform: translateY(-1px); }
+.prof-rev-can { display: flex; justify-content: center; }
+.prof-rev-info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.prof-rev-name { font-family: var(--font-title); font-weight: 600; font-size: 14px; color: var(--txt); }
+.prof-rev-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--txt-dim); letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px; }
+.prof-rev-meta svg { fill: var(--c-amber); transform: translateY(1px); }
+.prof-rev-comment {
+  font-size: 12px; color: var(--txt-dim); font-style: italic; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.prof-rev-metrics { display: flex; min-width: 0; }
+.prof-rev-edit {
+  width: 32px; height: 32px; border-radius: var(--r-sm);
+  display: grid; place-items: center;
+  color: var(--txt-dim); border: 1px solid var(--line);
+  background: transparent;
+}
+.prof-rev-edit:hover { color: var(--accent); border-color: rgba(var(--accent-rgb),0.4); }
+
+/* ═══════════════════════════════════════════════════════════════════
    RESPONSIVE — minimal breakpoints (catalog + header)
    Per-page breakpoints land here as pages migrate.
    ═══════════════════════════════════════════════════════════════════ */
@@ -1162,7 +1236,7 @@ body::before {
 }
 @media (max-width: 800px) {
   .hdr-inner { grid-template-columns: 1fr; gap: 10px; }
-  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stats, .prof-stats { grid-template-columns: repeat(2, 1fr); }
   .grid-regular { grid-template-columns: repeat(2, 1fr); }
   .main { padding: 16px 16px 32px; }
   .hero-grid { grid-template-columns: 1fr; padding: 20px; gap: 20px; }
@@ -1173,6 +1247,13 @@ body::before {
   .drink-meta { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .other-rev-grid { grid-template-columns: 1fr; }
   .similar-grid { grid-template-columns: 1fr; }
+  .prof-hero { grid-template-columns: 1fr; text-align: center; gap: 16px; }
+  .prof-avatar { justify-self: center; }
+  .prof-name { font-size: 28px; }
+  .prof-meta { justify-content: center; }
+  .prof-actions { flex-direction: row; justify-content: center; }
+  .prof-rev { grid-template-columns: 50px 1fr; }
+  .prof-rev-metrics, .prof-rev-edit { display: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
