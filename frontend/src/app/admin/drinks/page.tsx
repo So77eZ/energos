@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { drinkApi } from '@entities/drink'
+import { reviewApi } from '@entities/review'
 import { authApi } from '@entities/user'
 import { getToken } from '@shared/lib/session'
 import { AdminDrinksList } from '@widgets/admin-drinks/ui/AdminDrinksList'
@@ -15,7 +16,10 @@ export default async function AdminDrinksPage() {
   const user = await authApi.me(token).catch(() => null)
   if (!user || user.role !== 'admin') redirect(ROUTES.auth.login)
 
-  const drinks = await drinkApi.list().catch(() => [])
+  const [drinks, reviews] = await Promise.all([
+    drinkApi.list().catch(() => []),
+    reviewApi.list().catch(() => []),
+  ])
 
-  return <AdminDrinksList drinks={drinks} />
+  return <AdminDrinksList drinks={drinks} reviewsCount={reviews.length} />
 }
