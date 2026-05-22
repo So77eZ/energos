@@ -14,9 +14,10 @@ sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 from src.database import DATABASE_URL
 from src.models.base import Base
-from src.models.energy_drink import EnergyDrink  # noqa: F401
+from src.models.energy_drinks import EnergyDrink  # noqa: F401
 from src.models.auth import User  # noqa: F401
 from src.models.reviews import EnergyDrinkReview  # noqa: F401
+from src.models.review_emoji import ReviewEmoji  # noqa: F401
 
 
 # this is the Alembic Config object, which provides

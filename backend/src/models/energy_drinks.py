@@ -1,25 +1,20 @@
-from datetime import datetime
-
-from sqlalchemy import Integer, String, Float, Boolean, DateTime
+from sqlalchemy import String, Float, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, TYPE_CHECKING
 
 from src.models.base import Base
 
 if TYPE_CHECKING:
-    from .reviews import EnergyDrinkReview
+    from src.models.reviews import EnergyDrinkReview
 
 
 class EnergyDrink(Base):
     __tablename__ = "energy_drinks"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     price: Mapped[float | None] = mapped_column(Float, nullable=True)
     image_url: Mapped[str | None] = mapped_column(String, nullable=True)
     no_sugar: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationship
     reviews: Mapped[List["EnergyDrinkReview"]] = relationship(

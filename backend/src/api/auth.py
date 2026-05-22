@@ -6,7 +6,7 @@ from src.schemas.auth import UserCreate, UserResponse, Token
 from src.auth import create_access_token, verify_token, hash_password, verify_password
 from src.models.auth import User
 from src.database import async_session_maker
-from src.rate_limit import limiter
+from src.rate_limiter import limiter
 from src.localization import localize_text
 from sqlalchemy import select
 
@@ -17,7 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login/")
 
 @router.post("/register/", response_model=UserResponse, status_code=201)
 @limiter.limit("5/minute")
-async def register_user(request: Request, payload: UserCreate) -> UserResponse:
+async def register_user(request: Request, payload: UserCreate) -> User:
     async with async_session_maker() as session:
         query = select(User).where(User.username == payload.username)
         result = await session.execute(query)
@@ -72,21 +72,25 @@ async def login_for_access_token(
 async def get_current_user(
     request: Request,
     token: str = Depends(oauth2_scheme),
-) -> UserResponse:
+) -> User:
     username = verify_token(token)
     if username is None:
-        raise HTTPException(status_code=401, detail=localize_text("auth_error", request))
+        raise HTTPException(
+            status_code=401, detail=localize_text("auth_error", request)
+        )
     async with async_session_maker() as session:
         query = select(User).where(User.username == username)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
         if user is None:
-            raise HTTPException(status_code=401, detail=localize_text("user_not_found", request))
+            raise HTTPException(
+                status_code=401, detail=localize_text("user_not_found", request)
+            )
         return user
 
 
 @router.get("/me/", response_model=UserResponse)
 async def read_users_me(
-    current_user: UserResponse = Depends(get_current_user),
-) -> UserResponse:
+    current_user: User = Depends(get_current_user),
+) -> User:
     return current_user

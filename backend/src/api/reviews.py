@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from src.schemas.reviews import EnergyDrinkReviewSchema, CreateEnergyDrinkReviewSchema
 from src.api.auth import get_current_user
 from src.database import async_session_maker
-from src.rate_limit import limiter
+from src.rate_limiter import limiter
 from src.localization import localize_text
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
@@ -26,7 +26,7 @@ async def _attach_usernames(
 
 
 @router.post("/", response_model=EnergyDrinkReviewSchema, status_code=201)
-@limiter.limit("10/minute")
+@limiter.limit("5/minute")
 async def create_review(
     request: Request,
     payload: CreateEnergyDrinkReviewSchema,
@@ -103,7 +103,9 @@ async def read_review(
         result = await session.execute(query)
         row = result.scalar_one_or_none()
         if row is None:
-            raise HTTPException(status_code=404, detail=localize_text("review_not_found", request))
+            raise HTTPException(
+                status_code=404, detail=localize_text("review_not_found", request)
+            )
         schema = EnergyDrinkReviewSchema.model_validate(row)
         schema.username = row.user.username if row.user else None
         return schema
@@ -125,9 +127,13 @@ async def update_review(
         result = await session.execute(query)
         existing = result.scalar_one_or_none()
         if not existing:
-            raise HTTPException(status_code=404, detail=localize_text("review_not_found", request))
+            raise HTTPException(
+                status_code=404, detail=localize_text("review_not_found", request)
+            )
         if existing.user_id != current_user.id and current_user.role != "admin":
-            raise HTTPException(status_code=403, detail=localize_text("not_allowed", request))
+            raise HTTPException(
+                status_code=403, detail=localize_text("not_allowed", request)
+            )
         update_data = payload.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             if (
@@ -157,9 +163,13 @@ async def delete_review(
         result = await session.execute(query)
         existing = result.scalar_one_or_none()
         if not existing:
-            raise HTTPException(status_code=404, detail=localize_text("review_not_found", request))
+            raise HTTPException(
+                status_code=404, detail=localize_text("review_not_found", request)
+            )
         if existing.user_id != current_user.id and current_user.role != "admin":
-            raise HTTPException(status_code=403, detail=localize_text("not_allowed", request))
+            raise HTTPException(
+                status_code=403, detail=localize_text("not_allowed", request)
+            )
         schema = EnergyDrinkReviewSchema.model_validate(existing)
         schema.username = existing.user.username if existing.user else None
         await session.delete(existing)
