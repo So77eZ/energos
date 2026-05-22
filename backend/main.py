@@ -5,9 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 
 from src.api.base import api_router
-from src.rate_limit import limiter
+from src.rate_limiter import limiter, rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from src.rate_limit import rate_limit_exceeded_handler
 
 import uvicorn
 
