@@ -10,7 +10,6 @@ class EnergyDrinkReviewSchema(BaseModel):
     energy_drink_id: int = Field(..., ge=1)
     user_id: int = Field(..., ge=1)
     comment: str | None = Field(default=None)
-    rating: float = Field(..., ge=1, le=5)
     acidity: float = Field(..., ge=1, le=5)
     sweetness: float = Field(..., ge=1, le=5)
     concentration: float = Field(..., ge=1, le=5)
@@ -26,7 +25,6 @@ class EnergyDrinkReviewSchema(BaseModel):
 class CreateEnergyDrinkReviewSchema(BaseModel):
     energy_drink_id: int = Field(..., ge=1)
     comment: str | None = Field(default=None)
-    rating: float = Field(..., ge=1, le=5)
     acidity: float = Field(..., ge=1, le=5)
     sweetness: float = Field(..., ge=1, le=5)
     concentration: float = Field(..., ge=1, le=5)
