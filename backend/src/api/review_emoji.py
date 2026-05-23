@@ -62,7 +62,7 @@ async def add_emoji_to_review(
         if existing_emoji:
             raise HTTPException(
                 status_code=400,
-                detail="You have already added this emoji to the review",
+                detail=localize_text("emoji_already_added", request),
             )
 
         now = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -98,7 +98,9 @@ async def remove_emoji_from_review(
         emoji_obj = result.scalar_one_or_none()
 
         if not emoji_obj:
-            raise HTTPException(status_code=404, detail="Emoji reaction not found")
+            raise HTTPException(
+                status_code=404, detail=localize_text("emoji_not_found", request)
+            )
 
         await session.delete(emoji_obj)
         await session.commit()
