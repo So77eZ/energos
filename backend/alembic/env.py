@@ -18,6 +18,7 @@ from src.models.energy_drinks import EnergyDrink  # noqa: F401
 from src.models.auth import User  # noqa: F401
 from src.models.reviews import EnergyDrinkReview  # noqa: F401
 from src.models.review_emoji import ReviewEmoji  # noqa: F401
+from src.models.favorites import user_favorite_drinks  # noqa: F401
 
 
 # this is the Alembic Config object, which provides

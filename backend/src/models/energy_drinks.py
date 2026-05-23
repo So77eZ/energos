@@ -6,6 +6,7 @@ from src.models.base import Base
 
 if TYPE_CHECKING:
     from src.models.reviews import EnergyDrinkReview
+    from src.models.auth import User
 
 
 class EnergyDrink(Base):
@@ -19,4 +20,7 @@ class EnergyDrink(Base):
     # Relationship
     reviews: Mapped[List["EnergyDrinkReview"]] = relationship(
         back_populates="energy_drink"
+    )
+    favorited_by: Mapped[List["User"]] = relationship(
+        secondary="user_favorite_drinks", back_populates="favorite_energy_drinks"
     )
