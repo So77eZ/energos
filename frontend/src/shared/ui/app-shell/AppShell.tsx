@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { useTheme } from '@shared/lib/theme'
+import { AgeGate } from '@widgets/age-gate/ui/AgeGate'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { liquidBg, grain, scanlines } = useTheme()
@@ -19,6 +20,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
       {children}
+      <AgeGate />
     </div>
   )
 }

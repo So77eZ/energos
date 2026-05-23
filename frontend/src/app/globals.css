@@ -1614,6 +1614,127 @@ body::before {
 .adm-form-foot-r { display: flex; gap: 10px; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   AGE GATE — full-screen overlay, shown once per browser
+   ═══════════════════════════════════════════════════════════════════ */
+.age-gate {
+  position: fixed; inset: 0; z-index: 1000;
+  display: grid; place-items: center;
+  background: var(--bg-deep);
+  overflow: hidden;
+  animation: ageGateIn .25s ease-out;
+}
+@keyframes ageGateIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Decorative blurred blobs — same vibe as .liquid-bg but standalone (we don't
+   want the gate to depend on AppShell's bg toggles being on). */
+.age-gate::before, .age-gate::after {
+  content: ''; position: absolute;
+  border-radius: 50%; filter: blur(110px);
+  pointer-events: none;
+}
+.age-gate::before {
+  width: 720px; height: 720px; left: -180px; top: -160px;
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.65), transparent 70%);
+  animation: blob1 18s ease-in-out infinite;
+}
+.age-gate::after {
+  width: 640px; height: 640px; right: -160px; bottom: -180px;
+  background: radial-gradient(circle, rgba(255,46,136,0.65), transparent 70%);
+  animation: blob2 22s ease-in-out infinite;
+}
+
+.age-gate-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, #000 30%, transparent 80%);
+          mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, #000 30%, transparent 80%);
+}
+:root[data-theme="light"] .age-gate-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+}
+
+.age-gate-card {
+  position: relative; z-index: 2;
+  width: min(440px, calc(100vw - 32px));
+  padding: 36px 32px;
+  background: var(--bg-card); backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 40px rgba(var(--accent-rgb), 0.15);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 18px; text-align: center;
+}
+
+.age-gate-logo {
+  display: inline-flex; align-items: center; gap: 10px;
+  color: var(--accent);
+}
+.age-gate-logo .logo-bolt { width: 36px; height: 36px; }
+.age-gate-logo .logo-bolt svg { width: 22px; height: 22px; }
+.age-gate-logo-word {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 22px; letter-spacing: 3px;
+}
+
+.age-gate-badge {
+  display: inline-flex; align-items: center;
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 64px; line-height: 1; letter-spacing: -2px;
+  color: var(--c-pink);
+  text-shadow: 0 0 24px rgba(255,46,136,0.4);
+  margin-top: 4px;
+}
+
+.age-gate-title {
+  font-family: var(--font-title); font-weight: 700;
+  font-size: 22px; line-height: 1.2; color: var(--txt);
+  margin-top: -4px;
+}
+.age-gate-blurb {
+  font-size: 13px; color: var(--txt-dim); line-height: 1.5;
+  max-width: 36ch;
+}
+
+.age-gate-actions {
+  display: flex; gap: 10px; width: 100%; margin-top: 6px;
+}
+.age-gate-actions .cta-primary,
+.age-gate-actions .cta-ghost {
+  flex: 1; justify-content: center;
+}
+
+.age-gate-foot {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--txt-quiet); letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.age-gate-denied {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  text-align: center;
+}
+.age-gate-denied-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--c-pink);
+  background: rgba(255,46,136,0.10);
+  border: 1px solid rgba(255,46,136,0.4);
+}
+.age-gate-denied-link {
+  font-size: 12px; color: var(--accent); cursor: pointer;
+  margin-top: 4px;
+}
+.age-gate-denied-link:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════════════════════
    RESPONSIVE — minimal breakpoints (catalog + header)
    Per-page breakpoints land here as pages migrate.
    ═══════════════════════════════════════════════════════════════════ */
