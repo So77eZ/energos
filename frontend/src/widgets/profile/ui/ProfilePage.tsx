@@ -53,7 +53,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
     ? reviews.reduce((s, r) => s + calcRating(r), 0) / reviews.length
     : 0
   const ratedDrinkIds = new Set(reviews.map((r) => r.energy_drink_id))
-  const maxRated = reviews.filter((r) => r.rating === 5).length
+  const maxRated = reviews.filter((r) => calcRating(r) === 5).length
   const avatarColor = pickAvatarColor(user.id)
   const isAdmin = user.role === 'admin'
   const letter = user.username.charAt(0).toUpperCase()
@@ -175,7 +175,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
                     <div className="prof-rev-meta">
                       <span>{formatDate(r.updated_at ?? r.created_at)}</span>
                       <span>·</span>
-                      <Icons.star w={10} /> {r.rating.toFixed(1)}
+                      <Icons.star w={10} /> {calcRating(r).toFixed(1)}
                     </div>
                     {r.comment && <p className="prof-rev-comment">«{r.comment}»</p>}
                   </div>

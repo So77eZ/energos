@@ -32,7 +32,6 @@ function extractMetrics(formData: FormData) {
     return isNaN(v) ? null : Math.min(5, Math.max(1, v))
   }
   return {
-    rating: get('rating'),
     acidity: get('acidity'),
     sweetness: get('sweetness'),
     concentration: get('concentration'),
@@ -67,7 +66,6 @@ async function upsertAdminReview(drinkId: number, formData: FormData, token: str
   const payload = {
     energy_drink_id: drinkId,
     from_admin: true,
-    rating: metrics.rating ?? 3,
     acidity: metrics.acidity!,
     sweetness: metrics.sweetness!,
     concentration: metrics.concentration!,

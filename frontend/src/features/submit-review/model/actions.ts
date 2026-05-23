@@ -25,7 +25,6 @@ export async function saveReviewAction(
   const reviewId = reviewIdRaw ? Number(reviewIdRaw) : null
 
   const payload = {
-    rating:        getNum(formData, 'rating'),
     acidity:       getNum(formData, 'acidity'),
     sweetness:     getNum(formData, 'sweetness'),
     concentration: getNum(formData, 'concentration'),

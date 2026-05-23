@@ -52,12 +52,6 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
   const [isDeletePending, startDelete] = useTransition()
 
   const isCreate = mode === 'create'
-  const filled = METRIC_KEYS.filter((k) => metrics[k] > 0).length
-  const sum = METRIC_KEYS.reduce((s, k) => s + metrics[k], 0)
-  // Сохраняем admin-обзор только когда заполнены все 6 метрик. Иначе
-  // отправляем пустые значения — action игнорирует частичную запись.
-  const reviewReady = filled === 6
-  const rating = reviewReady ? Math.max(1, Math.min(5, Math.round(sum / 6))) : ''
 
   const setM = (k: keyof ReviewMetrics, v: number) => {
     setMetrics((m) => ({ ...m, [k]: v }))
@@ -206,9 +200,6 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
                   />
                 ))}
               </div>
-              {/* Rating вычисляется на клиенте как round(avg(metrics)). Action
-                  всё равно валидирует диапазон 1..5 и null-safe. */}
-              <input type="hidden" name="rating" value={rating} />
             </div>
           </div>
         </div>

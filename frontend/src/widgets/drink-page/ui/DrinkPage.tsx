@@ -7,6 +7,7 @@ import { enrichDrink, enrichDrinks, findSimilarDrinks } from '@entities/drink'
 import {
   AdminReviewCard,
   AvgReviewCard,
+  calcRating,
   MyReviewCard,
   METRIC_KEYS,
   UserReviewCard,
@@ -54,7 +55,7 @@ function averageMetrics(reviews: Review[]): ReviewMetrics | null {
 
 function averageRating(reviews: Review[]): number {
   if (reviews.length === 0) return 0
-  return reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+  return reviews.reduce((s, r) => s + calcRating(r), 0) / reviews.length
 }
 
 function sortedReviews(reviews: Review[], sort: ReviewSort): Review[] {
@@ -67,10 +68,10 @@ function sortedReviews(reviews: Review[], sort: ReviewSort): Review[] {
       arr.sort((a, b) => (Date.parse(a.created_at ?? '') || 0) - (Date.parse(b.created_at ?? '') || 0))
       break
     case 'rating_desc':
-      arr.sort((a, b) => b.rating - a.rating)
+      arr.sort((a, b) => calcRating(b) - calcRating(a))
       break
     case 'rating_asc':
-      arr.sort((a, b) => a.rating - b.rating)
+      arr.sort((a, b) => calcRating(a) - calcRating(b))
       break
   }
   return arr

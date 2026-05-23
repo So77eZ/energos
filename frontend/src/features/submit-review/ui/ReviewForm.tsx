@@ -43,8 +43,6 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
   const filled = METRIC_KEYS.filter((k) => metrics[k] > 0).length
   const sum = METRIC_KEYS.reduce((s, k) => s + metrics[k], 0)
   const avg = filled > 0 ? sum / filled : 0
-  // Overall rating sent to backend — average across all 6 metrics, rounded to int 1–5.
-  const rating = filled === 6 ? Math.max(1, Math.min(5, Math.round(sum / 6))) : 0
   const canSubmit = filled === 6 && !isPending
 
   const setM = (k: keyof ReviewMetrics, v: number) => {
@@ -70,7 +68,6 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
       </header>
 
       <input type="hidden" name="drink_id" value={drinkId} />
-      <input type="hidden" name="rating" value={rating} />
       {isEdit && <input type="hidden" name="review_id" value={editReview.id} />}
       {isEdit && editReview.user_id != null && (
         <input type="hidden" name="user_id" value={editReview.user_id} />

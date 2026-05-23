@@ -2,7 +2,7 @@
 // Mirrors frontendNew/page-drink.jsx → "my review" branch.
 
 import { Icons } from '@shared/ui/icons'
-import type { Review } from '../model/types'
+import { calcRating, type Review } from '../model/types'
 import { MiniMetrics } from './MiniMetrics'
 
 interface MyReviewCardProps {
@@ -29,7 +29,7 @@ export function MyReviewCard({ review, onEdit, onDelete }: MyReviewCardProps) {
           <span className="rev-date">{date}</span>
         </div>
         <div className="rev-rating">
-          <Icons.star w={16} /> <span>{review.rating.toFixed(1)}</span>
+          <Icons.star w={16} /> <span>{calcRating(review).toFixed(1)}</span>
         </div>
       </header>
       <MiniMetrics metrics={review} />

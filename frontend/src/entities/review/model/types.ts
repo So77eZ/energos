@@ -12,14 +12,15 @@ export interface Review extends ReviewMetrics {
   energy_drink_id: number
   user_id: number | null
   username: string | null
-  rating: number        // 1–5, общая оценка
   comment: string | null
   from_admin: boolean
   created_at: string | null
   updated_at: string | null
 }
 
-// from_admin включён — нужен при создании admin-отзыва
+// from_admin включён — нужен при создании admin-отзыва.
+// Общий rating отдельным полем не хранится — считается calcRating(metrics)
+// и на фронте, и (если потребуется) на бэке.
 export type ReviewCreate = Omit<Review, 'id' | 'user_id' | 'username' | 'created_at' | 'updated_at'>
 
 export const METRIC_LABELS: Record<keyof ReviewMetrics, string> = {

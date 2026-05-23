@@ -2,7 +2,7 @@
 // Mirrors frontendNew/page-drink.jsx → AdminReviewCard.
 
 import { Icons } from '@shared/ui/icons'
-import { METRIC_KEYS, type Review } from '../model/types'
+import { calcRating, METRIC_KEYS, type Review } from '../model/types'
 import { MetricDotRow } from './MetricDotRow'
 
 interface AdminReviewCardProps {
@@ -25,7 +25,7 @@ export function AdminReviewCard({ review }: AdminReviewCardProps) {
           {review.username && <span className="rev-meta-author">{review.username}</span>}
         </div>
         <div className="rev-rating">
-          <Icons.star w={16} /> <span>{review.rating.toFixed(1)}</span>
+          <Icons.star w={16} /> <span>{calcRating(review).toFixed(1)}</span>
         </div>
       </header>
       <div className="rev-body">
