@@ -1,10 +1,13 @@
 'use client'
 
-import { useActionState, useRef, useState } from 'react'
-import { Save, ImagePlus, X } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useActionState, useRef, useState, useTransition } from 'react'
 import type { Drink } from '@entities/drink'
-import type { Review } from '@entities/review'
-import { METRIC_LABELS, METRIC_KEYS } from '@entities/review'
+import { METRIC_KEYS, MetricRatingInput, type Review, type ReviewMetrics } from '@entities/review'
+import { ROUTES } from '@shared/config/routes'
+import { Icons } from '@shared/ui/icons'
+import { deleteDrinkAction } from '../model/actions'
 
 interface DrinkFormProps {
   mode: 'create' | 'edit'
@@ -13,15 +16,52 @@ interface DrinkFormProps {
   action: (formData: FormData) => Promise<void>
 }
 
+const EMPTY_METRICS: ReviewMetrics = {
+  acidity: 0,
+  sweetness: 0,
+  carbonation: 0,
+  concentration: 0,
+  aftertaste: 0,
+  price_quality: 0,
+}
+
+function pickInitialMetrics(review: Review | null | undefined): ReviewMetrics {
+  if (!review) return EMPTY_METRICS
+  return {
+    acidity: review.acidity,
+    sweetness: review.sweetness,
+    carbonation: review.carbonation,
+    concentration: review.concentration,
+    aftertaste: review.aftertaste,
+    price_quality: review.price_quality,
+  }
+}
+
 export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) {
+  const router = useRouter()
   const [, formAction, isPending] = useActionState(
     async (_: void, formData: FormData) => { await action(formData) },
     undefined,
   )
   const fileRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(drink?.image_url ?? null)
+  const [metrics, setMetrics] = useState<ReviewMetrics>(() => pickInitialMetrics(adminReview))
+  const [name, setName] = useState(drink?.name ?? '')
+  const [price, setPrice] = useState<string>(drink?.price?.toString() ?? '')
+  const [noSugar, setNoSugar] = useState(drink?.no_sugar ?? false)
+  const [isDeletePending, startDelete] = useTransition()
 
-  const label = mode === 'create' ? 'Создать' : 'Сохранить'
+  const isCreate = mode === 'create'
+  const filled = METRIC_KEYS.filter((k) => metrics[k] > 0).length
+  const sum = METRIC_KEYS.reduce((s, k) => s + metrics[k], 0)
+  // Сохраняем admin-обзор только когда заполнены все 6 метрик. Иначе
+  // отправляем пустые значения — action игнорирует частичную запись.
+  const reviewReady = filled === 6
+  const rating = reviewReady ? Math.max(1, Math.min(5, Math.round(sum / 6))) : ''
+
+  const setM = (k: keyof ReviewMetrics, v: number) => {
+    setMetrics((m) => ({ ...m, [k]: v }))
+  }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -33,128 +73,176 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  function handleDelete() {
+    if (!drink) return
+    if (!confirm(`Удалить «${drink.name}»?`)) return
+    startDelete(() => {
+      deleteDrinkAction(drink.id)
+    })
+  }
+
   return (
-    <form action={formAction} className="glass rounded-xl p-6 flex flex-col gap-5 max-w-xl">
-      <h2 className="text-lg font-bold text-[#f0f0f5]">
-        {mode === 'create' ? 'Новый напиток' : 'Редактировать'}
-      </h2>
+    <form action={formAction} className="adm-form" style={{ opacity: isDeletePending ? 0.4 : 1 }}>
+      <div className="adm-form-inner">
+        <header className="adm-form-head">
+          <div>
+            <div className="adm-form-eyebrow">{isCreate ? 'НОВЫЙ НАПИТОК' : 'РЕДАКТИРОВАНИЕ'}</div>
+            <h2 className="adm-form-title">
+              {isCreate ? 'Создать карточку' : drink?.name || 'Напиток'}
+            </h2>
+          </div>
+          <Link
+            href={ROUTES.admin.drinks}
+            className="rev-form-close"
+            aria-label="Закрыть"
+          >
+            <Icons.x w={16} />
+          </Link>
+        </header>
 
-      {/* Base fields */}
-      <section className="flex flex-col gap-3">
-        <Field label="Название *" name="name" defaultValue={drink?.name} required />
-        <Field label="Цена (₽)" name="price" type="number" step="0.01" defaultValue={drink?.price ?? ''} />
-
-        {/* Image upload */}
-        <div className="flex flex-col gap-1.5 text-sm">
-          <span className="text-[#9090a8]">Изображение</span>
-          <div className="flex items-center gap-3">
-            {preview && (
-              <div className="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-white/5 border border-white/10">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={preview} alt="" className="w-full h-full object-contain p-1" />
-                {preview !== drink?.image_url && (
-                  <button
-                    type="button"
-                    onClick={clearFile}
-                    className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-black/60 text-white hover:text-neon-red transition-colors"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
+        <div className="adm-form-grid">
+          {/* Left col — basic drink fields */}
+          <div className="adm-form-col">
+            <div className="adm-form-section">
+              <label className="adm-form-label" htmlFor="drink-image">Изображение</label>
+              <div className="adm-upload">
+                {preview ? (
+                  <div className="adm-upload-preview">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={preview} alt="" style={{ maxHeight: 170, width: 'auto', objectFit: 'contain' }} />
+                    {preview !== drink?.image_url && (
+                      <button
+                        type="button"
+                        className="adm-upload-clear"
+                        onClick={clearFile}
+                        aria-label="Очистить превью"
+                      >
+                        <Icons.x w={12} />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="adm-upload-empty">
+                    <Icons.upload w={32} />
+                    <span>Изображение ещё не загружено</span>
+                  </div>
                 )}
+                <label className="cta-ghost" htmlFor="drink-image" style={{ cursor: 'pointer' }}>
+                  <Icons.upload w={12} /> {preview ? 'Заменить фото' : 'Загрузить фото'}
+                </label>
+                <input
+                  ref={fileRef}
+                  id="drink-image"
+                  type="file"
+                  name="image"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  style={{ display: 'none' }}
+                  onChange={handleFile}
+                />
               </div>
-            )}
-            <label className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[#9090a8] hover:border-neon-blue/50 hover:text-neon-cyan transition-colors cursor-pointer">
-              <ImagePlus className="w-4 h-4 shrink-0" />
-              <span>{preview ? 'Заменить фото' : 'Загрузить фото'}</span>
+            </div>
+
+            <div className="adm-form-section">
+              <label className="adm-form-label" htmlFor="drink-name">Название *</label>
               <input
-                ref={fileRef}
-                type="file"
-                name="image"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                className="hidden"
-                onChange={handleFile}
+                id="drink-name"
+                name="name"
+                className="adm-input"
+                placeholder="Например: ВОЛЬТ ZERO Ледяной арбуз"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
-            </label>
+            </div>
+
+            <div className="adm-form-row">
+              <div className="adm-form-section">
+                <label className="adm-form-label" htmlFor="drink-price">Цена (₽)</label>
+                <input
+                  id="drink-price"
+                  name="price"
+                  className="adm-input"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                />
+              </div>
+              <div className="adm-form-section" style={{ justifyContent: 'flex-end' }}>
+                <label className="adm-toggle">
+                  <input
+                    type="checkbox"
+                    name="no_sugar"
+                    checked={noSugar}
+                    onChange={(e) => setNoSugar(e.target.checked)}
+                  />
+                  <span className="adm-toggle-track">
+                    <span className="adm-toggle-thumb" />
+                  </span>
+                  <span className="adm-toggle-label">Без сахара</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Right col — admin review (optional) */}
+          <div className="adm-form-col">
+            <div className="adm-form-section">
+              <span className="adm-form-label">Оценка администратора (отзыв от лица admin)</span>
+              <p className="adm-form-hint">
+                Эти оценки публикуются как обзор эксперта рядом с пользовательскими.
+                Чтобы пропустить — оставьте все 6 пустыми.
+              </p>
+              <div className="adm-metrics">
+                {METRIC_KEYS.map((k) => (
+                  <MetricRatingInput
+                    key={k}
+                    metricKey={k}
+                    value={metrics[k]}
+                    onChange={(v) => setM(k, v)}
+                    name={k}
+                  />
+                ))}
+              </div>
+              {/* Rating вычисляется на клиенте как round(avg(metrics)). Action
+                  всё равно валидирует диапазон 1..5 и null-safe. */}
+              <input type="hidden" name="rating" value={rating} />
+            </div>
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-[#9090a8] cursor-pointer select-none">
-          <input
-            type="checkbox"
-            name="no_sugar"
-            defaultChecked={drink?.no_sugar ?? false}
-            className="accent-neon-green w-4 h-4"
-          />
-          Без сахара
-        </label>
-      </section>
-
-      {/* Admin metrics */}
-      <section className="border-t border-white/10 pt-4 flex flex-col gap-3">
-        <p className="text-xs text-[#9090a8]">Оценка администратора (оставьте пустым, чтобы пропустить)</p>
-        <Field
-          label="Общий рейтинг"
-          name="rating"
-          type="number"
-          min="1"
-          max="5"
-          step="0.1"
-          defaultValue={adminReview?.rating ?? ''}
-        />
-        <div className="grid grid-cols-2 gap-3">
-          {METRIC_KEYS.map((key) => (
-            <Field
-              key={key}
-              label={METRIC_LABELS[key]}
-              name={key}
-              type="number"
-              min="1"
-              max="5"
-              step="0.1"
-              defaultValue={adminReview?.[key] ?? ''}
-            />
-          ))}
+        <div className="adm-form-foot">
+          <div className="adm-form-foot-l">
+            {!isCreate && drink && (
+              <button
+                type="button"
+                className="cta-ghost cta-danger"
+                onClick={handleDelete}
+                disabled={isDeletePending || isPending}
+              >
+                <Icons.trash /> Удалить
+              </button>
+            )}
+          </div>
+          <div className="adm-form-foot-r">
+            <button
+              type="button"
+              className="cta-ghost"
+              onClick={() => router.push(ROUTES.admin.drinks)}
+              disabled={isPending}
+            >
+              Отменить
+            </button>
+            <button type="submit" className="cta-primary" disabled={isPending || isDeletePending}>
+              {isPending
+                ? 'Сохранение…'
+                : (<><Icons.check w={14} /> {isCreate ? 'Создать напиток' : 'Сохранить'}</>)}
+            </button>
+          </div>
         </div>
-      </section>
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="flex items-center justify-center gap-2 px-4 py-2 bg-neon-blue/20 border border-neon-blue/50 rounded-lg text-sm font-semibold text-neon-cyan hover:bg-neon-blue/30 transition-colors disabled:opacity-50"
-      >
-        <Save className="w-4 h-4" />
-        {isPending ? 'Сохранение…' : label}
-      </button>
+      </div>
     </form>
-  )
-}
-
-function Field({
-  label,
-  name,
-  type = 'text',
-  defaultValue,
-  required,
-  ...rest
-}: {
-  label: string
-  name: string
-  type?: string
-  defaultValue?: string | number
-  required?: boolean
-  [k: string]: unknown
-}) {
-  return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="text-[#9090a8]">{label}</span>
-      <input
-        name={name}
-        type={type}
-        defaultValue={defaultValue as string}
-        required={required}
-        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
-        {...(rest as object)}
-      />
-    </label>
   )
 }

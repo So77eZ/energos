@@ -48,29 +48,39 @@ export async function createDrinkAction(formData: FormData) {
 
   const drink = await drinkApi.create(extractDrinkFields(formData), token)
   await uploadImageIfPresent(drink.id!, formData, token)
-  const metrics = extractMetrics(formData)
-
-  if (metrics.acidity != null) {
-    await reviewApi.create(
-      {
-        energy_drink_id: drink.id!,
-        from_admin: true,
-        rating: metrics.rating ?? 3,
-        acidity: metrics.acidity,
-        sweetness: metrics.sweetness ?? 3,
-        concentration: metrics.concentration ?? 3,
-        carbonation: metrics.carbonation ?? 3,
-        aftertaste: metrics.aftertaste ?? 3,
-        price_quality: metrics.price_quality ?? 3,
-        comment: null,
-      },
-      token,
-    )
-  }
+  await upsertAdminReview(drink.id!, formData, token)
 
   revalidateTag('drinks')
   revalidateTag('reviews')
   redirect(ROUTES.admin.drinks)
+}
+
+async function upsertAdminReview(drinkId: number, formData: FormData, token: string) {
+  const metrics = extractMetrics(formData)
+  // Полная запись разрешена только когда выставлены все 6 метрик —
+  // частичный admin-ревью не имеет смысла и ломает агрегацию.
+  const allFilled = ['acidity', 'sweetness', 'concentration', 'carbonation', 'aftertaste', 'price_quality']
+    .every((k) => metrics[k as keyof typeof metrics] != null)
+  if (!allFilled) return
+
+  const existing = (await reviewApi.byDrink(drinkId).catch(() => [])).find((r) => r.from_admin)
+  const payload = {
+    energy_drink_id: drinkId,
+    from_admin: true,
+    rating: metrics.rating ?? 3,
+    acidity: metrics.acidity!,
+    sweetness: metrics.sweetness!,
+    concentration: metrics.concentration!,
+    carbonation: metrics.carbonation!,
+    aftertaste: metrics.aftertaste!,
+    price_quality: metrics.price_quality!,
+    comment: null,
+  }
+  if (existing) {
+    await reviewApi.update(existing.id, { ...payload, user_id: existing.user_id ?? undefined }, token)
+  } else {
+    await reviewApi.create(payload, token)
+  }
 }
 
 export async function updateDrinkAction(id: number, formData: FormData) {
@@ -79,7 +89,10 @@ export async function updateDrinkAction(id: number, formData: FormData) {
 
   await drinkApi.update(id, extractDrinkFields(formData), token)
   await uploadImageIfPresent(id, formData, token)
+  await upsertAdminReview(id, formData, token)
+
   revalidateTag('drinks')
+  revalidateTag('reviews')
   redirect(ROUTES.admin.drinks)
 }
 
