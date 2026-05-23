@@ -7,7 +7,7 @@ interface TierBadgeProps {
   size?: Size
 }
 
-const TIER_COLORS: Record<Tier, string> = {
+export const TIER_COLORS: Record<Tier, string> = {
   S: 'var(--c-pink)',
   A: 'var(--c-amber)',
   B: 'var(--c-cyan)',

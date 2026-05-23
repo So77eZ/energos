@@ -1617,6 +1617,89 @@ body::before {
 .adm-form-foot-r { display: flex; gap: 10px; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   TIER LIST PAGE — drinks bucketed by S/A/B/C/D
+   ═══════════════════════════════════════════════════════════════════ */
+.tier-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 24px; flex-wrap: wrap;
+}
+.tier-legend-mini { display: flex; gap: 8px; }
+.tier-legend-item { display: flex; }
+.tier-leg-letter {
+  width: 36px; height: 36px; border-radius: 6px; border: 1.5px solid;
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 16px;
+}
+
+.tier-board { display: flex; flex-direction: column; gap: 10px; }
+.tier-row {
+  display: grid; grid-template-columns: 220px 1fr;
+  gap: 14px; padding: 14px;
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-left: 4px solid var(--tc);
+  border-radius: var(--r-md);
+}
+.tier-row-side {
+  display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center;
+}
+.tier-row-letter {
+  width: 64px; height: 64px; border-radius: var(--r-md);
+  border: 2px solid var(--tc); color: var(--tc);
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 900; font-size: 32px;
+  box-shadow: 0 0 16px var(--tc), inset 0 0 12px rgba(255,255,255,0.05);
+}
+.tier-row-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tier-row-label { font-family: var(--font-title); font-weight: 700; font-size: 14px; color: var(--txt); }
+.tier-row-desc { font-size: 11px; color: var(--txt-dim); line-height: 1.4; }
+.tier-row-count {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--txt-quiet); letter-spacing: 1px; margin-top: 4px;
+}
+.tier-row-items {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start;
+}
+.tier-item {
+  display: grid; grid-template-columns: 60px 1fr;
+  gap: 10px; padding: 10px;
+  background: var(--bg-input); border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  transition: border-color .15s, transform .15s;
+  width: 220px;
+  text-decoration: none; color: inherit;
+}
+.tier-item:hover { transform: translateY(-2px); border-color: rgba(var(--accent-rgb), 0.4); }
+.tier-item-can {
+  width: 60px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: var(--r-sm); overflow: hidden;
+}
+.tier-item-can img { max-height: 100px; width: auto; object-fit: contain; }
+.tier-item-info {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 0; overflow: hidden;
+}
+.tier-item-brand {
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--accent); letter-spacing: 1px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tier-item-name {
+  font-family: var(--font-title); font-weight: 600;
+  font-size: 12px; color: var(--txt); line-height: 1.2;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  min-height: 28px;
+}
+.tier-item-meta {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--txt-dim);
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;
+}
+.tier-item-meta svg { fill: var(--c-amber); }
+.tier-empty { color: var(--txt-quiet); font-style: italic; padding: 12px; font-size: 12px; }
+
+/* ═══════════════════════════════════════════════════════════════════
    COMPARE PAGE — side-by-side 2-3 drinks
    ═══════════════════════════════════════════════════════════════════ */
 .cmp-head {
@@ -2042,6 +2125,10 @@ body::before {
   .cmp-slot { grid-template-columns: 100px 1fr; padding: 14px; }
   .cmp-radar-stage { grid-template-columns: 1fr; }
   .cmp-metric-row { grid-template-columns: 1fr; gap: 6px; }
+  .tier-row { grid-template-columns: 1fr; }
+  .tier-row-side { grid-template-columns: 56px 1fr; }
+  .tier-row-letter { width: 56px; height: 56px; font-size: 26px; }
+  .tier-item { width: 100%; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════

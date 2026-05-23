@@ -8,6 +8,7 @@ export const ROUTES = {
     const params = ids.slice(0, slots.length).map((id, i) => `${slots[i]}=${id}`).join('&')
     return `/compare?${params}`
   },
+  tier: '/tier',
   profile: '/profile',
   auth: {
     login: '/auth/login',
