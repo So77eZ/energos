@@ -202,8 +202,11 @@ body::before {
 .three-left  { left: 0; }
 .three-right { right: 0; }
 
-/* Lift main content above 3D layer */
+/* Lift main content above 3D layer. .page тоже поднимаем — ThreeCans
+   живёт внутри .main как sibling .page, так что без своего stacking-
+   контекста static-контент .page рисуется ПОД positioned .three-bg. */
 .main { position: relative; z-index: 1; }
+.page { position: relative; z-index: 1; }
 .hdr  { z-index: 50; }
 
 /* ═══════════════════════════════════════════════════════════════════
