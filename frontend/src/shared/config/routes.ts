@@ -2,6 +2,12 @@ export const ROUTES = {
   home: '/',
   tasteMap: '/taste-map',
   reviews: (id?: number) => (id != null ? `/drinks?id=${id}` : '/drinks'),
+  compare: (ids?: number[]) => {
+    if (!ids?.length) return '/compare'
+    const slots = ['a', 'b', 'c'] as const
+    const params = ids.slice(0, slots.length).map((id, i) => `${slots[i]}=${id}`).join('&')
+    return `/compare?${params}`
+  },
   profile: '/profile',
   auth: {
     login: '/auth/login',

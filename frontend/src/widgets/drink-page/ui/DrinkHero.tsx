@@ -110,6 +110,9 @@ export function DrinkHero({ drink, loggedIn, hasMyReview, onWriteReview }: Drink
               <Icons.lock /> Войти, чтобы оценить
             </Link>
           )}
+          <Link href={ROUTES.compare([drink.id])} className="cta-ghost">
+            <Icons.scale /> Сравнить
+          </Link>
           <Link href={ROUTES.tasteMap} className="cta-ghost">
             <Icons.map /> На карте
           </Link>

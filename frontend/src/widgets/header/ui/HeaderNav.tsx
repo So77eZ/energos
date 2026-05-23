@@ -10,9 +10,10 @@ interface HeaderNavProps {
 }
 
 const ITEMS = [
-  { href: ROUTES.home,      label: 'Каталог',       icon: 'grid' },
-  { href: ROUTES.tasteMap,  label: 'Карта вкусов',  icon: 'map' },
-  { href: ROUTES.reviews(), label: 'Отзывы',        icon: 'msg' },
+  { href: ROUTES.home,      label: 'Каталог',       icon: 'grid'  },
+  { href: ROUTES.tasteMap,  label: 'Карта вкусов',  icon: 'map'   },
+  { href: ROUTES.compare(), label: 'Сравнение',     icon: 'scale' },
+  { href: ROUTES.reviews(), label: 'Отзывы',        icon: 'msg'   },
 ] as const
 
 export function HeaderNav({ isAdmin }: HeaderNavProps) {
