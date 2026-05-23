@@ -5,7 +5,6 @@
 ### 🔴 Высокий приоритет
 
 - **Изображения не отображаются на мобильных устройствах** — при открытии сайта с телефона картинки энергетиков не загружаются.
-- **Убрать `review.rating` из фронта** — бэк миграцией `585053038cea_delete_rating_from_reviews` дропнул колонку `rating` из `energy_drinks_reviews` (коммит `c6bcbbe`). Pydantic-схема `CreateEnergyDrinkReviewSchema` тоже без поля. Сейчас фронт: (а) принимает `rating: number` в типе `Review` — будет undefined; (б) отправляет `rating` в `saveReviewAction` и `upsertAdminReview` — бэк, скорее всего, проигнорирует или ругнётся валидацией. Нужно: убрать поле из `Review`/`ReviewCreate`, убрать `rating` из payload-объектов в `features/submit-review/model/actions.ts` и `features/drink-form/model/actions.ts`, везде где UI показывает `r.rating` (карточки в DrinkPage, ProfilePage, отзыв в hero) — заменить на `calcRating(r)`.
 
 ### 🟡 Средний приоритет
 
@@ -125,6 +124,7 @@
 
 ### Реализовано в этой сессии
 
+- ~~**Убрать `review.rating` из фронта**~~ ✅ Бэк дропнул колонку (миграция `585053038cea`); фронт везде вычисляет `calcRating(metrics)`, payload без поля `rating` (коммит `3092153`).
 - ~~**Добавить в админку поле для загрузки фото**~~ ✅ Форма `DrinkForm` заменила текстовое поле URL на file-upload с превью и кнопкой очистки.
 - ~~**Исправить обрезание строки поиска**~~ ✅ Placeholder сокращён до «Поиск…».
 - ~~**Rate limiter на бэкенд**~~ ✅ `slowapi` in-memory: login 10/мин, register 5/мин, reviews 10/мин. Фронт обрабатывает HTTP 429 через `RateLimitError`.
