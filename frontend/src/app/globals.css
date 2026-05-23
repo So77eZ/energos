@@ -345,20 +345,26 @@ body::before {
 }
 
 .foot {
-  margin-top: 24px;
-  padding: 18px 4px;
+  /* Footer is sibling of <main> in layout.tsx — keep its width matching .main
+     (max 1440px, same horizontal padding) so columns sit under content. */
+  max-width: 1440px;
+  margin: 24px auto 0;
+  padding: 18px 28px;
   display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; flex-wrap: wrap;
   border-top: 1px solid var(--line);
   font-family: var(--font-mono); font-size: 10.5px;
   color: var(--txt-quiet); letter-spacing: 1px;
 }
-.foot-left { display: flex; align-items: center; gap: 10px; }
+.foot-left, .foot-mid, .foot-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.foot-mid { justify-content: center; }
 .foot-logo { color: var(--accent); display: flex; align-items: center; gap: 6px; font-weight: 600; }
-.foot-right { display: flex; align-items: center; gap: 10px; }
-.foot-right .dot, .hero-code .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--txt-quiet); }
+.foot-dim { color: var(--txt-quiet); }
+.foot .dot, .hero-code .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--txt-quiet); }
 .foot-link {
   display: inline-flex; align-items: center; gap: 6px;
   color: var(--txt-dim); transition: color .15s;
+  text-decoration: none;
 }
 .foot-link:hover { color: var(--accent); }
 
