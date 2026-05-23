@@ -1,14 +1,14 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
-import { Search, SlidersHorizontal, Zap } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { useCatalogSearch } from '@shared/lib/catalog-search'
+import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
+import { useCatalogSearch } from '@shared/lib/catalog-search'
 
 const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/drinks', '/taste-map']
-
-const PLACEHOLDER = 'Поиск…'
+const FILTER_PAGES = ['/', '/taste-map']
+const PLACEHOLDER = 'Поиск напитка, бренда, метрики…'
 
 export function HeaderSearchBar() {
   const pathname = usePathname()
@@ -17,9 +17,8 @@ export function HeaderSearchBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const isCatalog = pathname === '/'
-  const isTasteMap = pathname === '/taste-map'
   const isReviews = pathname === '/drinks'
+  const showFilterToggle = FILTER_PAGES.includes(pathname)
   const hasActiveFilters = noSugarOnly || sort !== 'name'
 
   useEffect(() => {
@@ -40,40 +39,45 @@ export function HeaderSearchBar() {
     : []
 
   return (
-    <>
-      <div className="relative flex-1 min-w-0" ref={containerRef}>
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9090a8] pointer-events-none" />
+    <div className="hdr-search" ref={containerRef}>
+      <div className="search">
+        <Icons.search w={14} />
         <input
           type="search"
           id="header-search"
           name="search"
           placeholder={PLACEHOLDER}
           value={search}
-          onChange={(e) => { setSearch(e.target.value); if (isReviews) setDropdownOpen(true) }}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            if (isReviews) setDropdownOpen(true)
+          }}
           onFocus={() => { if (isReviews && search) setDropdownOpen(true) }}
-          className="w-full pl-8 pr-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-[#f0f0f5] placeholder-[#9090a8] focus:outline-none focus:border-neon-blue/50 transition-colors"
         />
+        <kbd>⌘K</kbd>
 
-        {/* Dropdown for reviews page */}
         {isReviews && dropdownOpen && matchingItems.length > 0 && (
-          <ul className="absolute left-0 right-0 top-full mt-1 glass rounded-xl overflow-hidden z-[60] max-h-60 overflow-y-auto shadow-lg">
+          <ul className="search-dropdown" role="listbox">
             {matchingItems.map((d) => (
               <li key={d.id}>
                 <button
+                  type="button"
+                  className="search-dropdown-item"
                   onClick={() => {
                     router.push(ROUTES.reviews(d.id))
                     setDropdownOpen(false)
                     setSearch('')
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
                 >
-                  <div className="w-6 h-6 shrink-0 flex items-center justify-center bg-white/5 rounded overflow-hidden">
-                    {d.image_url
+                  <span className="search-dropdown-thumb">
+                    {d.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={d.image_url} alt={d.name} className="w-full h-full object-contain" />
-                      : <Zap className="w-3 h-3 text-neon-cyan/40" />}
-                  </div>
-                  <span className="text-sm text-[#f0f0f5] truncate">{d.name}</span>
+                      <img src={d.image_url} alt={d.name} />
+                    ) : (
+                      <Icons.bolt w={12} />
+                    )}
+                  </span>
+                  <span className="search-dropdown-name">{d.name}</span>
                 </button>
               </li>
             ))}
@@ -81,19 +85,18 @@ export function HeaderSearchBar() {
         )}
       </div>
 
-      {(isCatalog || isTasteMap) && (
+      {showFilterToggle && (
         <button
+          type="button"
+          className={`hdr-filter-btn${hasActiveFilters ? ' active' : ''}`}
           onClick={() => setFilterOpen(!filterOpen)}
-          className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors border shrink-0 ${
-            hasActiveFilters
-              ? 'text-neon-cyan bg-neon-cyan/10 border-neon-cyan/40'
-              : 'text-[#9090a8] bg-white/5 border-white/10 hover:text-neon-cyan hover:border-neon-cyan/30'
-          }`}
+          aria-label="Фильтры"
+          aria-pressed={filterOpen}
         >
-          <SlidersHorizontal className="w-4 h-4" />
-          {hasActiveFilters && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-neon-cyan" />}
+          <Icons.sliders w={16} />
+          {hasActiveFilters && <span className="hdr-filter-dot" />}
         </button>
       )}
-    </>
+    </div>
   )
 }

@@ -24,12 +24,9 @@ export async function Header() {
           <span className="logo-meta">/ v3.0</span>
         </Link>
 
-        {/* Search bar — own visual frame until catalog migration moves filters out. */}
-        <div className="flex items-center gap-2 max-w-[480px] w-full mx-auto">
-          <Suspense fallback={null}>
-            <HeaderSearchBar />
-          </Suspense>
-        </div>
+        <Suspense fallback={<div className="hdr-search" />}>
+          <HeaderSearchBar />
+        </Suspense>
 
         <nav className="hdr-nav" aria-label="Основная навигация">
           <HeaderNav isAdmin={isAdmin} />
