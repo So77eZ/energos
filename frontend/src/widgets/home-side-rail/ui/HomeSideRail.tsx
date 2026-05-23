@@ -3,19 +3,11 @@
 import Link from 'next/link'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
-import { cleanDrinkName, EnergyCan } from '@entities/drink'
+import { cleanDrinkName, EnergyCan, TIER_COLORS } from '@entities/drink'
 import type { EnrichedDrink, Tier } from '@entities/drink'
 
 interface HomeSideRailProps {
   drinks: EnrichedDrink[]
-}
-
-const TIER_COLORS: Record<Tier, string> = {
-  S: 'var(--c-pink)',
-  A: 'var(--c-amber)',
-  B: 'var(--c-cyan)',
-  C: 'var(--c-blue)',
-  D: 'var(--txt-dim)',
 }
 
 const TIERS: Tier[] = ['S', 'A', 'B', 'C', 'D']
@@ -73,7 +65,9 @@ export function HomeSideRail({ drinks }: HomeSideRailProps) {
           <span className="rail-title">
             <Icons.trophy /> TIER LIST
           </span>
-          <span className="rail-tag">{totalRated} оценено</span>
+          <Link href={ROUTES.tier} className="rail-link">
+            Открыть <Icons.arrow w={10} />
+          </Link>
         </div>
         <div className="tier-mini">
           {TIERS.map((t, i) => {
