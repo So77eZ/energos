@@ -1,0 +1,56 @@
+import type { EvaluatedAchievement } from '@entities/achievement'
+import { Icons } from '@shared/ui/icons'
+
+interface AchievementsTabProps {
+  achievements: EvaluatedAchievement[]
+}
+
+export function AchievementsTab({ achievements }: AchievementsTabProps) {
+  const unlocked = achievements.filter((a) => a.unlocked)
+  const locked = achievements.filter((a) => !a.unlocked)
+  const sorted = [...unlocked, ...locked]
+
+  return (
+    <section className="prof-section">
+      <div className="section-head">
+        <h2 className="section-title">Все достижения</h2>
+        <span className="section-sub">
+          {unlocked.length} разблокировано · {locked.length} в процессе
+        </span>
+      </div>
+      <div className="ach-grid">
+        {sorted.map((a) => (
+          <AchCard key={a.id} ach={a} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function AchCard({ ach }: { ach: EvaluatedAchievement }) {
+  const Icon = Icons[ach.icon]
+  return (
+    <div className={`ach-card ach-${ach.hue} ${ach.unlocked ? 'unlocked' : 'locked'}`}>
+      <div className="ach-medal">
+        <Icon w={20} />
+        {!ach.unlocked && (
+          <span className="ach-lock"><Icons.lock w={10} /></span>
+        )}
+      </div>
+      <div className="ach-info">
+        <div className="ach-name">{ach.name}</div>
+        <div className="ach-desc">{ach.desc}</div>
+        {ach.unlocked ? (
+          <div className="ach-date">разблокировано</div>
+        ) : (
+          <div className="ach-progress">
+            <div className="ach-progress-track">
+              <div className="ach-progress-fill" style={{ width: `${ach.progress}%` }} />
+            </div>
+            <span>{ach.progress}%</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

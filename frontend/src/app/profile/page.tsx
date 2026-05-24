@@ -1,9 +1,10 @@
 import { redirect } from 'next/navigation'
-import { getToken } from '@shared/lib/session'
-import { authApi } from '@entities/user'
-import { reviewApi } from '@entities/review'
+import { Suspense } from 'react'
 import { drinkApi } from '@entities/drink'
+import { reviewApi } from '@entities/review'
+import { authApi } from '@entities/user'
 import { ROUTES } from '@shared/config/routes'
+import { getToken } from '@shared/lib/session'
 import { ProfilePage } from '@widgets/profile/ui/ProfilePage'
 
 export const metadata = { title: 'Личный кабинет — Energos' }
@@ -21,5 +22,9 @@ export default async function ProfileRoute() {
 
   if (!user) redirect(ROUTES.auth.login)
 
-  return <ProfilePage user={user} reviews={reviews} drinks={drinks} />
+  return (
+    <Suspense fallback={null}>
+      <ProfilePage user={user} reviews={reviews} drinks={drinks} />
+    </Suspense>
+  )
 }

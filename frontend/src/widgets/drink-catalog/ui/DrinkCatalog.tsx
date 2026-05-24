@@ -29,6 +29,9 @@ const PAGE_SIZE = 12
 interface DrinkCatalogProps {
   initialDrinks: Drink[]
   allReviews: Review[]
+  /** Current logged-in user id, или null если гость. Прокидывается в DrinkCard
+   *  для кнопки избранного. */
+  currentUserId?: number | null
 }
 
 /** Hero shows the highest-rated drink with at least one review. */
@@ -38,7 +41,7 @@ function pickHero(drinks: EnrichedDrink[]): EnrichedDrink | null {
   return candidates.reduce((best, d) => (d.rating! > best.rating! ? d : best))
 }
 
-export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
+export function DrinkCatalog({ initialDrinks, allReviews, currentUserId = null }: DrinkCatalogProps) {
   const enriched = useMemo(() => enrichDrinks(initialDrinks, allReviews), [initialDrinks, allReviews])
   const hero = useMemo(() => pickHero(enriched), [enriched])
   const { filtered } = useFilterDrinks(enriched)
@@ -97,6 +100,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
                   key={drink.id}
                   drink={drink}
                   rank={(safePage - 1) * PAGE_SIZE + i + (hero ? 2 : 1)}
+                  userId={currentUserId}
                 />
               ))}
             </div>

@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, MouseEvent } from 'react'
 import { ROUTES } from '@shared/config/routes'
+import { useFavorites } from '@shared/lib/favorites'
+import { useToast } from '@shared/lib/toast'
 import { Icons } from '@shared/ui/icons'
 import { MiniMetrics } from '@entities/review'
 import { EnergyCan } from './EnergyCan'
@@ -15,15 +17,31 @@ interface DrinkCardProps {
   rank?: number | null
   /** Brand displayed before the variant name. Overrides the heuristic split. */
   brand?: string
+  /** Current user id — enables the favorite-toggle button. */
+  userId?: number | null
 }
 
-export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
+export function DrinkCard({ drink, rank = null, brand, userId = null }: DrinkCardProps) {
   const cleaned = cleanDrinkName(drink.name)
   const split = brand
     ? { brand: brand.toUpperCase(), variant: cleaned }
     : splitDrinkBrand(cleaned)
   const blend = drink.blend
   const style: CSSProperties & { '--blend'?: string } = { '--blend': blend }
+
+  const { toggle, isFavorite } = useFavorites()
+  const { toast } = useToast()
+  const isFav = userId != null && isFavorite(userId, drink.id)
+
+  function onFavClick(e: MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (userId == null) {
+      toast({ kind: 'info', msg: 'Войди, чтобы добавить в избранное' })
+      return
+    }
+    toggle(userId, drink.id, split.variant || drink.name)
+  }
 
   return (
     <Link href={ROUTES.reviews(drink.id)} className="card card-glass" style={style}>
@@ -40,6 +58,17 @@ export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
           {drink.no_sugar && <span className="micro-tag micro-lime">ZERO</span>}
         </div>
       </div>
+
+      <button
+        type="button"
+        className={`card-fav${isFav ? ' is-fav' : ''}`}
+        onClick={onFavClick}
+        aria-label={isFav ? 'Убрать из избранного' : 'Добавить в избранное'}
+        aria-pressed={isFav}
+        title={isFav ? 'Убрать из избранного' : 'Добавить в избранное'}
+      >
+        <Icons.bolt w={14} />
+      </button>
 
       <div
         className="card-vis"

@@ -1,16 +1,25 @@
 'use client'
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+import { evaluateAchievements } from '@entities/achievement'
 import type { Drink } from '@entities/drink'
-import { cleanDrinkName, EnergyCan, enrichDrinks } from '@entities/drink'
+import { enrichDrinks } from '@entities/drink'
 import type { Review } from '@entities/review'
-import { calcRating, MiniMetrics } from '@entities/review'
 import type { User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
 import { ROUTES } from '@shared/config/routes'
+import { useFavorites } from '@shared/lib/favorites'
+import { useMySubmissions } from '@shared/lib/submissions'
 import { Icons } from '@shared/ui/icons'
+import { AchievementsTab } from './tabs/AchievementsTab'
+import { FavoritesTab } from './tabs/FavoritesTab'
+import { ReviewsTab } from './tabs/ReviewsTab'
+import { SubmissionsTab } from './tabs/SubmissionsTab'
+
+type TabId = 'reviews' | 'favorites' | 'submissions' | 'achievements'
+
+const TAB_IDS: TabId[] = ['reviews', 'favorites', 'submissions', 'achievements']
 
 interface ProfilePageProps {
   user: User
@@ -27,33 +36,60 @@ function pickAvatarColor(seed: string | number): string {
   return AVATAR_COLORS[hash % AVATAR_COLORS.length]
 }
 
-function pluralize(n: number, one: string, few: string, many: string): string {
-  const last = n % 10
-  const lastTwo = n % 100
-  if (lastTwo >= 11 && lastTwo <= 14) return many
-  if (last === 1) return one
-  if (last >= 2 && last <= 4) return few
-  return many
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('ru-RU')
+function parseTab(raw: string | null): TabId {
+  if (raw && (TAB_IDS as string[]).includes(raw)) return raw as TabId
+  return 'reviews'
 }
 
 export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   const router = useRouter()
-  const drinkMap = useMemo(() => new Map(drinks.map((d) => [d.id, d])), [drinks])
-  const enrichedMap = useMemo(() => {
-    const enriched = enrichDrinks(drinks, [])
-    return new Map(enriched.map((d) => [d.id, d]))
-  }, [drinks])
+  const searchParams = useSearchParams()
+  const [tab, setTab] = useState<TabId>(() => parseTab(searchParams.get('tab')))
 
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((s, r) => s + calcRating(r), 0) / reviews.length
-    : 0
-  const ratedDrinkIds = new Set(reviews.map((r) => r.energy_drink_id))
-  const maxRated = reviews.filter((r) => calcRating(r) === 5).length
+  // Sync URL ?tab=... when tab changes (scroll: false чтобы не дёргать страницу).
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (tab === 'reviews') params.delete('tab')
+    else params.set('tab', tab)
+    const qs = params.toString()
+    router.replace(qs ? `${ROUTES.profile}?${qs}` : ROUTES.profile, { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab])
+
+  const drinkMap = useMemo(() => new Map(drinks.map((d) => [d.id, d])), [drinks])
+  const enrichedAll = useMemo(() => enrichDrinks(drinks, []), [drinks])
+  const enrichedMap = useMemo(() => new Map(enrichedAll.map((d) => [d.id, d])), [enrichedAll])
+
+  const { getFor } = useFavorites()
+  const favIds = getFor(user.id)
+  const favDrinks = useMemo(
+    () => favIds.map((id) => enrichedMap.get(id)).filter((d): d is NonNullable<typeof d> => Boolean(d)),
+    [favIds, enrichedMap],
+  )
+
+  const mySubs = useMySubmissions(user.id)
+  const pendingCount = mySubs.filter((s) => s.status === 'pending').length
+  const approvedCount = mySubs.filter((s) => s.status === 'approved').length
+
+  const achievements = useMemo(
+    () =>
+      evaluateAchievements({
+        reviewsCount: reviews.length,
+        favoritesCount: favIds.length,
+        submissionsCount: mySubs.length,
+        approvedSubmissionsCount: approvedCount,
+      }),
+    [reviews.length, favIds.length, mySubs.length, approvedCount],
+  )
+  const unlockedCount = achievements.filter((a) => a.unlocked).length
+
+  const counts: Record<TabId, string | number> = {
+    reviews: reviews.length,
+    favorites: favIds.length,
+    submissions: mySubs.length,
+    achievements: `${unlockedCount}/${achievements.length}`,
+  }
+
   const avatarColor = pickAvatarColor(user.id)
   const isAdmin = user.role === 'admin'
   const letter = user.username.charAt(0).toUpperCase()
@@ -76,12 +112,10 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           </div>
           <h1 className="prof-name">{user.username}</h1>
           <div className="prof-meta">
-            <span>
-              <Icons.msg w={12} /> {reviews.length} {pluralize(reviews.length, 'отзыв', 'отзыва', 'отзывов')}
-            </span>
-            <span>
-              <Icons.beaker w={12} /> {ratedDrinkIds.size} из {drinks.length}
-            </span>
+            <span><Icons.msg w={12} /> {reviews.length} отзывов</span>
+            <span><Icons.bolt w={12} /> {favIds.length} в избранном</span>
+            <span><Icons.beaker w={12} /> {mySubs.length} заявок</span>
+            <span><Icons.award w={12} /> {unlockedCount}/{achievements.length}</span>
           </div>
         </div>
         <div className="prof-actions">
@@ -101,101 +135,67 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           <div className="stat-sub">всего</div>
           <div className="stat-corner" />
         </div>
-        <div className="stat-card stat-pink">
-          <div className="stat-icon"><Icons.star /></div>
-          <div className="stat-lbl">СРЕДНЯЯ ОЦЕНКА</div>
-          <div className="stat-val">{reviews.length > 0 ? avgRating.toFixed(1) : '—'}</div>
-          <div className="stat-sub">по моим отзывам</div>
+        <div className="stat-card stat-amber">
+          <div className="stat-icon"><Icons.bolt /></div>
+          <div className="stat-lbl">ИЗБРАННЫХ</div>
+          <div className="stat-val">{favIds.length}</div>
+          <div className="stat-sub">из {drinks.length}</div>
           <div className="stat-corner" />
         </div>
         <div className="stat-card stat-purple">
           <div className="stat-icon"><Icons.beaker /></div>
-          <div className="stat-lbl">НАПИТКОВ ОЦЕНЕНО</div>
-          <div className="stat-val">{ratedDrinkIds.size}</div>
-          <div className="stat-sub">из {drinks.length}</div>
+          <div className="stat-lbl">ЗАЯВКИ</div>
+          <div className="stat-val">{mySubs.length}</div>
+          <div className="stat-sub">{pendingCount} ждут · {approvedCount} одобрены</div>
           <div className="stat-corner" />
         </div>
-        <div className="stat-card stat-amber">
+        <div className="stat-card stat-pink">
           <div className="stat-icon"><Icons.trophy /></div>
-          <div className="stat-lbl">МАКС. ОЦЕНОК</div>
-          <div className="stat-val">{maxRated}</div>
-          <div className="stat-sub">пятёрок</div>
+          <div className="stat-lbl">АЧИВКИ</div>
+          <div className="stat-val">{unlockedCount}</div>
+          <div className="stat-sub">/{achievements.length}</div>
           <div className="stat-corner" />
         </div>
       </section>
 
-      <section className="prof-section">
-        <div className="section-head">
-          <h2 className="section-title">
-            <Icons.msg /> Мои отзывы
-          </h2>
-          <Link href={ROUTES.home} className="section-link">
-            + Добавить <Icons.arrow w={10} />
-          </Link>
-        </div>
+      <div className="prof-tabs" role="tablist" aria-label="Разделы профиля">
+        <TabButton id="reviews"      label="Отзывы"     icon="msg"    badge={counts.reviews}      active={tab} onSelect={setTab} />
+        <TabButton id="favorites"    label="Избранное"  icon="bolt"   badge={counts.favorites}    active={tab} onSelect={setTab} />
+        <TabButton id="submissions"  label="Мои заявки" icon="beaker" badge={counts.submissions}  active={tab} onSelect={setTab} />
+        <TabButton id="achievements" label="Достижения" icon="trophy" badge={counts.achievements} active={tab} onSelect={setTab} />
+      </div>
 
-        {reviews.length === 0 ? (
-          <div className="empty">
-            <Icons.beaker />
-            <p>
-              Вы ещё не оставили ни одного отзыва — <Link href={ROUTES.home} style={{ color: 'var(--accent)' }}>выберите напиток</Link>, чтобы начать.
-            </p>
-          </div>
-        ) : (
-          <div className="prof-rev-list">
-            {reviews.map((r) => {
-              const drink = drinkMap.get(r.energy_drink_id)
-              const enriched = enrichedMap.get(r.energy_drink_id)
-              const cleanedName = drink ? cleanDrinkName(drink.name) : `Напиток #${r.energy_drink_id}`
-              const openDrink = () => router.push(ROUTES.reviews(r.energy_drink_id))
-              const openEdit = (e: React.MouseEvent) => {
-                e.stopPropagation()
-                router.push(`${ROUTES.reviews(r.energy_drink_id)}&review=1`)
-              }
-              return (
-                <div
-                  key={r.id}
-                  className="prof-rev"
-                  role="link"
-                  tabIndex={0}
-                  onClick={openDrink}
-                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openDrink()}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="prof-rev-can">
-                    {drink?.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={drink.image_url} alt={drink.name} style={{ maxHeight: 108, width: 'auto', objectFit: 'contain' }} />
-                    ) : enriched ? (
-                      <EnergyCan can={enriched.can} w={50} h={108} />
-                    ) : null}
-                  </div>
-                  <div className="prof-rev-info">
-                    <div className="prof-rev-name">{cleanedName}</div>
-                    <div className="prof-rev-meta">
-                      <span>{formatDate(r.updated_at ?? r.created_at)}</span>
-                      <span>·</span>
-                      <Icons.star w={10} /> {calcRating(r).toFixed(1)}
-                    </div>
-                    {r.comment && <p className="prof-rev-comment">«{r.comment}»</p>}
-                  </div>
-                  <div className="prof-rev-metrics">
-                    <MiniMetrics metrics={r} />
-                  </div>
-                  <button
-                    type="button"
-                    className="prof-rev-edit"
-                    aria-label="Изменить отзыв"
-                    onClick={openEdit}
-                  >
-                    <Icons.edit />
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </section>
+      {tab === 'reviews'      && <ReviewsTab reviews={reviews} drinkMap={drinkMap} enrichedMap={enrichedMap} />}
+      {tab === 'favorites'    && <FavoritesTab favDrinks={favDrinks} userId={user.id} />}
+      {tab === 'submissions'  && <SubmissionsTab mySubs={mySubs} />}
+      {tab === 'achievements' && <AchievementsTab achievements={achievements} />}
     </div>
+  )
+}
+
+interface TabButtonProps {
+  id: TabId
+  label: string
+  icon: 'msg' | 'bolt' | 'beaker' | 'trophy'
+  badge: string | number
+  active: TabId
+  onSelect: (id: TabId) => void
+}
+
+function TabButton({ id, label, icon, badge, active, onSelect }: TabButtonProps) {
+  const Icon = Icons[icon]
+  const isActive = active === id
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={isActive}
+      className={`prof-tab${isActive ? ' active' : ''}`}
+      onClick={() => onSelect(id)}
+    >
+      <Icon w={14} />
+      <span>{label}</span>
+      <span className="prof-tab-badge">{badge}</span>
+    </button>
   )
 }
