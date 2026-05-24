@@ -188,14 +188,17 @@ body::before {
   pointer-events: none;
   display: none;
 }
-@media (min-width: 1440px) {
+/* Контент .main max-width 1440px + горизонтальная padding 28px = ~1500px.
+   Чтобы банки (clamp ~330-440px) гарантированно сидели в свободном
+   gutter'е и не били по карточкам, показываем только при широком экране. */
+@media (min-width: 1900px) {
   .three-bg { display: block; }
 }
 .three-can {
   position: absolute; top: 50%;
   transform: translateY(-50%);
-  width: clamp(300px, 22vw, 440px);
-  height: min(720px, 88vh);
+  width: clamp(280px, 18vw, 380px);
+  height: min(720px, 84vh);
   pointer-events: auto;
   cursor: pointer;
 }
