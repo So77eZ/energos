@@ -46,7 +46,7 @@ export function Footer() {
           <span key={tg.handle} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
             <span className="dot" />
             <a className="foot-link" href={tg.url} target="_blank" rel="noopener noreferrer">
-              <Icons.msg w={12} /> {tg.handle}
+              <Icons.telegram w={12} /> {tg.handle}
             </a>
           </span>
         ))}
