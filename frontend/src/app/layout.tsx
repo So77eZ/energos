@@ -1,15 +1,18 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import './globals.css'
+import { authApi, favoritesApi } from '@entities/user'
 import { Header } from '@widgets/header/ui/Header'
 import { Footer } from '@widgets/footer/ui/Footer'
 import { ScrollToTop } from '@widgets/scroll-to-top/ui/ScrollToTop'
 import { CatalogSearchProvider } from '@shared/lib/catalog-search'
 import { ConfirmProvider } from '@shared/lib/confirm'
 import { FavoritesProvider } from '@shared/lib/favorites'
+import { getToken } from '@shared/lib/session'
 import { SubmissionsProvider } from '@shared/lib/submissions'
 import { ThemeProvider, THEME_INIT_SCRIPT } from '@shared/lib/theme'
 import { ToastProvider } from '@shared/lib/toast'
+import { UserProvider } from '@shared/lib/user'
 import { AppShell } from '@shared/ui/app-shell/AppShell'
 
 export const metadata: Metadata = {
@@ -18,7 +21,16 @@ export const metadata: Metadata = {
   verification: { yandex: '8e9eed80219a0095' },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Server-side: токен из httpOnly-куки, оттуда userId + initial favorites.
+  // Любая ошибка фетча — null/[] (не валим рендер из-за неавторизованного запроса).
+  const token = await getToken()
+  const [user, initialFavorites] = token
+    ? await Promise.all([
+        authApi.me(token).catch(() => null),
+        favoritesApi.list(token).catch(() => []),
+      ])
+    : [null, [] as number[]]
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
@@ -26,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Russo+One&family=Exo+2:wght@400;600;700&family=Share+Tech+Mono&display=swap"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Russo+One&family=Exo+2:wght@400;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;600;700&family=Rajdhani:wght@400;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
@@ -53,18 +65,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <ToastProvider>
             <ConfirmProvider>
-              <SubmissionsProvider>
-                <FavoritesProvider>
-                  <AppShell>
-                    <CatalogSearchProvider>
-                      <Header />
-                      <main className="main">{children}</main>
-                      <Footer />
-                      <ScrollToTop />
-                    </CatalogSearchProvider>
-                  </AppShell>
-                </FavoritesProvider>
-              </SubmissionsProvider>
+              <UserProvider user={user}>
+                <SubmissionsProvider>
+                  <FavoritesProvider initial={initialFavorites} userId={user?.id ?? null}>
+                    <AppShell>
+                      <CatalogSearchProvider>
+                        <Header />
+                        <main className="main">{children}</main>
+                        <Footer />
+                        <ScrollToTop />
+                      </CatalogSearchProvider>
+                    </AppShell>
+                  </FavoritesProvider>
+                </SubmissionsProvider>
+              </UserProvider>
             </ConfirmProvider>
           </ToastProvider>
         </ThemeProvider>

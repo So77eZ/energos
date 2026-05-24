@@ -4,7 +4,6 @@ import Link from 'next/link'
 import type { CSSProperties, MouseEvent } from 'react'
 import { ROUTES } from '@shared/config/routes'
 import { useFavorites } from '@shared/lib/favorites'
-import { useToast } from '@shared/lib/toast'
 import { Icons } from '@shared/ui/icons'
 import { MiniMetrics } from '@entities/review'
 import { EnergyCan } from './EnergyCan'
@@ -17,11 +16,9 @@ interface DrinkCardProps {
   rank?: number | null
   /** Brand displayed before the variant name. Overrides the heuristic split. */
   brand?: string
-  /** Current user id — enables the favorite-toggle button. */
-  userId?: number | null
 }
 
-export function DrinkCard({ drink, rank = null, brand, userId = null }: DrinkCardProps) {
+export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
   const cleaned = cleanDrinkName(drink.name)
   const split = brand
     ? { brand: brand.toUpperCase(), variant: cleaned }
@@ -29,18 +26,15 @@ export function DrinkCard({ drink, rank = null, brand, userId = null }: DrinkCar
   const blend = drink.blend
   const style: CSSProperties & { '--blend'?: string } = { '--blend': blend }
 
+  // Состояние избранного теперь полностью в провайдере (знает userId и держит API-state).
+  // Для гостей toggle сам выдаст info-toast — нам тут ничего проверять не надо.
   const { toggle, isFavorite } = useFavorites()
-  const { toast } = useToast()
-  const isFav = userId != null && isFavorite(userId, drink.id)
+  const isFav = isFavorite(drink.id)
 
   function onFavClick(e: MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    if (userId == null) {
-      toast({ kind: 'info', msg: 'Войди, чтобы добавить в избранное' })
-      return
-    }
-    toggle(userId, drink.id, split.variant || drink.name)
+    void toggle(drink.id, split.variant || drink.name)
   }
 
   return (

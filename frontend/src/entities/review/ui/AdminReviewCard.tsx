@@ -1,6 +1,7 @@
 // Expert/admin review card — purple-bordered with rev-badge.
 // Mirrors frontendNew/page-drink.jsx → AdminReviewCard.
 
+import { EmojiBar } from '@features/emoji-reactions'
 import { Icons } from '@shared/ui/icons'
 import { calcRating, METRIC_KEYS, type Review } from '../model/types'
 import { MetricDotRow } from './MetricDotRow'
@@ -35,6 +36,7 @@ export function AdminReviewCard({ review }: AdminReviewCardProps) {
           ))}
         </div>
         {review.comment && <p className="rev-comment">«{review.comment}»</p>}
+        <EmojiBar reviewId={review.id} />
       </div>
       <footer className="rev-foot">
         <span className="rev-date">{formatDate(review.updated_at ?? review.created_at)}</span>

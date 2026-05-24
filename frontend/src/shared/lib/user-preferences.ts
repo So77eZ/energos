@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
+// Список доступных шрифтов. Первые 4 подгружаются из Google Fonts через
+// <link> в layout.tsx — если добавляешь новый, не забудь дописать туда же,
+// иначе он молча упадёт в системный sans.
+// Monocraft self-hosted: файл /public/fonts/Monocraft.ttc, @font-face в globals.css.
 export const FONTS = [
   { id: 'JetBrains Mono', label: 'JetBrains Mono' },
   { id: 'Share Tech Mono', label: 'Share Tech Mono' },

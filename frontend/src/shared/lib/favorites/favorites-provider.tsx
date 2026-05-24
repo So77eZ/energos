@@ -1,69 +1,70 @@
 'use client'
 
-// Mock-state Context для избранных напитков. До выкатки бэка
-// /api/users/me/favorites держим { [userId]: drinkId[] } в localStorage.
-// Замена на реальное API — точечная (подменить add/remove на fetch).
+// Real-API провайдер избранных напитков. Состояние инициализируется initial-массивом
+// из layout (server-side fetch с токеном). Toggle идёт через server action, который
+// сам читает token из httpOnly-куки. Оптимистичный update + revert при ошибке.
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
 import { useToast } from '@shared/lib/toast'
-
-type FavoritesMap = Record<number, number[]>
-
-const STORAGE_KEY = 'energos_favorites_mock'
+import { toggleFavoriteAction } from './actions'
 
 interface FavoritesContextValue {
-  /** All favorited drink ids for the given user. */
-  getFor: (userId: number) => number[]
-  /** Toggle membership. Returns the new state (true = now in favorites). */
-  toggle: (userId: number, drinkId: number, drinkName?: string) => boolean
-  isFavorite: (userId: number, drinkId: number) => boolean
+  /** Массив drink_id текущего юзера. Гость → пустой. */
+  favorites: number[]
+  isFavorite: (drinkId: number) => boolean
+  /** Переключает избранное на бэке. Возвращает новое состояние (true = добавлено).
+   *  Если гость — выдаёт info-toast и возвращает текущее состояние. */
+  toggle: (drinkId: number, drinkName?: string) => Promise<boolean>
+  /** true пока идёт хоть один in-flight toggle (для loading-стейтов). */
+  isPending: boolean
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null)
 
-function loadInitial(): FavoritesMap {
-  if (typeof window === 'undefined') return {}
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as FavoritesMap) : {}
-  } catch {
-    return {}
-  }
+interface FavoritesProviderProps {
+  children: ReactNode
+  initial?: number[]
+  /** id текущего юзера. null → гость (toggle покажет toast вместо вызова). */
+  userId?: number | null
 }
 
-function persist(map: FavoritesMap) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
-  } catch {}
-}
-
-export function FavoritesProvider({ children }: { children: ReactNode }) {
-  const [map, setMap] = useState<FavoritesMap>({})
+export function FavoritesProvider({ children, initial = [], userId = null }: FavoritesProviderProps) {
+  const [favorites, setFavorites] = useState<number[]>(initial)
+  const [pendingCount, setPendingCount] = useState(0)
   const { toast } = useToast()
 
-  useEffect(() => { setMap(loadInitial()) }, [])
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    persist(map)
-  }, [map])
-
-  const getFor = useCallback(
-    (userId: number): number[] => map[userId] ?? [],
-    [map],
-  )
-
   const isFavorite = useCallback(
-    (userId: number, drinkId: number): boolean => (map[userId] ?? []).includes(drinkId),
-    [map],
+    (drinkId: number): boolean => favorites.includes(drinkId),
+    [favorites],
   )
 
   const toggle = useCallback(
-    (userId: number, drinkId: number, drinkName?: string): boolean => {
-      const current = map[userId] ?? []
-      const inList = current.includes(drinkId)
-      const next = inList ? current.filter((x) => x !== drinkId) : [...current, drinkId]
-      setMap((prev) => ({ ...prev, [userId]: next }))
-      const nowFav = !inList
+    async (drinkId: number, drinkName?: string): Promise<boolean> => {
+      if (userId == null) {
+        toast({ kind: 'info', msg: 'Войди, чтобы добавить в избранное' })
+        return false
+      }
+
+      const currentlyFav = favorites.includes(drinkId)
+      // Оптимистично переключаем — UI отзывается мгновенно.
+      setFavorites((prev) =>
+        currentlyFav ? prev.filter((x) => x !== drinkId) : [...prev, drinkId],
+      )
+      setPendingCount((n) => n + 1)
+
+      const result = await toggleFavoriteAction(drinkId, currentlyFav)
+      setPendingCount((n) => n - 1)
+
+      if (!result.ok) {
+        // Откат — возвращаем предыдущее состояние.
+        setFavorites((prev) =>
+          currentlyFav ? [...prev, drinkId] : prev.filter((x) => x !== drinkId),
+        )
+        toast({ kind: 'err', msg: result.error || 'Не удалось обновить избранное' })
+        return currentlyFav
+      }
+
+      const nowFav = result.nowFav
       toast({
         kind: nowFav ? 'love' : 'info',
         msg: drinkName
@@ -72,11 +73,11 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       })
       return nowFav
     },
-    [map, toast],
+    [favorites, userId, toast],
   )
 
   return (
-    <FavoritesContext.Provider value={{ getFor, toggle, isFavorite }}>
+    <FavoritesContext.Provider value={{ favorites, isFavorite, toggle, isPending: pendingCount > 0 }}>
       {children}
     </FavoritesContext.Provider>
   )

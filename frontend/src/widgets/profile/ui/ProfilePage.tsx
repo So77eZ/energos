@@ -13,13 +13,14 @@ import { useFavorites } from '@shared/lib/favorites'
 import { useMySubmissions } from '@shared/lib/submissions'
 import { Icons } from '@shared/ui/icons'
 import { AchievementsTab } from './tabs/AchievementsTab'
+import { AppearanceTab } from './tabs/AppearanceTab'
 import { FavoritesTab } from './tabs/FavoritesTab'
 import { ReviewsTab } from './tabs/ReviewsTab'
 import { SubmissionsTab } from './tabs/SubmissionsTab'
 
-type TabId = 'reviews' | 'favorites' | 'submissions' | 'achievements'
+type TabId = 'reviews' | 'favorites' | 'submissions' | 'achievements' | 'appearance'
 
-const TAB_IDS: TabId[] = ['reviews', 'favorites', 'submissions', 'achievements']
+const TAB_IDS: TabId[] = ['reviews', 'favorites', 'submissions', 'achievements', 'appearance']
 
 interface ProfilePageProps {
   user: User
@@ -60,8 +61,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   const enrichedAll = useMemo(() => enrichDrinks(drinks, []), [drinks])
   const enrichedMap = useMemo(() => new Map(enrichedAll.map((d) => [d.id, d])), [enrichedAll])
 
-  const { getFor } = useFavorites()
-  const favIds = getFor(user.id)
+  const { favorites: favIds } = useFavorites()
   const favDrinks = useMemo(
     () => favIds.map((id) => enrichedMap.get(id)).filter((d): d is NonNullable<typeof d> => Boolean(d)),
     [favIds, enrichedMap],
@@ -83,7 +83,8 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   )
   const unlockedCount = achievements.filter((a) => a.unlocked).length
 
-  const counts: Record<TabId, string | number> = {
+  // appearance исключён — у вкладки нет badge'а со счётчиком (это настройки).
+  const counts: Record<Exclude<TabId, 'appearance'>, string | number> = {
     reviews: reviews.length,
     favorites: favIds.length,
     submissions: mySubs.length,
@@ -159,16 +160,18 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       </section>
 
       <div className="prof-tabs" role="tablist" aria-label="Разделы профиля">
-        <TabButton id="reviews"      label="Отзывы"     icon="msg"    badge={counts.reviews}      active={tab} onSelect={setTab} />
-        <TabButton id="favorites"    label="Избранное"  icon="bolt"   badge={counts.favorites}    active={tab} onSelect={setTab} />
-        <TabButton id="submissions"  label="Мои заявки" icon="beaker" badge={counts.submissions}  active={tab} onSelect={setTab} />
-        <TabButton id="achievements" label="Достижения" icon="trophy" badge={counts.achievements} active={tab} onSelect={setTab} />
+        <TabButton id="reviews"      label="Отзывы"     icon="msg"     badge={counts.reviews}      active={tab} onSelect={setTab} />
+        <TabButton id="favorites"    label="Избранное"  icon="bolt"    badge={counts.favorites}    active={tab} onSelect={setTab} />
+        <TabButton id="submissions"  label="Мои заявки" icon="beaker"  badge={counts.submissions}  active={tab} onSelect={setTab} />
+        <TabButton id="achievements" label="Достижения" icon="trophy"  badge={counts.achievements} active={tab} onSelect={setTab} />
+        <TabButton id="appearance"   label="Оформление" icon="sparkle" active={tab} onSelect={setTab} />
       </div>
 
       {tab === 'reviews'      && <ReviewsTab reviews={reviews} drinkMap={drinkMap} enrichedMap={enrichedMap} />}
-      {tab === 'favorites'    && <FavoritesTab favDrinks={favDrinks} userId={user.id} />}
+      {tab === 'favorites'    && <FavoritesTab favDrinks={favDrinks} />}
       {tab === 'submissions'  && <SubmissionsTab mySubs={mySubs} />}
       {tab === 'achievements' && <AchievementsTab achievements={achievements} />}
+      {tab === 'appearance'   && <AppearanceTab />}
     </div>
   )
 }
@@ -176,8 +179,9 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
 interface TabButtonProps {
   id: TabId
   label: string
-  icon: 'msg' | 'bolt' | 'beaker' | 'trophy'
-  badge: string | number
+  icon: 'msg' | 'bolt' | 'beaker' | 'trophy' | 'sparkle'
+  /** Опционально — вкладка «Оформление» (настройки) бейджа не имеет. */
+  badge?: string | number
   active: TabId
   onSelect: (id: TabId) => void
 }
@@ -195,7 +199,7 @@ function TabButton({ id, label, icon, badge, active, onSelect }: TabButtonProps)
     >
       <Icon w={14} />
       <span>{label}</span>
-      <span className="prof-tab-badge">{badge}</span>
+      {badge != null && <span className="prof-tab-badge">{badge}</span>}
     </button>
   )
 }

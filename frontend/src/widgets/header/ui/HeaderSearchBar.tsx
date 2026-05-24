@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
@@ -32,7 +33,21 @@ export function HeaderSearchBar() {
     return () => document.removeEventListener('mousedown', onOutside)
   }, [dropdownOpen])
 
-  if (!SEARCH_PAGES.includes(pathname)) return null
+  // На страницах без поиска (/glossary, /compare, /tier, /submit, /auth/...) —
+  // рендерим ту же визуальную плашку, но как Link на каталог. Так header
+  // одинаков на всех страницах; навигация не сдвигается влево из-за пустого
+  // слота, и юзер при клике сразу попадает туда где поиск работает.
+  if (!SEARCH_PAGES.includes(pathname)) {
+    return (
+      <div className="hdr-search">
+        <Link href={ROUTES.home} className="search search-link" title="Поиск напитков в каталоге">
+          <Icons.search w={14} />
+          <span className="search-placeholder">Поиск напитков</span>
+          <kbd>⌘K</kbd>
+        </Link>
+      </div>
+    )
+  }
 
   const matchingItems = isReviews && search
     ? searchItems.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()))

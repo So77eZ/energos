@@ -87,6 +87,18 @@ export function HomeSideRail({ drinks }: HomeSideRailProps) {
           })}
         </div>
       </div>
+
+      <div className="rail-card">
+        <div className="rail-head">
+          <span className="rail-title">
+            <Icons.scale /> СРАВНЕНИЕ
+          </span>
+        </div>
+        <p className="rail-blurb">Выбери 2–3 напитка и сравни вкусовые профили рядом.</p>
+        <Link href={ROUTES.compare()} className="rail-cta">
+          Открыть сравнение <Icons.arrow w={10} />
+        </Link>
+      </div>
     </aside>
   )
 }

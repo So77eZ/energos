@@ -1,6 +1,7 @@
 // Compact user review card — avatar, name, date, rating, mini-metrics, comment.
 // Mirrors frontendNew/page-drink.jsx → UserReviewCard.
 
+import { EmojiBar } from '@features/emoji-reactions'
 import { Icons } from '@shared/ui/icons'
 import { calcRating, type Review } from '../model/types'
 import { MiniMetrics } from './MiniMetrics'
@@ -44,6 +45,7 @@ export function UserReviewCard({ review }: UserReviewCardProps) {
       </header>
       <MiniMetrics metrics={review} />
       {review.comment && <p className="rev-comment">«{review.comment}»</p>}
+      <EmojiBar reviewId={review.id} />
     </article>
   )
 }

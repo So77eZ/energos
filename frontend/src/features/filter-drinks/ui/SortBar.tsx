@@ -1,7 +1,9 @@
 'use client'
 
+import { useRef } from 'react'
 import { Icons } from '@shared/ui/icons'
 import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
+import { FilterPanel } from './FilterPanel'
 
 type SortKey = 'rating' | 'fresh' | 'reviews' | 'price'
 type Direction = 'asc' | 'desc'
@@ -36,15 +38,32 @@ function combine(key: SortKey, dir: Direction): SortOption {
   return `${key}_${dir}` as SortOption
 }
 
-export function SortBar() {
-  const { sort, setSort, noSugarOnly, setNoSugarOnly, filterOpen, setFilterOpen } = useCatalogSearch()
+interface SortBarProps {
+  /** [min, max] цен в каталоге — нужен для слайдера в FilterPanel'е.
+   *  Если есть напитки без цены/каталог пустой — каталог должен подсунуть [0, 500]. */
+  priceBounds: [number, number]
+}
+
+export function SortBar({ priceBounds }: SortBarProps) {
+  const {
+    sort, setSort,
+    tiers, priceRange, onlyNew, noSugarOnly,
+    filterOpen, setFilterOpen,
+    view, setView,
+  } = useCatalogSearch()
   const { key: activeKey, dir: activeDir } = parseSort(sort)
-  const isAll = sort === 'name' && !noSugarOnly
-  const activeFilterCount = (noSugarOnly ? 1 : 0)
+  const isAll = sort === 'name'
+  // Активные оси фильтра: тиры, цена, only-new, no-sugar.
+  const activeFilterCount =
+    (tiers.length > 0 ? 1 : 0) +
+    (priceRange ? 1 : 0) +
+    (onlyNew ? 1 : 0) +
+    (noSugarOnly ? 1 : 0)
+
+  const filterBtnRef = useRef<HTMLButtonElement | null>(null)
 
   function pickTab(tab: SortTab) {
     if (activeKey === tab.key) {
-      // Same tab clicked again — flip direction.
       const nextDir: Direction = activeDir === 'desc' ? 'asc' : 'desc'
       setSort(combine(tab.key, nextDir))
     } else {
@@ -52,13 +71,8 @@ export function SortBar() {
     }
   }
 
-  function toggleNoSugar() {
-    setNoSugarOnly(!noSugarOnly)
-  }
-
-  function resetAll() {
+  function resetSort() {
     setSort('name')
-    setNoSugarOnly(false)
   }
 
   return (
@@ -83,34 +97,53 @@ export function SortBar() {
         })}
         <button
           type="button"
-          aria-selected={noSugarOnly}
-          className={`sort-tab${noSugarOnly ? ' active' : ''}`}
-          onClick={toggleNoSugar}
-        >
-          <span className="sort-tab-lbl">Без сахара</span>
-          <span className="sort-tab-hint">zero sugar</span>
-        </button>
-        <button
-          type="button"
           aria-selected={isAll}
           className={`sort-tab${isAll ? ' active' : ''}`}
-          onClick={resetAll}
+          onClick={resetSort}
         >
           <span className="sort-tab-lbl">Все</span>
           <span className="sort-tab-hint">по названию</span>
         </button>
       </div>
 
-      <button
-        type="button"
-        className="filter-btn"
-        onClick={() => setFilterOpen(!filterOpen)}
-        aria-expanded={filterOpen}
-      >
-        <Icons.sliders w={14} />
-        Фильтры
-        {activeFilterCount > 0 && <span className="filter-count">{activeFilterCount}</span>}
-      </button>
+      <div className="view-switch" role="group" aria-label="Вид каталога">
+        <button
+          type="button"
+          className={`view-btn${view === 'grid' ? ' active' : ''}`}
+          onClick={() => setView('grid')}
+          aria-pressed={view === 'grid'}
+          title="Сетка карточек"
+        >
+          <Icons.grid w={14} />
+        </button>
+        <button
+          type="button"
+          className={`view-btn${view === 'heat' ? ' active' : ''}`}
+          onClick={() => setView('heat')}
+          aria-pressed={view === 'heat'}
+          title="Таблица-heatmap"
+        >
+          <Icons.layers w={14} />
+        </button>
+      </div>
+
+      {/* filter-anchor — positioning context для popover'а. Кнопка и popover —
+          siblings: popover отрисуется поверх через position:absolute. */}
+      <div className="filter-anchor">
+        <button
+          ref={filterBtnRef}
+          type="button"
+          className="filter-btn"
+          onClick={() => setFilterOpen(!filterOpen)}
+          aria-expanded={filterOpen}
+          aria-haspopup="dialog"
+        >
+          <Icons.sliders w={14} />
+          Фильтры
+          {activeFilterCount > 0 && <span className="filter-count">{activeFilterCount}</span>}
+        </button>
+        <FilterPanel priceBounds={priceBounds} anchorRef={filterBtnRef} />
+      </div>
     </div>
   )
 }

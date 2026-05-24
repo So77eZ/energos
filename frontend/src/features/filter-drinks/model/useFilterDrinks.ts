@@ -4,12 +4,6 @@ import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
 
 export type { SortOption }
 
-export interface DrinkFilters {
-  search: string
-  sort: SortOption
-  noSugarOnly: boolean
-}
-
 const RATING_FOR_SORT = (d: EnrichedDrink, asc: boolean) =>
   d.rating ?? (asc ? Infinity : -Infinity)
 
@@ -20,13 +14,7 @@ const CREATED_FOR_SORT = (d: EnrichedDrink) =>
   d.created_at ? Date.parse(d.created_at) : 0
 
 export function useFilterDrinks(drinks: EnrichedDrink[]) {
-  const { search, sort, noSugarOnly, setSort, setNoSugarOnly } = useCatalogSearch()
-  const filters: DrinkFilters = { search, sort, noSugarOnly }
-
-  function setFilter<K extends keyof DrinkFilters>(key: K, value: DrinkFilters[K]) {
-    if (key === 'sort') setSort(value as SortOption)
-    if (key === 'noSugarOnly') setNoSugarOnly(value as boolean)
-  }
+  const { search, sort, tiers, priceRange, onlyNew, noSugarOnly } = useCatalogSearch()
 
   const filtered = useMemo(() => {
     let result = drinks
@@ -34,6 +22,14 @@ export function useFilterDrinks(drinks: EnrichedDrink[]) {
       const q = search.toLowerCase()
       result = result.filter((d) => d.name.toLowerCase().includes(q))
     }
+    if (tiers.length > 0) {
+      result = result.filter((d) => d.tier != null && tiers.includes(d.tier))
+    }
+    if (priceRange) {
+      const [lo, hi] = priceRange
+      result = result.filter((d) => d.price != null && d.price >= lo && d.price <= hi)
+    }
+    if (onlyNew) result = result.filter((d) => d.isNew)
     if (noSugarOnly) result = result.filter((d) => d.no_sugar)
 
     const arr = [...result]
@@ -66,7 +62,7 @@ export function useFilterDrinks(drinks: EnrichedDrink[]) {
         arr.sort((a, b) => a.name.localeCompare(b.name, 'ru'))
     }
     return arr
-  }, [drinks, search, sort, noSugarOnly])
+  }, [drinks, search, sort, tiers, priceRange, onlyNew, noSugarOnly])
 
-  return { filters, setFilter, filtered }
+  return { filtered }
 }

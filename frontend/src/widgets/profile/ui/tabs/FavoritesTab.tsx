@@ -7,10 +7,9 @@ import { ProfileEmpty } from './ProfileEmpty'
 
 interface FavoritesTabProps {
   favDrinks: EnrichedDrink[]
-  userId: number
 }
 
-export function FavoritesTab({ favDrinks, userId }: FavoritesTabProps) {
+export function FavoritesTab({ favDrinks }: FavoritesTabProps) {
   if (favDrinks.length === 0) {
     return (
       <ProfileEmpty
@@ -26,7 +25,7 @@ export function FavoritesTab({ favDrinks, userId }: FavoritesTabProps) {
     <section className="prof-section">
       <div className="grid grid-regular">
         {favDrinks.map((d) => (
-          <DrinkCard key={d.id} drink={d} userId={userId} />
+          <DrinkCard key={d.id} drink={d} />
         ))}
       </div>
     </section>

@@ -6,7 +6,10 @@ export {
   METRIC_KEYS,
   calcRating,
 } from './model/types'
+export type { ReviewEmoji, EmojiAggregate } from './model/emoji-types'
+export { aggregateEmojis } from './model/emoji-types'
 export { reviewApi } from './api/reviewApi'
+export { reviewEmojiApi } from './api/reviewEmojiApi'
 export { MiniMetrics } from './ui/MiniMetrics'
 export { HexRadar } from './ui/HexRadar'
 export { MetricDotRow } from './ui/MetricDotRow'

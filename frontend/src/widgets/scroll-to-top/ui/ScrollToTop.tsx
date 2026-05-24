@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ArrowUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export function ScrollToTop() {
@@ -29,10 +28,12 @@ export function ScrollToTop() {
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.18 }}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-4 z-50 w-10 h-10 lg:w-14 lg:h-14 flex items-center justify-center rounded-full glass border border-neon-blue/40 text-neon-cyan shadow-lg hover:bg-neon-blue/20 transition-colors"
+          className="up-fab"
           aria-label="Наверх"
         >
-          <ArrowUp className="w-5 h-5 lg:w-7 lg:h-7" />
+          <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2}>
+            <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </motion.button>
       )}
     </AnimatePresence>

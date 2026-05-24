@@ -1,6 +1,7 @@
 // Logged-in user's own review with edit/delete actions.
 // Mirrors frontendNew/page-drink.jsx → "my review" branch.
 
+import { EmojiBar } from '@features/emoji-reactions'
 import { Icons } from '@shared/ui/icons'
 import { calcRating, type Review } from '../model/types'
 import { MiniMetrics } from './MiniMetrics'
@@ -34,6 +35,7 @@ export function MyReviewCard({ review, onEdit, onDelete }: MyReviewCardProps) {
       </header>
       <MiniMetrics metrics={review} />
       {review.comment && <p className="rev-comment">«{review.comment}»</p>}
+      <EmojiBar reviewId={review.id} />
       <div className="rev-actions">
         <button type="button" className="cta-ghost" onClick={onEdit}>
           <Icons.edit /> Изменить
