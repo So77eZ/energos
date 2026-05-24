@@ -5,7 +5,9 @@ import { Header } from '@widgets/header/ui/Header'
 import { Footer } from '@widgets/footer/ui/Footer'
 import { ScrollToTop } from '@widgets/scroll-to-top/ui/ScrollToTop'
 import { CatalogSearchProvider } from '@shared/lib/catalog-search'
+import { ConfirmProvider } from '@shared/lib/confirm'
 import { ThemeProvider, THEME_INIT_SCRIPT } from '@shared/lib/theme'
+import { ToastProvider } from '@shared/lib/toast'
 import { AppShell } from '@shared/ui/app-shell/AppShell'
 
 export const metadata: Metadata = {
@@ -47,14 +49,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <img src="https://mc.yandex.ru/watch/109003264" style={{ position: 'absolute', left: -9999 }} alt="" />
         </noscript>
         <ThemeProvider>
-          <AppShell>
-            <CatalogSearchProvider>
-              <Header />
-              <main className="main">{children}</main>
-              <Footer />
-              <ScrollToTop />
-            </CatalogSearchProvider>
-          </AppShell>
+          <ToastProvider>
+            <ConfirmProvider>
+              <AppShell>
+                <CatalogSearchProvider>
+                  <Header />
+                  <main className="main">{children}</main>
+                  <Footer />
+                  <ScrollToTop />
+                </CatalogSearchProvider>
+              </AppShell>
+            </ConfirmProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
