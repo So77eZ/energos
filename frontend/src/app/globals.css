@@ -386,7 +386,10 @@ body::before {
   padding: 24px 28px 48px;
   display: flex; flex-direction: column; gap: 24px;
 }
-.page { display: flex; flex-direction: column; gap: 24px; }
+/* gap 14px вместо 24 — gap'ы между секциями страницы прозрачные, в них
+   просвечивает .three-bg за контентом. Меньше gap = меньше видимости
+   3D-банок в полосах между блоками. */
+.page { display: flex; flex-direction: column; gap: 14px; }
 .page-eyebrow {
   font-family: var(--font-mono); font-size: 10.5px;
   color: var(--accent); letter-spacing: 2.5px; margin-bottom: 6px;
@@ -576,7 +579,7 @@ body::before {
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ─── Sortbar ──────────────────────────────────────────────────── */
-.sortbar { display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap; }
+.sortbar { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; }
 .sort-tabs {
   display: flex; gap: 4px;
   padding: 4px; background: var(--bg-card);
@@ -2392,11 +2395,11 @@ body::before {
 .ach-progress-track { flex: 1; height: 4px; background: var(--bg-input); border-radius: 2px; overflow: hidden; }
 .ach-progress-fill { height: 100%; background: var(--accent); }
 
-/* Favorite button on .card */
+/* Favorite button on .card — flex-item внутри .card-tags, чтобы не
+   накладывался на TierBadge/NEW/ZERO. Parent .card-top отключает
+   pointer-events, поэтому здесь явно их включаем для кликабельности. */
 .card-fav {
-  position: absolute; top: 10px; right: 10px;
-  z-index: 3;
-  width: 30px; height: 30px;
+  width: 26px; height: 26px;
   display: grid; place-items: center;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.5);
@@ -2404,6 +2407,8 @@ body::before {
   color: var(--txt-quiet);
   backdrop-filter: blur(6px);
   cursor: pointer;
+  pointer-events: auto;
+  flex-shrink: 0;
   transition: color .15s, border-color .15s, background .15s, transform .12s;
   -webkit-tap-highlight-color: transparent;
 }
