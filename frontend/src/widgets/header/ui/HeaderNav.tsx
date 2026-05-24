@@ -15,6 +15,7 @@ const ITEMS = [
   { href: ROUTES.tier,      label: 'Tier list',     icon: 'trophy' },
   { href: ROUTES.compare(), label: 'Сравнение',     icon: 'scale'  },
   { href: ROUTES.glossary,  label: 'Словарь',       icon: 'book'   },
+  { href: ROUTES.submit,    label: 'Предложить',    icon: 'plus'   },
   { href: ROUTES.reviews(), label: 'Отзывы',        icon: 'msg'    },
 ] as const
 

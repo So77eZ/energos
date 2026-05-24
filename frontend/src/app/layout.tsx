@@ -6,6 +6,7 @@ import { Footer } from '@widgets/footer/ui/Footer'
 import { ScrollToTop } from '@widgets/scroll-to-top/ui/ScrollToTop'
 import { CatalogSearchProvider } from '@shared/lib/catalog-search'
 import { ConfirmProvider } from '@shared/lib/confirm'
+import { SubmissionsProvider } from '@shared/lib/submissions'
 import { ThemeProvider, THEME_INIT_SCRIPT } from '@shared/lib/theme'
 import { ToastProvider } from '@shared/lib/toast'
 import { AppShell } from '@shared/ui/app-shell/AppShell'
@@ -51,14 +52,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <ToastProvider>
             <ConfirmProvider>
-              <AppShell>
-                <CatalogSearchProvider>
-                  <Header />
-                  <main className="main">{children}</main>
-                  <Footer />
-                  <ScrollToTop />
-                </CatalogSearchProvider>
-              </AppShell>
+              <SubmissionsProvider>
+                <AppShell>
+                  <CatalogSearchProvider>
+                    <Header />
+                    <main className="main">{children}</main>
+                    <Footer />
+                    <ScrollToTop />
+                  </CatalogSearchProvider>
+                </AppShell>
+              </SubmissionsProvider>
             </ConfirmProvider>
           </ToastProvider>
         </ThemeProvider>

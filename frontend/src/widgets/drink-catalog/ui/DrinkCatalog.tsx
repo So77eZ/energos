@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { DrinkCard, enrichDrinks } from '@entities/drink'
 import type { Drink, EnrichedDrink } from '@entities/drink'
@@ -72,6 +73,20 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
 
       <SortBar />
       <FilterPanel />
+
+      {/* Inline CTA: предложить напиток */}
+      <Link href="/submit" className="catalog-cta">
+        <div className="catalog-cta-meta">
+          <div className="catalog-cta-icon"><Icons.plus w={16} /></div>
+          <div>
+            <div className="catalog-cta-title">Не нашёл напиток?</div>
+            <div className="catalog-cta-sub">Расскажи о нём — администратор добавит в каталог.</div>
+          </div>
+        </div>
+        <span className="cta-ghost catalog-cta-btn">
+          <Icons.plus w={12} /> Предложить
+        </span>
+      </Link>
 
       <div className="home-split with-rail">
         <div className="home-content">

@@ -10,6 +10,7 @@ export const ROUTES = {
   },
   tier: '/tier',
   glossary: '/glossary',
+  submit: '/submit',
   profile: '/profile',
   auth: {
     login: '/auth/login',
