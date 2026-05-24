@@ -1,15 +1,16 @@
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import { drinkApi } from '@entities/drink'
 import { reviewApi } from '@entities/review'
 import { authApi } from '@entities/user'
-import { getToken } from '@shared/lib/session'
-import { AdminDrinksList } from '@widgets/admin-drinks/ui/AdminDrinksList'
 import { ROUTES } from '@shared/config/routes'
+import { getToken } from '@shared/lib/session'
+import { AdminPage } from '@widgets/admin-page/ui/AdminPage'
 
 export const metadata = { title: 'Управление — Energos' }
 export const dynamic = 'force-dynamic'
 
-export default async function AdminDrinksPage() {
+export default async function AdminRoute() {
   const token = await getToken()
   if (!token) redirect(ROUTES.auth.login)
 
@@ -21,5 +22,9 @@ export default async function AdminDrinksPage() {
     reviewApi.list().catch(() => []),
   ])
 
-  return <AdminDrinksList drinks={drinks} reviewsCount={reviews.length} />
+  return (
+    <Suspense fallback={null}>
+      <AdminPage drinks={drinks} reviews={reviews} />
+    </Suspense>
+  )
 }

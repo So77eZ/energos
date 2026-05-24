@@ -7,87 +7,45 @@ import {
   cleanDrinkName,
   EnergyCan,
   enrichDrinks,
-  isFreshDrink,
   TierBadge,
 } from '@entities/drink'
-import type { Drink } from '@entities/drink'
-import type { Review } from '@entities/review'
-import { Icons } from '@shared/ui/icons'
+import type { Drink, EnrichedDrink } from '@entities/drink'
+import { deleteDrinkAction } from '@features/drink-form/model/actions'
 import { ROUTES } from '@shared/config/routes'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
-import { deleteDrinkAction } from '@features/drink-form/model/actions'
+import { useConfirm } from '@shared/lib/confirm'
+import { useToast } from '@shared/lib/toast'
+import { Icons } from '@shared/ui/icons'
 
-interface AdminDrinksListProps {
+interface CatalogTabProps {
   drinks: Drink[]
-  reviewsCount: number
 }
 
-export function AdminDrinksList({ drinks, reviewsCount }: AdminDrinksListProps) {
+export function CatalogTab({ drinks }: CatalogTabProps) {
   const { search } = useCatalogSearch()
   const enriched = useMemo(() => enrichDrinks(drinks, []), [drinks])
-
   const filtered = enriched.filter((d) =>
     d.name.toLowerCase().includes(search.toLowerCase()),
   )
-
   const totalCount = drinks.length
-  const freshCount = drinks.filter((d) => isFreshDrink(d.created_at)).length
-  const noSugarCount = drinks.filter((d) => d.no_sugar).length
 
   return (
-    <div className="page page-admin">
-      <div className="adm-head">
-        <div>
-          <div className="page-eyebrow">УПРАВЛЕНИЕ · ADMIN</div>
-          <h1 className="page-title">Каталог напитков</h1>
-          <p className="page-blurb">
-            Добавление, редактирование и удаление позиций. Только администраторы.
-          </p>
-        </div>
+    <>
+      <div className="adm-cat-head">
         <Link href={ROUTES.admin.newDrink} className="cta-primary">
           <Icons.plus /> Добавить напиток
         </Link>
-      </div>
-
-      <div className="adm-stats">
-        <div className="stat-card stat-cyan">
-          <div className="stat-icon"><Icons.pkg /></div>
-          <div className="stat-lbl">ВСЕГО ПОЗИЦИЙ</div>
-          <div className="stat-val">{totalCount}</div>
-          <div className="stat-sub">в каталоге</div>
-          <div className="stat-corner" />
-        </div>
-        <div className="stat-card stat-amber">
-          <div className="stat-icon"><Icons.flame /></div>
-          <div className="stat-lbl">НОВЫЕ</div>
-          <div className="stat-val">{freshCount}</div>
-          <div className="stat-sub">за 14 дней</div>
-          <div className="stat-corner" />
-        </div>
-        <div className="stat-card stat-lime">
-          <div className="stat-icon"><Icons.candyOff /></div>
-          <div className="stat-lbl">БЕЗ САХАРА</div>
-          <div className="stat-val">{noSugarCount}</div>
-          <div className="stat-sub">zero-sugar</div>
-          <div className="stat-corner" />
-        </div>
-        <div className="stat-card stat-pink">
-          <div className="stat-icon"><Icons.msg /></div>
-          <div className="stat-lbl">ВСЕГО ОТЗЫВОВ</div>
-          <div className="stat-val">{reviewsCount}</div>
-          <div className="stat-sub">в базе</div>
-          <div className="stat-corner" />
-        </div>
       </div>
 
       <div className="adm-list">
         <div className="adm-list-head">
           <span>СПИСОК НАПИТКОВ</span>
           <div className="adm-list-tools">
-            <span className="tm-dim">{filtered.length} {filtered.length === totalCount ? '· всего' : `/ ${totalCount}`}</span>
+            <span className="tm-dim">
+              {filtered.length} {filtered.length === totalCount ? '· всего' : `/ ${totalCount}`}
+            </span>
           </div>
         </div>
-
         {filtered.length === 0 ? (
           <div className="empty" style={{ padding: '60px 20px' }}>
             <Icons.beaker />
@@ -101,12 +59,14 @@ export function AdminDrinksList({ drinks, reviewsCount }: AdminDrinksListProps) 
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }
 
-function DrinkRow({ drink }: { drink: ReturnType<typeof enrichDrinks>[number] }) {
+function DrinkRow({ drink }: { drink: EnrichedDrink }) {
   const router = useRouter()
+  const confirm = useConfirm()
+  const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
   const cleanedName = cleanDrinkName(drink.name)
   const editHref = ROUTES.admin.editDrink(drink.id)
@@ -115,12 +75,19 @@ function DrinkRow({ drink }: { drink: ReturnType<typeof enrichDrinks>[number] })
     router.push(editHref)
   }
 
-  function handleDelete(e: React.MouseEvent) {
+  async function handleDelete(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    if (!confirm(`Удалить «${drink.name}»?`)) return
+    const ok = await confirm({
+      title: 'Удалить напиток?',
+      body: `«${cleanedName}» и все привязанные отзывы будут безвозвратно удалены.`,
+      confirmLabel: 'Удалить',
+      danger: true,
+    })
+    if (!ok) return
     startTransition(() => {
       deleteDrinkAction(drink.id)
+      toast({ kind: 'ok', msg: `«${cleanedName}» удалён` })
     })
   }
 
