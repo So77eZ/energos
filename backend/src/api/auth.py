@@ -99,11 +99,11 @@ async def read_users_me(
     return current_user
 
 
-@router.get("/me/favorites/", response_model=list[EnergyDrinkSchema])
+@router.get("/me/favorites/", response_model=list[int])
 async def get_favorite_drinks(
     request: Request,
     current_user: User = Depends(get_current_user),
-) -> list[EnergyDrink]:
+) -> list[int]:
     async with async_session_maker() as session:
         query = (
             select(User)
@@ -112,15 +112,17 @@ async def get_favorite_drinks(
         )
         result = await session.execute(query)
         user = result.scalar_one()
-        return list(user.favorite_energy_drinks)
+        return [drink.id for drink in user.favorite_energy_drinks]
 
 
-@router.post("/me/favorites/{energy_drink_id}/", status_code=201)
+@router.put(
+    "/me/favorites/{energy_drink_id}/", status_code=204, response_class=Response
+)
 async def add_favorite_drink(
     request: Request,
     energy_drink_id: int,
     current_user: User = Depends(get_current_user),
-) -> dict[str, str]:
+):
     async with async_session_maker() as session:
         query = (
             select(User)
@@ -140,13 +142,11 @@ async def add_favorite_drink(
             )
 
         if any(d.id == energy_drink_id for d in user.favorite_energy_drinks):
-            raise HTTPException(
-                status_code=400, detail=localize_text("already_in_favorites", request)
-            )
+            return Response(status_code=204)
 
         user.favorite_energy_drinks.append(drink)
         await session.commit()
-        return {"message": "Energy drink added to favorites"}
+        return Response(status_code=204)
 
 
 @router.delete(
@@ -171,9 +171,7 @@ async def remove_favorite_drink(
         )
 
         if not drink_to_remove:
-            raise HTTPException(
-                status_code=404, detail=localize_text("not_in_favorites", request)
-            )
+            return Response(status_code=204)
 
         user.favorite_energy_drinks.remove(drink_to_remove)
         await session.commit()
