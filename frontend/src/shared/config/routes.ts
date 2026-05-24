@@ -9,6 +9,7 @@ export const ROUTES = {
     return `/compare?${params}`
   },
   tier: '/tier',
+  glossary: '/glossary',
   profile: '/profile',
   auth: {
     login: '/auth/login',

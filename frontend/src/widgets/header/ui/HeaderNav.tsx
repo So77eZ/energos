@@ -14,6 +14,7 @@ const ITEMS = [
   { href: ROUTES.tasteMap,  label: 'Карта вкусов',  icon: 'map'    },
   { href: ROUTES.tier,      label: 'Tier list',     icon: 'trophy' },
   { href: ROUTES.compare(), label: 'Сравнение',     icon: 'scale'  },
+  { href: ROUTES.glossary,  label: 'Словарь',       icon: 'book'   },
   { href: ROUTES.reviews(), label: 'Отзывы',        icon: 'msg'    },
 ] as const
 

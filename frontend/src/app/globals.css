@@ -1620,6 +1620,87 @@ body::before {
 .adm-form-foot-r { display: flex; gap: 10px; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   GLOSSARY (SOMMELIER) — 6 metric definitions + tasting protocol
+   ═══════════════════════════════════════════════════════════════════ */
+.som-head {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: 24px; flex-wrap: wrap;
+}
+.som-head-meta { flex: 1; min-width: 280px; }
+.som-head-stat {
+  display: flex; align-items: baseline; gap: 8px;
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 16px 24px;
+}
+.som-head-stat-val {
+  font-family: var(--font-display); font-weight: 900;
+  font-size: 56px; color: var(--accent); line-height: 1;
+}
+.som-head-stat-lbl {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--txt-dim); letter-spacing: 1.5px;
+}
+
+.som-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 14px; }
+.som-card {
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  border-left: 3px solid var(--col);
+}
+.som-head-row { display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: center; }
+.som-icon {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  background: var(--bg-input); border: 1px solid currentColor;
+  border-radius: var(--r-sm);
+}
+.som-icon svg { width: 18px; height: 18px; }
+.som-term { font-family: var(--font-title); font-weight: 700; font-size: 18px; color: var(--txt); }
+.som-short { font-family: var(--font-mono); font-size: 10px; color: var(--txt-dim); letter-spacing: 1.5px; }
+.som-axis-no {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 22px; color: var(--col); opacity: 0.4;
+}
+.som-def { font-size: 13px; color: var(--txt-dim); line-height: 1.6; }
+
+.som-scale { display: flex; align-items: center; gap: 8px; }
+.som-scale-lbl { font-family: var(--font-mono); font-size: 9.5px; color: var(--txt-quiet); letter-spacing: 1px; }
+.som-scale-bar { display: flex; gap: 2px; flex: 1; }
+.som-scale-cell { height: 10px; flex: 1; border-radius: 2px; }
+
+.som-examples {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  padding-top: 8px; border-top: 1px dashed var(--line);
+}
+.som-ex { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; min-width: 0; }
+.som-ex-tag {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px;
+  padding: 2px 6px; border-radius: 3px;
+  border: 1px solid var(--line); color: var(--txt-quiet);
+  display: inline-block; align-self: flex-start;
+}
+.som-ex-name { font-weight: 600; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.som-protocol {
+  background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 22px;
+}
+.som-steps {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-top: 14px;
+}
+.som-step {
+  display: flex; flex-direction: column; gap: 6px; padding: 14px;
+  background: var(--bg-input); border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  border-left: 2px solid var(--accent);
+}
+.som-step-n { font-family: var(--font-display); font-weight: 900; font-size: 18px; color: var(--accent); }
+.som-step-title { font-family: var(--font-title); font-weight: 700; font-size: 15px; color: var(--txt); }
+.som-step-body { font-size: 12px; color: var(--txt-dim); line-height: 1.5; }
+
+/* ═══════════════════════════════════════════════════════════════════
    TIER LIST PAGE — drinks bucketed by S/A/B/C/D
    ═══════════════════════════════════════════════════════════════════ */
 .tier-head {
@@ -2132,6 +2213,8 @@ body::before {
   .tier-row-side { grid-template-columns: 56px 1fr; }
   .tier-row-letter { width: 56px; height: 56px; font-size: 26px; }
   .tier-item { width: 100%; }
+  .som-steps { grid-template-columns: 1fr; }
+  .som-grid { grid-template-columns: 1fr; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
