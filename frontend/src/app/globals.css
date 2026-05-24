@@ -187,26 +187,6 @@ body::before {
   position: fixed; inset: 0; z-index: 0;
   pointer-events: none;
   display: none;
-  /* Mask out central 1440px зону где живёт .main контент. Банка может
-     быть какой угодно ширины — её просто отрежет на границе. Z-index
-     спасает только сами карточки, но не gap'ы между ними — без mask'a
-     полоски банки видны в пустотах. */
-  -webkit-mask-image:
-    linear-gradient(to right,
-      black 0,
-      black calc(50% - 720px),
-      transparent calc(50% - 720px),
-      transparent calc(50% + 720px),
-      black calc(50% + 720px),
-      black 100%);
-          mask-image:
-    linear-gradient(to right,
-      black 0,
-      black calc(50% - 720px),
-      transparent calc(50% - 720px),
-      transparent calc(50% + 720px),
-      black calc(50% + 720px),
-      black 100%);
 }
 @media (min-width: 1440px) {
   .three-bg { display: block; }
