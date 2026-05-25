@@ -1,11 +1,17 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
 import { Icons } from '@shared/ui/icons'
 import { registerAction } from '../model/actions'
 
 export function RegisterForm() {
   const [state, formAction, isPending] = useActionState(registerAction, null)
+
+  useEffect(() => {
+    if (state?.success) {
+      window.location.href = '/'
+    }
+  }, [state?.success])
 
   return (
     <form action={formAction} className="auth-fields">

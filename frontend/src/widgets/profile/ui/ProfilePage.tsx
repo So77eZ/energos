@@ -120,11 +120,16 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           </div>
         </div>
         <div className="prof-actions">
-          <form action={logoutAction}>
-            <button type="submit" className="cta-ghost cta-danger">
-              <Icons.lock /> Выйти
-            </button>
-          </form>
+          <button
+            type="button"
+            className="cta-ghost cta-danger"
+            onClick={async () => {
+              await logoutAction()
+              window.location.href = '/'
+            }}
+          >
+            <Icons.lock /> Выйти
+          </button>
         </div>
       </section>
 

@@ -1,14 +1,15 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { authApi } from '@entities/user'
 import { setToken, clearToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 
 export async function loginAction(
-  _prev: { error: string } | null,
+  _prev: { error: string; success?: boolean } | null,
   formData: FormData,
-): Promise<{ error: string } | null> {
+): Promise<{ error: string; success?: boolean } | null> {
   const username = formData.get('username') as string
   const password = formData.get('password') as string
 
@@ -20,13 +21,15 @@ export async function loginAction(
     return { error: 'Неверный логин или пароль' }
   }
 
-  redirect('/')
+  // Вместо redirect (который вызывает soft-навигацию),
+  // даем команду клиенту выполнить window.location.href='/'.
+  return { error: '', success: true }
 }
 
 export async function registerAction(
-  _prev: { error: string } | null,
+  _prev: { error: string; success?: boolean } | null,
   formData: FormData,
-): Promise<{ error: string } | null> {
+): Promise<{ error: string; success?: boolean } | null> {
   const username = formData.get('username') as string
   const password = formData.get('password') as string
   const confirm = formData.get('confirm') as string
@@ -42,10 +45,10 @@ export async function registerAction(
     return { error: e instanceof Error ? e.message : 'Ошибка регистрации' }
   }
 
-  redirect('/')
+  return { error: '', success: true }
 }
 
-export async function logoutAction(): Promise<void> {
+export async function logoutAction(): Promise<{ success: boolean }> {
   await clearToken()
-  redirect('/auth/login')
+  return { success: true }
 }
