@@ -3,7 +3,6 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timezone
 
 from src.schemas.auth import UserCreate, UserResponse, Token
-from src.schemas.energy_drink import EnergyDrinkSchema
 from src.auth import create_access_token, verify_token, hash_password, verify_password
 from src.models.auth import User
 from src.models.energy_drinks import EnergyDrink

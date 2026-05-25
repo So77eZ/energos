@@ -5,9 +5,13 @@ const BASE = '/api/reviews'
 
 async function deleteNoBody(path: string, headers: Record<string, string>): Promise<void> {
   const baseUrl = typeof window === 'undefined' ? (process.env.API_ORIGIN ?? 'http://localhost') : ''
+  const reqHeaders = {
+    ...headers,
+    ...(typeof window === 'undefined' ? { 'Origin': process.env.NEXT_PUBLIC_ORIGIN ?? 'http://localhost:3000' } : {}),
+  }
   const res = await fetch(`${baseUrl}${path}`, {
     method: 'DELETE',
-    headers,
+    headers: reqHeaders,
     credentials: 'include',
   })
   if (!res.ok && res.status !== 404) {

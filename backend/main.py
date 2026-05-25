@@ -19,7 +19,8 @@ class NoDirectAccessMiddleware:
         if scope["type"] == "http" and settings.DEPLOY_ENV == "prod":
             request = Request(scope, receive)
             origin = request.headers.get("origin")
-            if not origin:
+            referer = request.headers.get("referer")
+            if not origin and not referer:
                 response = JSONResponse(
                     status_code=403, content={"detail": "Direct access not allowed"}
                 )
