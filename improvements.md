@@ -21,6 +21,26 @@
 - **Бренд напитка как отдельное поле в БД** — сейчас фронт берёт первый ALL-CAPS токен из имени (`RED BULL Red Edition` → бренд `RED BULL`), fallback `ENERGOS`. С нормальным полем `brand` всё было бы стабильнее и можно фильтровать.
 - **Объём напитка как отдельное поле** — `0.45 л`, `0.25 л` сидит в имени. `cleanDrinkName()` его выкидывает, но потерянная информация полезная — фильтр по объёму и группировка дублей по объёму невозможны.
 - **Описание/blurb напитка** — поле для hero/карточки, 1–2 предложения о вкусе/составе. Сейчас место в дизайне есть, но в БД пусто.
+- **Аватарки пользователей** — сейчас аватар везде это цветной кружок с первой буквой ника (`pickAvatarColor` от хеша user_id, буква = `username[0]`). Пора дать возможность загружать настоящие.
+
+  **Бэк:**
+  - Миграция: колонка `users.avatar_url: str | None` (nullable; null = fallback на буквенный аватар).
+  - `POST /api/auth/me/avatar` (multipart, auth) — приём картинки. Та же валидация что у `POST /energy-drinks/{id}/upload-image/`: jpeg/png/webp/gif, лимит ~2 МБ (меньше чем у напитков, аватарки маленькие).
+  - `DELETE /api/auth/me/avatar` (auth, 204) — снять (вернуться к буквенному).
+  - Хранилище — то же что и для drink-изображений (видимо `/uploads/avatars/{user_id}.{ext}` с очисткой старого файла при замене).
+  - В `UserResponse` добавить `avatar_url: str | None`.
+
+  **Фронт:**
+  - В `entities/user/api/authApi.ts` добавить `uploadAvatar(file, token)` и `removeAvatar(token)`.
+  - Универсальный компонент `<Avatar user={user} size={40} />` который проверяет `user.avatar_url`: если есть — `<img>`, иначе — цветной кружок с буквой (текущая логика). Заменить инлайн-кружки в:
+    - [HeaderAvatar.tsx](frontend/src/widgets/header/ui/HeaderAvatar.tsx)
+    - `prof-avatar` в [ProfilePage.tsx](frontend/src/widgets/profile/ui/ProfilePage.tsx)
+    - `rev-avatar` в [UserReviewCard.tsx](frontend/src/entities/review/ui/UserReviewCard.tsx) и [MyReviewCard.tsx](frontend/src/entities/review/ui/MyReviewCard.tsx)
+    - `lb-avatar` в [LeadersTab.tsx](frontend/src/widgets/admin-page/ui/tabs/LeadersTab.tsx)
+  - В профиле — клик по аватару открывает file picker; preview; кнопка «Сохранить» / «Удалить аватар» / «Отмена». После upload — обновить `useCurrentUser()` контекст и `router.refresh()`.
+  - Опционально: crop-step через `react-easy-crop` (~30KB) — обрезать в квадрат 256×256 перед отправкой. Иначе бэк сам круглит через CSS `border-radius: 50%`.
+
+  **Опционально (на потом):** Gravatar-fallback по email (если будем хранить email — см. пункт «Сброс пароля / верификация email»), или DiceBear identicons для неавторизованных/новых юзеров — детерминистично от user_id, чтобы у каждого был свой узнаваемый рисунок ещё до того как загрузил настоящую.
 - **Сохранение страницы пагинации при back-навигации** — листаешь каталог, открываешь напиток на 4-й странице, жмёшь «Назад» — снова на 1-й странице. Сейчас в `DrinkCatalog` `const [page, setPage] = useState(1)`: локальный React-state теряется при unmount, browser back восстанавливает HTML, но page = 1.
 
   **Фикс:** перенести `page` в URL через `useSearchParams`:

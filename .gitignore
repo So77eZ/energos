@@ -217,6 +217,10 @@ __marimo__/
 uv.lock
 .python-version
 
+# Локальный референс мокапов дизайна (старый прототип на vanilla JS).
+# Используется только для миграции идей в текущий frontend/.
+frontendNew/
+
 # data
 data/
 BDBackup/
