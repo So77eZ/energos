@@ -34,7 +34,7 @@ export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
   function onFavClick(e: MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    void toggle(drink.id, split.variant || drink.name)
+    void toggle(drink.id, drink.name)
   }
 
   return (
