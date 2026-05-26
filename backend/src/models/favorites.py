@@ -1,7 +1,7 @@
 from sqlalchemy import Table, Column, Integer, ForeignKey
 from src.models.base import Base
 
-user_favorite_drinks = Table(
+UserFavoriteDrinks = Table(
     "user_favorite_drinks",
     Base.metadata,
     Column(

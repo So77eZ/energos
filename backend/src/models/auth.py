@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, TYPE_CHECKING
 
 from src.models.base import Base
-from src.models.favorites import user_favorite_drinks
+from src.models.favorites import UserFavoriteDrinks
 from src.constants import Role
 
 if TYPE_CHECKING:
@@ -25,5 +25,5 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     favorite_energy_drinks: Mapped[List["EnergyDrink"]] = relationship(
-        secondary=user_favorite_drinks, back_populates="favorited_by"
+        secondary=UserFavoriteDrinks, back_populates="favorited_by"
     )
