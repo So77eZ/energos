@@ -9,6 +9,7 @@ from src.models.energy_drinks import EnergyDrink
 from src.database import async_session_maker
 from src.rate_limiter import limiter
 from src.localization import localize_text
+from src.constants import Role
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
@@ -34,7 +35,7 @@ async def register_user(request: Request, payload: UserCreate) -> User:
     user = User(
         username=payload.username,
         password_hash=hashed_password,
-        role="user",
+        role=Role.USER,
         created_at=now,
         updated_at=now,
     )

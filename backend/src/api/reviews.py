@@ -8,6 +8,7 @@ from src.api.auth import get_current_user
 from src.database import async_session_maker
 from src.rate_limiter import limiter
 from src.localization import localize_text
+from src.constants import Role
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
@@ -36,7 +37,7 @@ async def create_review(
     review = EnergyDrinkReview(
         **payload.model_dump(exclude={"from_admin"}),
         user_id=current_user.id,
-        from_admin=current_user.role == "admin",
+        from_admin=current_user.role == Role.ADMIN,
         created_at=now,
         updated_at=now,
     )
@@ -130,7 +131,7 @@ async def update_review(
             raise HTTPException(
                 status_code=404, detail=localize_text("review_not_found", request)
             )
-        if existing.user_id != current_user.id and current_user.role != "admin":
+        if existing.user_id != current_user.id and current_user.role != Role.ADMIN:
             raise HTTPException(
                 status_code=403, detail=localize_text("not_allowed", request)
             )
@@ -166,7 +167,7 @@ async def delete_review(
             raise HTTPException(
                 status_code=404, detail=localize_text("review_not_found", request)
             )
-        if existing.user_id != current_user.id and current_user.role != "admin":
+        if existing.user_id != current_user.id and current_user.role != Role.ADMIN:
             raise HTTPException(
                 status_code=403, detail=localize_text("not_allowed", request)
             )

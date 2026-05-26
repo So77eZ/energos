@@ -1,7 +1,9 @@
+export type UserRole = 'user' | 'admin'
+
 export interface User {
   id: number
   username: string
-  role: string
+  role: UserRole
 }
 
 export interface AuthToken {

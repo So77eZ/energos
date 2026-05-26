@@ -2,6 +2,7 @@ from datetime import datetime
 
 import re
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from src.constants import Role
 
 
 class UserCreate(BaseModel):
@@ -35,7 +36,7 @@ class UserResponse(BaseModel):
 
     id: int = Field(...)
     username: str = Field(...)
-    role: str = Field(...)
+    role: Role = Field(...)
     created_at: datetime | None = Field(default=None)
     updated_at: datetime | None = Field(default=None)
 
