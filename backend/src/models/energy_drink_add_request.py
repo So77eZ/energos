@@ -1,4 +1,4 @@
-from sqlalchemy import String, Float, Boolean, LargeBinary
+from sqlalchemy import String, Float, Boolean, LargeBinary, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
 from src.constants import EnergyDrinkAddRequestStatus
@@ -21,5 +21,5 @@ class EnergyDrinkAddRequest(Base):
     )
 
     # Relationships
-    user_id: Mapped[int] = mapped_column(nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     user: Mapped["User"] = relationship(back_populates="energy_drink_add_requests")

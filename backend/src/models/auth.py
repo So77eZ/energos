@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from src.models.reviews import EnergyDrinkReview
     from src.models.review_emoji import ReviewEmoji
     from src.models.energy_drinks import EnergyDrink
+    from src.models.energy_drink_add_request import EnergyDrinkAddRequest
 
 
 class User(Base):
@@ -26,4 +27,7 @@ class User(Base):
     )
     favorite_energy_drinks: Mapped[List["EnergyDrink"]] = relationship(
         secondary=UserFavoriteDrinks, back_populates="favorited_by"
+    )
+    energy_drink_add_requests: Mapped[List["EnergyDrinkAddRequest"]] = relationship(
+        back_populates="user"
     )
