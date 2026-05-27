@@ -10,6 +10,7 @@ from fastapi import (
     Response,
 )
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 
 from src.database import async_session_maker
 from src.api.auth import get_current_user
@@ -41,6 +42,7 @@ async def create_request(
     name: str = Form(...),
     price: Optional[float] = Form(None),
     no_sugar: bool = Form(False),
+    comment: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
 ):
@@ -53,6 +55,7 @@ async def create_request(
             name=name,
             price=price,
             no_sugar=no_sugar,
+            comment=comment,
             image=image_bytes,
             user_id=current_user.id,
         )
@@ -60,7 +63,9 @@ async def create_request(
         await session.commit()
         await session.refresh(new_request)
 
-    return new_request
+    res = EnergyDrinkAddRequestRead.model_validate(new_request)
+    res.user_name = current_user.username
+    return res
 
 
 @router.get("/", response_model=List[EnergyDrinkAddRequestRead])
@@ -68,13 +73,22 @@ async def get_requests(
     current_user: User = Depends(get_current_user),
 ):
     async with async_session_maker() as session:
-        query = select(EnergyDrinkAddRequest)
+        query = select(EnergyDrinkAddRequest).options(
+            joinedload(EnergyDrinkAddRequest.user)
+        )
         if current_user.role != Role.ADMIN:
             query = query.where(EnergyDrinkAddRequest.user_id == current_user.id)
 
         result = await session.execute(query)
         requests = result.scalars().all()
-        return requests
+
+        # Manually populate user_name from the joined user
+        res = []
+        for r in requests:
+            p = EnergyDrinkAddRequestRead.model_validate(r)
+            p.user_name = r.user.username if r.user else f"User {r.user_id}"
+            res.append(p)
+        return res
 
 
 @router.get("/{id}/image")
@@ -105,7 +119,9 @@ async def update_request_status(
 
     async with async_session_maker() as session:
         result = await session.execute(
-            select(EnergyDrinkAddRequest).where(EnergyDrinkAddRequest.id == id)
+            select(EnergyDrinkAddRequest)
+            .options(joinedload(EnergyDrinkAddRequest.user))
+            .where(EnergyDrinkAddRequest.id == id)
         )
         db_request = result.scalar_one_or_none()
 
@@ -119,4 +135,12 @@ async def update_request_status(
 
         await session.commit()
         await session.refresh(db_request)
-        return db_request
+
+        # Add user_name manually
+        res = EnergyDrinkAddRequestRead.model_validate(db_request)
+        res.user_name = (
+            db_request.user.username
+            if db_request.user
+            else f"User {db_request.user_id}"
+        )
+        return res

@@ -7,8 +7,10 @@ class EnergyDrinkAddRequestRead(BaseModel):
     name: str
     price: Optional[float] = None
     no_sugar: bool
+    comment: Optional[str] = None
     status: str
     user_id: int
+    user_name: Optional[str] = None
 
     class Config:
         from_attributes = True

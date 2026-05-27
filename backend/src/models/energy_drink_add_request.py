@@ -16,6 +16,7 @@ class EnergyDrinkAddRequest(Base):
     price: Mapped[float | None] = mapped_column(Float, nullable=True)
     image: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     no_sugar: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    comment: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(
         String, default=EnergyDrinkAddRequestStatus.PENDING, nullable=False
     )

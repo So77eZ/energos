@@ -29,5 +29,8 @@ class User(Base):
         secondary=UserFavoriteDrinks, back_populates="favorited_by"
     )
     energy_drink_add_requests: Mapped[List["EnergyDrinkAddRequest"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    energy_drink_add_requests: Mapped[List["EnergyDrinkAddRequest"]] = relationship(
         back_populates="user"
     )
