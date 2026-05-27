@@ -8,6 +8,7 @@ class EnergyDrinkAddRequestRead(BaseModel):
     price: Optional[float] = None
     no_sugar: bool
     comment: Optional[str] = None
+    admin_comment: Optional[str] = None
     status: str
     user_id: int
     user_name: Optional[str] = None
@@ -18,3 +19,4 @@ class EnergyDrinkAddRequestRead(BaseModel):
 
 class EnergyDrinkAddRequestUpdateStatus(BaseModel):
     status: str
+    admin_comment: Optional[str] = None
