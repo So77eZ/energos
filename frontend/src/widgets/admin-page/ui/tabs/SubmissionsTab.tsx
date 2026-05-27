@@ -43,7 +43,13 @@ export function SubmissionsTab() {
       body: `«${s.drink_name}» будет добавлен в каталог. Заполни остальные поля в карточке напитка после одобрения.`,
       confirmLabel: 'Одобрить',
     })
-    if (ok) updateStatus(s.id, 'approved')
+    if (ok) {
+      try {
+        await updateStatus(s.id, 'approved')
+      } catch (err) {
+        console.error(err)
+      }
+    }
   }
 
   async function reject(s: Submission) {
@@ -53,7 +59,13 @@ export function SubmissionsTab() {
       confirmLabel: 'Отклонить',
       danger: true,
     })
-    if (ok) updateStatus(s.id, 'rejected', 'Не прошло модерацию')
+    if (ok) {
+      try {
+        await updateStatus(s.id, 'rejected', 'Не прошло модерацию')
+      } catch (err) {
+        console.error(err)
+      }
+    }
   }
 
   return (
@@ -111,17 +123,27 @@ function AdminSubmissionCard({ sub, onApprove, onReject }: CardProps) {
   const StatusIcon = Icons[meta.icon]
   return (
     <article className={`sub-card sub-${sub.status}`}>
-      <div className="sub-card-photo">
-        {sub.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={sub.photo} alt={sub.drink_name} />
-        ) : (
-          <div className="sub-card-photo-placeholder">
+      {sub.status === 'pending' && (
+        <div className="sub-card-photo">
+          {sub.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img 
+              src={sub.photo} 
+              alt={sub.drink_name} 
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                if (e.currentTarget.nextElementSibling) {
+                  (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                }
+              }} 
+            />
+          ) : null}
+          <div className="sub-card-photo-placeholder" style={{ display: sub.photo ? 'none' : 'flex' }}>
             <Icons.flask w={28} />
             <span>нет фото</span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       <div className="sub-card-body">
         <div className="sub-card-head">
           <h3 className="sub-card-name">{sub.drink_name}</h3>

@@ -65,19 +65,21 @@ export function SubmitForm({ currentUser, onSubmitted }: SubmitFormProps) {
     readFile(e.dataTransfer.files?.[0])
   }
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!canSubmit) return
-    const item = add({
-      user_id: currentUser.id,
-      user_name: currentUser.username,
-      drink_name: trimmedName,
-      comment: comment.trim() || null,
-      price: price === '' ? null : parseFloat(price),
-      photo,
-    })
-    toast({ kind: 'ok', msg: `Заявка №${item.id} отправлена — ждёт модерации` })
-    onSubmitted(item)
+    try {
+      const item = await add({
+        drink_name: trimmedName,
+        comment: comment.trim() || null,
+        price: price === '' ? null : parseFloat(price),
+        photo,
+      })
+      toast({ kind: 'ok', msg: `Заявка №${item.id} отправлена — ждёт модерации` })
+      onSubmitted(item)
+    } catch (err) {
+      toast({ kind: 'err', msg: String(err) })
+    }
   }
 
   return (

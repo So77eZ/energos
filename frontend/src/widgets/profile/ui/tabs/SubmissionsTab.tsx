@@ -62,14 +62,26 @@ function MySubmissionCard({ sub }: { sub: Submission }) {
   const Icon = Icons[info.icon]
   return (
     <article className={`my-sub sub-${sub.status} my-sub-${sub.status}`}>
-      <div className="my-sub-photo">
-        {sub.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={sub.photo} alt={sub.drink_name} />
-        ) : (
-          <div className="my-sub-photo-empty"><Icons.flask w={22} /></div>
-        )}
-      </div>
+      {sub.status === 'pending' && (
+        <div className="my-sub-photo">
+          {sub.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img 
+              src={sub.photo} 
+              alt={sub.drink_name} 
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                if (e.currentTarget.nextElementSibling) {
+                  (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                }
+              }}
+            />
+          ) : null}
+          <div className="my-sub-photo-empty" style={{ display: sub.photo ? 'none' : 'flex' }}>
+            <Icons.flask w={22} />
+          </div>
+        </div>
+      )}
       <div className="my-sub-body">
         <div className="my-sub-head">
           <h4 className="my-sub-name">{sub.drink_name}</h4>
