@@ -129,6 +129,8 @@ async def update_request_status(
             raise HTTPException(status_code=404, detail="Request not found")
 
         db_request.status = status_update.status
+        if status_update.admin_comment is not None:
+            db_request.admin_comment = status_update.admin_comment
 
         if db_request.status != EnergyDrinkAddRequestStatus.PENDING:
             db_request.image = None
