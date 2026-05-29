@@ -244,9 +244,17 @@
 
 #### 🔴 Critical (фиксить срочно)
 
-- **Broken access control: любой залогиненный юзер может управлять каталогом** — в [backend/src/api/energy_drink.py](backend/src/api/energy_drink.py) эндпоинты `POST /` (создать напиток), `PUT /{id}/`, `DELETE /{id}/`, `POST /{id}/upload-image/` зависят только от `Depends(get_current_user)`, нет проверки `current_user.role == "admin"`. Любой зарегистрированный пользователь может создавать, изменять, удалять напитки и заливать картинки в Supabase bucket (квоты/счёт за хранилище). Admin-check присутствует только в `reviews.py:133,169`.
+- **Broken access control: любой залогиненный юзер может управлять каталогом** — в [backend/src/api/energy_drink.py](backend/src/api/energy_drink.py) эндпоинты `POST /` (создать напиток), `PUT /{id}/`, `DELETE /{id}/`, `POST /{id}/upload-image/` зависят только от `Depends(get_current_user)`, нет проверки `current_user.role == Role.ADMIN`. Любой зарегистрированный пользователь может создавать, изменять, удалять напитки и заливать картинки в Supabase bucket (квоты/счёт за хранилище). Admin-check присутствует только в `reviews.py:134,170` и `energy_drink_add_request.py:116`.
 
-  **Фикс:** ввести зависимость `require_admin` (HTTP 403 если `role != "admin"`) и навесить её на все четыре эндпоинта drinks + на админские части submissions/users если появятся. Можно прямо как `Depends(require_admin)` рядом с `get_current_user`.
+  **Фикс:** ввести зависимость `require_admin` (HTTP 403 если `role != Role.ADMIN`) и навесить её на все четыре эндпоинта drinks. Можно прямо как `Depends(require_admin)` рядом с `get_current_user`.
+
+- **`GET /api/add-requests/{id}/image` — публично, без auth** — [backend/src/api/energy_drink_add_request.py:93-107](backend/src/api/energy_drink_add_request.py#L93-L107) `get_request_image` не зависит от `get_current_user`. Любой по ID `1, 2, 3, ...` сливает приватные картинки чужих заявок (фото банки с возможным контекстом — комната, лицо, документы).
+
+  **Фикс:** добавить `current_user: User = Depends(get_current_user)` + проверку «либо владелец заявки, либо admin».
+
+- **`POST /api/add-requests/` — OOM + MIME spoof** — [backend/src/api/energy_drink_add_request.py:49-51](backend/src/api/energy_drink_add_request.py#L49-L51) `image_bytes = await image.read()` целиком в RAM, без `Content-Length` проверки и без проверки реального типа (magic-bytes функция `_get_image_mime_type` есть, но вызывается только при GET; POST принимает что угодно). Атакующий шлёт 1 ГБ или HTML с подделанным MIME.
+
+  **Фикс:** проверять size во время чтения (чанками с лимитом ~5 МБ) + вызвать `_get_image_mime_type(image_bytes)` сразу после чтения, отказывать если не один из четырёх известных. Заодно валидировать `name`/`comment`/`admin_comment` через `max_length`.
 
 - **`SECRET_KEY` дефолтится в пустую строку** — [backend/config.py:12](backend/config.py#L12) `SECRET_KEY: str = os.getenv("SECRET_KEY", "")`. Если переменная не задана — JWT подписывается пустой строкой и любой может выпустить валидный токен. Pydantic Settings не валидирует обязательность.
 
@@ -264,7 +272,7 @@
 
 - **Upload: MIME-тип берётся из заголовка клиента** — `file.content_type` подделывается. Файл `.html` с `Content-Type: image/jpeg` пройдёт валидацию, попадёт в публичный Supabase bucket с MIME `image/jpeg`, но по факту HTML — XSS-вектор если кто-то откроет URL напрямую (Supabase отдаёт ровно тот MIME, который записали).
 
-  **Фикс:** проверять реальный тип через magic bytes — `PIL.Image.open(BytesIO(content)).verify()` (если бросило исключение — не картинка). Дополнительно — пересохранять через PIL чтобы выкинуть полиглот-payload'ы.
+  **Фикс:** проверять реальный тип через magic bytes — `PIL.Image.open(BytesIO(content)).verify()` (если бросило исключение — не картинка). Дополнительно — пересохранять через PIL чтобы выкинуть полиглот-payload'ы. Уже есть готовый `_get_image_mime_type` в [backend/src/api/energy_drink_add_request.py:28-37](backend/src/api/energy_drink_add_request.py#L28-L37) — вынести в общий util и звать в `SupabaseService.upload_image` тоже.
 
 - **Upload: имя файла из юзера не санитизируется** — [backend/src/database.py:42](backend/src/database.py#L42) `f"{uuid.uuid4()}_{file.filename}"`. `file.filename` может содержать `../`, `/`, NUL, unicode-control. UUID-префикс защитит от перезаписи, но S3-ключ может оказаться невалидным или эзотерическим (`%00`, RTL-override). Имя возвращается клиенту через URL и попадает в `<img src>`.
 
@@ -371,7 +379,21 @@
 
 - **API docs `/docs` открыты в prod?** — FastAPI по умолчанию рендерит Swagger. Если `DEPLOY_ENV=prod` — отключать через `FastAPI(docs_url=None, redoc_url=None)` или защитить basic-auth'ом.
 
-- **`role` строкой вместо enum** — `current_user.role == "admin"` падёт молча если опечатался. Перевести в `Enum`/`Literal["user","admin"]` на уровне модели + Pydantic — typo поймает mypy.
+- ~~**`role` строкой вместо enum**~~ — ✅ исправлено в [backend/src/constants.py](backend/src/constants.py) (commit `52ac096`). `Role(str, Enum)` с `USER`/`ADMIN`, используется в reviews/auth/models. `energy_drink.py` всё ещё игнорирует — после фикса access control звать `Role.ADMIN`.
+
+#### 🐛 Доп. баги в свежих коммитах (не security, но фиксить)
+
+- **Дубль relationship в [backend/src/models/auth.py:30-35](backend/src/models/auth.py#L30-L35)** — `energy_drink_add_requests: Mapped[...]` объявлен дважды подряд. Вторая объявка перезаписывает первую → теряется `cascade="all, delete-orphan"`. SQLAlchemy в свежих версиях выдаёт warning или падает.
+
+  **Фикс:** удалить вторую строку (без cascade).
+
+- **Image заявок хранится как `BYTEA` в БД** — [backend/src/models/energy_drink_add_request.py](backend/src/models/energy_drink_add_request.py) `image: bytes`. БД и pg_dump бэкапы растут на каждую заявку с фото (5 МБ × N). После approve image зануляется (`db_request.image = None` в [`update_request_status:135`](backend/src/api/energy_drink_add_request.py#L135)) — хорошо, но pending-очередь всё равно жирная.
+
+  **Фикс:** перенести в Supabase bucket (как drink-картинки), хранить только URL. Tot же `SupabaseService.upload_image` — после общего рефакторинга.
+
+- **`UserFavoriteDrinks` в PascalCase для `Table` instance** — [backend/src/models/favorites.py](backend/src/models/favorites.py) переименован с `user_favorite_drinks`. SQLAlchemy `Table` объекты по конвенции snake_case (как и `Base.metadata`-объекты). Стиль-баг, mypy/ruff может заругаться.
+
+  **Фикс:** вернуть `user_favorite_drinks`.
 
 ### 💬 Обсуждения
 
