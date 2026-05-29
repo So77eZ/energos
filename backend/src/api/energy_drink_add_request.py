@@ -82,7 +82,6 @@ async def get_requests(
         result = await session.execute(query)
         requests = result.scalars().all()
 
-        # Manually populate user_name from the joined user
         res = []
         for r in requests:
             p = EnergyDrinkAddRequestRead.model_validate(r)
@@ -138,7 +137,6 @@ async def update_request_status(
         await session.commit()
         await session.refresh(db_request)
 
-        # Add user_name manually
         res = EnergyDrinkAddRequestRead.model_validate(db_request)
         res.user_name = (
             db_request.user.username
