@@ -238,6 +238,141 @@
 - **`prefers-reduced-motion`** — полностью отключать для юзеров с этой preferences: liquid-bg, scanlines, 3D-cans hover-animations. Оставить только базовые fade/scale переходы.
 - **`base64` фото в payload заявки — может вылететь 1+ МБ** — сейчас фото в `/api/submissions` кодируется base64 и идёт в JSON. На многомегабайтных снимках это излишне раздувает payload. Альтернатива: загрузка отдельным шагом `POST /uploads` → получает `photo_url` → `POST /submissions` с этим url. Либо multipart-форма.
 
+### 🛡 Безопасность
+
+Аудит от 2026-05-30. Сгруппировано по серьёзности. Все ссылки на код — текущий backend (FastAPI).
+
+#### 🔴 Critical (фиксить срочно)
+
+- **Broken access control: любой залогиненный юзер может управлять каталогом** — в [backend/src/api/energy_drink.py](backend/src/api/energy_drink.py) эндпоинты `POST /` (создать напиток), `PUT /{id}/`, `DELETE /{id}/`, `POST /{id}/upload-image/` зависят только от `Depends(get_current_user)`, нет проверки `current_user.role == "admin"`. Любой зарегистрированный пользователь может создавать, изменять, удалять напитки и заливать картинки в Supabase bucket (квоты/счёт за хранилище). Admin-check присутствует только в `reviews.py:133,169`.
+
+  **Фикс:** ввести зависимость `require_admin` (HTTP 403 если `role != "admin"`) и навесить её на все четыре эндпоинта drinks + на админские части submissions/users если появятся. Можно прямо как `Depends(require_admin)` рядом с `get_current_user`.
+
+- **`SECRET_KEY` дефолтится в пустую строку** — [backend/config.py:12](backend/config.py#L12) `SECRET_KEY: str = os.getenv("SECRET_KEY", "")`. Если переменная не задана — JWT подписывается пустой строкой и любой может выпустить валидный токен. Pydantic Settings не валидирует обязательность.
+
+  **Фикс:** `SECRET_KEY: str` без default + валидатор `@field_validator("SECRET_KEY")` с `len >= 32`. Падать на старте если не задана. Аналогично для `DB_URL` и `SUPABASE_*` ключей.
+
+- **`NoDirectAccessMiddleware` — обходимая псевдо-защита** — [backend/main.py:14-29](backend/main.py#L14-L29) блокирует запросы без `Origin`/`Referer`. Атакующий просто шлёт `Referer: https://x` curl'ом — обходит. Никакой реальной защиты не даёт, но создаёт ложное чувство безопасности. Браузер всё равно ставит эти заголовки сам.
+
+  **Фикс:** удалить middleware. Полагаться на CORS + auth + rate-limit. Если нужен anti-scraping слой — другой механизм (Cloudflare Turnstile, IP-allowlist на админ-роуты).
+
+#### 🟠 High
+
+- **Upload: `Content-Length` не проверяется до полного чтения в память** — [backend/src/database.py:37-41](backend/src/database.py#L37-L41) сначала `content = await file.read()` (целиком в RAM), потом сверяет `len > 5MB`. Атакующий шлёт файл 1 ГБ → сервер OOM'ится до проверки.
+
+  **Фикс:** читать чанками `while chunk := await file.read(64*1024)` и обрывать как только накопилось > 5 МБ. Дополнительно — `app.add_middleware(..., max_request_size=...)` или nginx/Caddy лимит `request_body 6m`.
+
+- **Upload: MIME-тип берётся из заголовка клиента** — `file.content_type` подделывается. Файл `.html` с `Content-Type: image/jpeg` пройдёт валидацию, попадёт в публичный Supabase bucket с MIME `image/jpeg`, но по факту HTML — XSS-вектор если кто-то откроет URL напрямую (Supabase отдаёт ровно тот MIME, который записали).
+
+  **Фикс:** проверять реальный тип через magic bytes — `PIL.Image.open(BytesIO(content)).verify()` (если бросило исключение — не картинка). Дополнительно — пересохранять через PIL чтобы выкинуть полиглот-payload'ы.
+
+- **Upload: имя файла из юзера не санитизируется** — [backend/src/database.py:42](backend/src/database.py#L42) `f"{uuid.uuid4()}_{file.filename}"`. `file.filename` может содержать `../`, `/`, NUL, unicode-control. UUID-префикс защитит от перезаписи, но S3-ключ может оказаться невалидным или эзотерическим (`%00`, RTL-override). Имя возвращается клиенту через URL и попадает в `<img src>`.
+
+  **Фикс:** игнорировать `file.filename` целиком — использовать `f"{uuid4()}{ext_from_mime}"` где ext выводится из проверенного MIME (`.jpg`/`.png`/`.webp`/`.gif`).
+
+- **EXIF не очищается из аватаров/картинок** — Pillow по умолчанию сохраняет EXIF при resave. EXIF из фоток с телефона содержит GPS-координаты юзера → PII утечка через публичный бакет.
+
+  **Фикс:** при resave через PIL — `img.save(buf, format=..., exif=b"")` или явно `del img.info["exif"]`.
+
+- **Mass assignment: PUT `/reviews/{id}/` позволяет подменить `user_id`** — [backend/src/api/reviews.py:114-148](backend/src/api/reviews.py#L114-L148) применяет `setattr` для всех полей `EnergyDrinkReviewSchema`, исключая только `id/created_at/updated_at/username/from_admin`. Поле `user_id` (которое есть в схеме) НЕ исключено. Юзер может в payload поставить `user_id: 42` и подменить владельца своего отзыва. Аналогично — `energy_drink_id` (можно «переселить» отзыв на чужой напиток).
+
+  **Фикс:** добавить `user_id` в exclude-list. Или лучше — использовать отдельную `UpdateEnergyDrinkReviewSchema` без read-only полей вообще (как `Create` уже отделён).
+
+- **Аналогично mass assignment в `PUT /energy-drinks/{id}/`** — [backend/src/api/energy_drink.py:108-111](backend/src/api/energy_drink.py#L108-L111) сетит любое поле кроме id/created/updated. Если в `EnergyDrinkSchema` появится поле типа `is_featured`, `slug`, `image_url` — юзер сможет руками подменить `image_url` на свой URL (после фикса admin-check на эндпоинт это становится меньшей проблемой, но всё равно).
+
+  **Фикс:** отдельная `UpdateEnergyDrinkSchema` с явным whitelist полей.
+
+- **JWT: 30-минутный access token без refresh + без revocation** — [backend/src/auth.py:11,22-32](backend/src/auth.py#L11). Украденный токен живёт 30 минут, logout не инвалидирует (нет blacklist), нет refresh-token флоу. Нет `iss`/`aud` claims — токен от dev-окружения может пройти в prod если SECRET_KEY совпадает.
+
+  **Фикс:** короткий access (~15 мин) + refresh-token с записью в БД (отзываемый), `iss="energos"`, `aud=<env>`. Logout удаляет refresh из БД. Опционально — JWT jti + blacklist в Redis для access.
+
+- **Rate limit считается по `get_remote_address` за прокси** — [backend/src/rate_limiter.py:8](backend/src/rate_limiter.py#L8). `slowapi.util.get_remote_address` возвращает `request.client.host` = IP реверс-прокси (Caddy/nginx). Все юзеры мира делят один счётчик. Бот легко обходит, легитимные юзеры лочатся.
+
+  **Фикс:** custom `key_func` который читает `X-Forwarded-For` / `X-Real-IP` (первый IP в цепочке). Убедиться что Caddy/nginx ставит этот заголовок и **затирает** клиентский (иначе клиент сам себе подставит фейк-IP).
+
+#### 🟡 Medium
+
+- **CORS: `allow_credentials=True` + `allow_methods=["*"]` + `allow_headers=["*"]`** — [backend/main.py:42-48](backend/main.py#L42-L48). При credentials wildcard методов/заголовков делает CORS-маску достаточно прозрачной для CSRF-подобных атак если JWT уедет в cookie. Сейчас Authorization-header → менее страшно, но при миграции на httpOnly cookie станет дырой. `ALLOWED_ORIGINS` зашит в дефолт `http://localhost,http://server` — оба слишком широкие.
+
+  **Фикс:** явный whitelist методов (`GET, POST, PUT, DELETE`), явный whitelist заголовков (`Authorization, Content-Type, Accept-Language`). Запретить `*`. `ALLOWED_ORIGINS` без дефолта — из env.
+
+- **Cookie `secure` флаг условный — токен может уйти по plain HTTP** — [frontend/src/shared/lib/session.ts:14](frontend/src/shared/lib/session.ts#L14) `secure: process.env.NEXT_PUBLIC_ORIGIN?.startsWith('https://') || false`. Если env-переменная не задана / опечатка / не пушнули в prod — JWT в cookie идёт без `Secure` флага. Wi-Fi-MITM перехватывает.
+
+  **Фикс:** в prod хардкодить `secure: true` через `process.env.NODE_ENV === 'production'`. Опечатка в URL не должна снимать защиту.
+
+- **Logout не отзывает JWT** — нет `/api/auth/logout/` на бэке. Фронт чистит cookie, но JWT остаётся валидным до `exp` (30 мин). Украденный токен живёт всё это окно даже после явного logout.
+
+  **Фикс:** связано с пунктом про refresh-token — нужен серверный store отозванных токенов (Redis с jti). Или хотя бы blacklist в БД.
+
+- **Cookie maxAge=7d, JWT exp=30 мин — рассинхрон** — [frontend/src/shared/lib/session.ts:17](frontend/src/shared/lib/session.ts#L17). После 30 минут cookie ещё валидна, но любой API-запрос даёт 401. UX-баг (юзер думает что залогинен), не security.
+
+- **CSRF: защита только через `SameSite=Lax`** — нет explicit CSRF-токена. `SameSite=Lax` блокирует POST-CSRF с других сайтов (хорошо), но GET-side-effects уязвимы. Сейчас все мутации через POST/PUT/DELETE — допустимо, но хрупко: одна `GET /api/.../delete/` пройдёт.
+
+  **Фикс:** для критичных операций (смена пароля, удаление аккаунта) — `SameSite=Strict` на отдельной cookie. Или double-submit CSRF-токен.
+
+- **Yandex Metrika грузится без consent — 152-ФЗ / GDPR** — [frontend/src/app/layout.tsx:46-58](frontend/src/app/layout.tsx#L46-L58) `ym(...,'init',{webvisor:true,...})` инициализируется при первом рендере. `webvisor:true` записывает движения мыши, клики, скроллы, ввод в формы (если не помечены `data-ym-disable-keys`). Согласие пользователя не запрашивается. Для рос. трафика — нарушение 152-ФЗ (сбор персональных данных без согласия), для ЕС-трафика — GDPR.
+
+  **Фикс:** баннер согласия → инициализация ym только после accept. Альтернатива — `webvisor:false` + только агрегированные метрики (тогда персональных данных нет). Поля паролей/email в формах помечать `data-ym-disable-keys` обязательно.
+
+- **Yandex Metrika ID `109003264` захардкожен в layout** — публичный, не секрет, но переносить в `NEXT_PUBLIC_YM_ID` env для отключения в dev.
+
+- **Tracking pixel через `image_url` mass assignment** — в связке с broken access control на drinks: атакующий `PUT /api/energy-drinks/{id}/` ставит `image_url: "https://attacker.com/log?ref=energos"`. Все посетители каталога автоматически дёргают этот URL → утечка IP/User-Agent всех пользователей. После фикса admin-check проблема исчезает; до фикса — критично.
+
+  **Доп. фикс независимо от admin-check:** валидация `image_url` в Pydantic через `HttpUrl` + whitelist хостов (`supabase-url.co`). Чужие URL отклонять.
+
+- **Pydantic-схемы без `max_length` на строковых полях** — `comment` в [backend/src/schemas/reviews.py:12,27](backend/src/schemas/reviews.py#L12), `name` в [backend/src/schemas/energy_drink.py:10](backend/src/schemas/energy_drink.py#L10), `username` уже ограничен (50). Юзер шлёт `comment: "A" * 10_000_000` → 10 МБ в БД на каждый POST. Памяти сервера и места на диске нет.
+
+  **Фикс:** `comment: str | None = Field(default=None, max_length=2000)`, `name: str = Field(..., min_length=1, max_length=200)`. По всем схемам — пройтись и проставить разумные лимиты.
+
+#### ✅ Проверено, дыр нет
+
+- **XSS через комментарии** — все рендерится через JSX `{review.comment}` → React автоэкранирует. `dangerouslySetInnerHTML` используется только для двух статичных init-скриптов (theme, ym) без юзер-инпута. Чисто.
+- **Open redirect** — все вызовы `router.push` / `redirect` идут на захардкоженные `ROUTES.*` или `/`. Нет `redirect(searchParams.get('next'))` или похожего. Чисто.
+- **SSRF / image-proxy** — бэк не делает `fetch(user_supplied_url)`. Картинки приходят только как `UploadFile` (multipart), загружаются в Supabase. SSRF-вектора нет.
+- **SQL injection** — все запросы через SQLAlchemy с параметризацией (`select(User).where(User.username == ...)`). Чисто.
+- **Path traversal на upload** — Supabase S3 key через `uuid4()` префикс, юзер не контролирует начало ключа (после фикса санитизации `file.filename` — будет полностью чисто).
+- **JWT in localStorage** — нет, JWT в **httpOnly cookie** через [frontend/src/shared/lib/session.ts](frontend/src/shared/lib/session.ts). XSS-кражи токена нет.
+
+- **Username enumeration на регистрации** — [backend/src/api/auth.py:27-30](backend/src/api/auth.py#L27-L30) возвращает 400 `username_taken`. Атакующий перебирает имена и узнаёт кто зарегистрирован. (На login уже всё правильно — единое `invalid_credentials`.)
+
+  **Фикс:** компромисс — оставить как есть (UX > enumeration risk для публичной регистрации) ИЛИ перевести на email + OTP (см. соседний пункт про OTP-вход), там enumeration естественно мутится.
+
+- **Парольная политика без проверки на распространённые пароли** — [backend/src/schemas/auth.py:18-30](backend/src/schemas/auth.py#L18-L30) требует upper+lower+digit от 8 символов. `Password1` пройдёт, но это в топ-100 утёкших.
+
+  **Фикс:** zxcvbn (Python-порт) для оценки энтропии — отказывать если score < 3. Или k-anonymity Pwned Passwords (`api.pwnedpasswords.com/range/{prefix5}`) — оффлайн-проверка хеша.
+
+- **Emoji-query без валидации** — [backend/src/api/review_emoji.py:39,86](backend/src/api/review_emoji.py#L39) `emoji: str = Query(...)` без `max_length`, regex. Юзер шлёт 10 МБ строку → в БД лезет, уникальный индекс упадёт, но память съест.
+
+  **Фикс:** `emoji: str = Query(..., max_length=8, regex=r"^\p{Emoji}+$")` (Python: `re` не знает `\p{Emoji}` — взять `emoji` lib или регэксп из её исходников).
+
+- **`upload_image` ловит `Exception` и кладёт `str(e)` в ответ** — [backend/src/database.py:52-55](backend/src/database.py#L52-L55) `detail=f"Failed to upload image: {str(e)}"`. boto3-исключения могут содержать имя бакета, эндпоинт, регион, иногда ключи в ARN. Утечка инфраструктуры наружу.
+
+  **Фикс:** логировать `e` на сервере, отдавать клиенту общий текст «Не удалось загрузить файл, попробуйте позже». Не светить внутренности.
+
+- **Print с ошибкой удаления в `delete_image`** — [backend/src/database.py:67](backend/src/database.py#L67) `print(f"Failed to delete image {key}: {str(e)}")`. Должен быть `logger.error`, иначе ошибки уходят в stdout без структуры и теряются.
+
+- **Логирование на стороне prod не настроено** (по этому файлу видно) — никакой видимости неудачных логинов, лимитов, 5xx. Невозможно увидеть атаку.
+
+  **Фикс:** структурированные логи (loguru / structlog), отдельный channel для auth-событий: failed login → IP, username, timestamp.
+
+#### 🟢 Low / hardening
+
+- **Security headers** — `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Content-Security-Policy` (хотя бы `default-src 'self'; img-src 'self' supabase-url`). Часть может ставить Caddy — проверить `caddyfile`.
+
+- **`SameSite` cookie не настроен** — при будущем переходе на cookie-auth обязательно `SameSite=Lax` (или `Strict` для админ-сессий).
+
+- **Нет CAPTCHA на регистрацию** — rate-limit 5/мин по IP не остановит ботнет. Cloudflare Turnstile или hCaptcha.
+
+- **`BDBackup/`, `dumps/`, `data/` в репо** — проверить что не залиты прод-дампы и `.env`-файлы. `git log --all --full-history -- .env` для убедительности.
+
+- **`pyproject.toml` deps не закреплены через lockfile / audited** — добавить `pip-audit` или `safety check` в CI, проверять CVE в зависимостях (PyJWT, FastAPI, boto3).
+
+- **Нет CSP / Subresource Integrity** на фронте — внешние CDN скрипты без `integrity=` атрибута.
+
+- **API docs `/docs` открыты в prod?** — FastAPI по умолчанию рендерит Swagger. Если `DEPLOY_ENV=prod` — отключать через `FastAPI(docs_url=None, redoc_url=None)` или защитить basic-auth'ом.
+
+- **`role` строкой вместо enum** — `current_user.role == "admin"` падёт молча если опечатался. Перевести в `Enum`/`Literal["user","admin"]` на уровне модели + Pydantic — typo поймает mypy.
+
 ### 💬 Обсуждения
 
 - **Убрать из админки оставление отзывов** — администратор должен оставлять отзывы через обычный интерфейс, а не отдельную форму в панели управления.
