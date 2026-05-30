@@ -3,11 +3,11 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { DrinkCard, enrichDrinks } from '@entities/drink'
-import type { Drink, EnrichedDrink } from '@entities/drink'
+import type { Drink, EnrichedDrink, Tier } from '@entities/drink'
 import type { Review } from '@entities/review'
-import { useCatalogSearch } from '@shared/lib/catalog-search'
+import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
 import { Icons } from '@shared/ui/icons'
 import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
@@ -28,6 +28,12 @@ const ThreeCans = dynamic(() => import('@widgets/three-cans/ui/ThreeCans').then(
 
 const PAGE_SIZE = 12
 
+const SORT_OPTIONS: readonly SortOption[] = [
+  'name', 'price_asc', 'price_desc', 'rating_desc', 'rating_asc',
+  'fresh_desc', 'fresh_asc', 'reviews_desc', 'reviews_asc',
+]
+const TIERS: readonly Tier[] = ['S', 'A', 'B', 'C', 'D']
+
 interface DrinkCatalogProps {
   initialDrinks: Drink[]
   allReviews: Review[]
@@ -44,22 +50,64 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   const enriched = useMemo(() => enrichDrinks(initialDrinks, allReviews), [initialDrinks, allReviews])
   const hero = useMemo(() => pickHero(enriched), [enriched])
   const { filtered } = useFilterDrinks(enriched)
-  const { view } = useCatalogSearch()
+  const {
+    view, setView,
+    sort, setSort,
+    tiers, setTiers,
+    priceRange, setPriceRange,
+    onlyNew, setOnlyNew,
+    noSugarOnly, setNoSugarOnly,
+  } = useCatalogSearch()
 
-  // page хранится в URL (?page=N) — переживает back-навигацию и шарится.
-  // State — источник для рендера, URL — зеркало (паттерн как в ComparePage).
+  // Состояние каталога (page + sort + фильтры + view) живёт в URL — переживает
+  // back-навигацию и шарится. State — источник для рендера, URL — зеркало.
+  // `search` НЕ синкается намеренно: его сбрасывает SearchResetter при навигации.
   const router = useRouter()
   const searchParams = useSearchParams()
   const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1)
 
+  // Гидратация состояния из URL — один раз при маунте (back-навигация на /?...).
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (page <= 1) params.delete('page')
-    else params.set('page', String(page))
+    const sp = searchParams
+    const s = sp.get('sort')
+    if (s && (SORT_OPTIONS as readonly string[]).includes(s)) setSort(s as SortOption)
+    const t = sp.get('tiers')
+    if (t) {
+      const parsed = t.split(',').filter((x): x is Tier => (TIERS as readonly string[]).includes(x))
+      if (parsed.length) setTiers(parsed)
+    }
+    const pr = sp.get('price')
+    if (pr) {
+      const [lo, hi] = pr.split('-').map(Number)
+      if (Number.isFinite(lo) && Number.isFinite(hi)) setPriceRange([lo, hi])
+    }
+    if (sp.get('new') === '1') setOnlyNew(true)
+    if (sp.get('zero') === '1') setNoSugarOnly(true)
+    const v = sp.get('view')
+    if (v === 'heat' || v === 'grid') setView(v)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Зеркалим state → URL при изменениях. Первый прогон (маунт) пропускаем,
+  // чтобы не затереть параметры URL дефолтами до гидратации.
+  const firstWrite = useRef(true)
+  useEffect(() => {
+    if (firstWrite.current) {
+      firstWrite.current = false
+      return
+    }
+    const params = new URLSearchParams()
+    if (page > 1) params.set('page', String(page))
+    if (sort !== 'name') params.set('sort', sort)
+    if (tiers.length) params.set('tiers', tiers.join(','))
+    if (priceRange) params.set('price', `${priceRange[0]}-${priceRange[1]}`)
+    if (onlyNew) params.set('new', '1')
+    if (noSugarOnly) params.set('zero', '1')
+    if (view !== 'grid') params.set('view', view)
     const qs = params.toString()
     router.replace(qs ? `/?${qs}` : '/', { scroll: false })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page])
+  }, [page, sort, tiers, priceRange, onlyNew, noSugarOnly, view])
 
   // [min, max] цен — границы для слайдера в filter-popover'е. Игнорируем напитки
   // без цены; если их вообще нет — fallback [0, 500] чтобы слайдер не сломался.
