@@ -5,6 +5,12 @@
 
 ---
 
+## Фильтрация отзывов по оценке и периоду (коммит `997a6ed`)
+
+- ~~**Фильтрация отзывов по рейтингу и дате**~~ ✅ На странице напитка под отзывами рядом с сортировкой добавлены два `.select-min`: фильтр по оценке (Все / 5 / 4+ / 3+ / 2+ / 1+, по округлённому `calcRating`) и по периоду (всё время / год / месяц / неделя, по `created_at`). [DrinkPage.tsx](frontend/src/widgets/drink-page/ui/DrinkPage.tsx). Секция держится пока есть отзывы вообще — при пустом фильтре контролы остаются + empty-state; счётчик «N из M» при активном фильтре.
+
+---
+
 ## Каталог: URL-пагинация, токенный поиск, скелетоны, 404 (коммит `447bd23`)
 
 - ~~**Сохранение страницы пагинации при back-навигации**~~ ✅ `page` перенесён в URL (`?page=N`) через `useSearchParams` в [DrinkCatalog.tsx](frontend/src/widgets/drink-catalog/ui/DrinkCatalog.tsx) (state→URL one-way, init из URL — паттерн как в ComparePage). Переживает back, шарится. Главная обёрнута в `<Suspense>` ([page.tsx](frontend/src/app/page.tsx)) — требование useSearchParams.
