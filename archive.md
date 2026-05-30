@@ -5,6 +5,16 @@
 
 ---
 
+## Каталог: URL-пагинация, токенный поиск, скелетоны, 404 (коммит `447bd23`)
+
+- ~~**Сохранение страницы пагинации при back-навигации**~~ ✅ `page` перенесён в URL (`?page=N`) через `useSearchParams` в [DrinkCatalog.tsx](frontend/src/widgets/drink-catalog/ui/DrinkCatalog.tsx) (state→URL one-way, init из URL — паттерн как в ComparePage). Переживает back, шарится. Главная обёрнута в `<Suspense>` ([page.tsx](frontend/src/app/page.tsx)) — требование useSearchParams.
+- ~~**Поиск независимо от порядка слов**~~ ✅ В [useFilterDrinks.ts](frontend/src/features/filter-drinks/model/useFilterDrinks.ts) подстрока заменена на токены: `split(/\s+/)` + `tokens.every(t => name.includes(t))`. «burn киви яблоко» находит «BURN Яблоко, киви».
+- ~~**`loading.tsx` / Suspense-границы**~~ ✅ [app/loading.tsx](frontend/src/app/loading.tsx) — скелетон каталога (hero + sortbar + сетка из 8 карточек), `.skel` shimmer-анимация, `prefers-reduced-motion: reduce` отключает.
+- ~~**`not-found.tsx` для несуществующего `?id=`**~~ ✅ [drinks/page.tsx](frontend/src/app/drinks/page.tsx) при заданном, но несуществующем id вызывает `notFound()` вместо молчаливого показа первого напитка; [drinks/not-found.tsx](frontend/src/app/drinks/not-found.tsx) — 404-страница с CTA в каталог.
+- ~~**Сортировка по цене**~~ ✅ Уже была реализована ранее (таб «По цене» в SortBar + `price_asc`/`price_desc` в useFilterDrinks) — пункт был устаревшим в backlog.
+
+---
+
 ## Доработки от бэкендера (коммиты `6c7a0ad` → `97b5aac`)
 
 - ~~**Pydantic mismatch на `GET /me/favorites/`**~~ ✅ Бэк теперь возвращает `[d.id for d in user.favorite_energy_drinks]` — нормальный `list[int]`. Hack-нормализация в `favoritesApi.list` оставлена defensive-кодом, но больше не нужна для работы. (`6c7a0ad`)
