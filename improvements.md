@@ -6,7 +6,31 @@
 
 ### 🔴 Высокий приоритет
 
-- **Изображения не отображаются на мобильных устройствах** — при открытии сайта с телефона картинки энергетиков не загружаются.
+- **Фото напитков не грузятся на мобильных (РФ-сети)** — диагностика показала: загруженные фото отдаются в браузер **напрямую с Supabase** (`https://<project>.supabase.co/storage/...`, [database.py:50](backend/src/database.py#L50), `<img src={drink.image_url}>` в [DrinkCard.tsx:73](frontend/src/entities/drink/ui/DrinkCard.tsx#L73)). Supabase = AWS, его режут/блокируют российские мобильные операторы → `<img>` не грузится. Десктоп с дружелюбной сети/VPN/кэша тянет, мобила по сотовой — нет. Сам сайт (Caddy) при этом открывается на том же URL — значит свой origin в РФ доступен, недоступен только хост картинок.
+
+  **Принцип фикса:** клиент должен ходить за картинкой только на свой origin (Caddy-хост), не на supabase.co напрямую. Дальнейшее зависит от того, **дотягивается ли сам сервер (Caddy/backend) до Supabase**.
+
+  **Ситуация A — сервер достаёт Supabase (VPS за рубежом / есть обход):** проксировать, без миграции данных.
+  - **Caddy reverse-proxy (минимум кода).** В [server/Caddyfile](server/Caddyfile) добавить роут, отдающий объекты Supabase через свой origin:
+
+    ```caddy
+    handle_path /img/* {
+        reverse_proxy https://<project>.supabase.co {
+            header_up Host <project>.supabase.co
+            rewrite * /storage/v1/object/public/<bucket>{uri}
+        }
+    }
+    ```
+
+  - В [SupabaseService.upload_image](backend/src/database.py#L31) возвращать/хранить `image_url` как относительный `/img/<file_name>` вместо абсолютного Supabase-URL (либо переписывать на отдаче в API). `delete_image` подправить под новый формат ключа.
+  - Существующие записи в БД с абсолютными URL — миграцией заменить префикс на `/img/`.
+  - Итог: браузер грузит `https://<свой-домен>/img/<key>`, Caddy сам ходит в Supabase server-side.
+
+  **Ситуация B — сервер в РФ и тоже не достаёт Supabase:** проксирование не спасёт, переезжать с Supabase.
+  - **Вариант B1 — сменить S3-хранилище на РФ-дружественное** (Yandex Object Storage / VK Cloud — S3-совместимы). boto3 уже используется ([database.py:16](backend/src/database.py#L16)) — поменять `endpoint_url`, `region_name`, ключи (`SUPABASE_*` → новые env), формат public-URL в [upload_image:50](backend/src/database.py#L50). Мигрировать существующие файлы в новый бакет + переписать `image_url` в БД.
+  - **Вариант B2 — локальное хранилище** (`/uploads`-том, отдаёт Caddy). Убрать boto3/S3 целиком: `upload_image` пишет файл в смонтированный том, `image_url = /uploads/<file_name>`, Caddy отдаёт статикой (`file_server`). Проще, без внешних провайдеров, но без CDN и привязка к диску сервера. Согласовать с тем, что для заявок (`add-requests`) картинки уже лежат в БД (`LargeBinary`) — можно унифицировать подход.
+
+  **Решающий вопрос до старта:** где хостится прод и достаёт ли сервер Supabase — определяет A vs B.
 
 ### 🟡 Средний приоритет
 
