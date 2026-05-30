@@ -236,7 +236,49 @@
 - **Monocraft.ttc — 5.9MB** — Monocraft подключён через `@font-face` с `.ttc` (TrueType Collection). Большой файл — конвертнуть в `.woff2` сэкономит ~75% (1.5MB вместо 5.9). Команда: распаковать `Monocraft-ttf.zip` из релиза → `woff2_compress Monocraft.ttf` (или онлайн-конвертер). Заменить src в globals.css на `url('/fonts/Monocraft.woff2') format('woff2')` и удалить .ttc.
 - **Анимация перехода dark ↔ light** — сейчас при переключении темы flash. Можно `transition: background-color .3s, color .3s` на root, либо View Transitions API.
 - **`prefers-reduced-motion`** — полностью отключать для юзеров с этой preferences: liquid-bg, scanlines, 3D-cans hover-animations. Оставить только базовые fade/scale переходы.
-- **`base64` фото в payload заявки — может вылететь 1+ МБ** — сейчас фото в `/api/submissions` кодируется base64 и идёт в JSON. На многомегабайтных снимках это излишне раздувает payload. Альтернатива: загрузка отдельным шагом `POST /uploads` → получает `photo_url` → `POST /submissions` с этим url. Либо multipart-форма.
+- **`base64` фото в payload заявки — может вылететь 1+ МБ** — сейчас фото в `/api/submissions` кодируется base64 и идёт в JSON. На многомегабайтных снимках это излишне раздувает payload. Альтернатива: загрузка отдельным шагом `POST /uploads` → получает `photo_url` → `POST /submissions` с этим url. Либо multipart-форма. *(Замечание устарело: фронт уже шлёт `multipart/form-data` через [submissionApi.create](frontend/src/entities/submission/api/submissionApi.ts#L29). Пункт про OOM/лимит размера актуален — см. секцию Безопасность.)*
+
+### 📝 Заявки на добавление энергетика — доделать связь фронт↔бэк
+
+Фича заявок (`POST/GET/PATCH /api/add-requests/`) подключена на фронте ([submissionApi.ts](frontend/src/entities/submission/api/submissionApi.ts), [SubmissionsTab.tsx](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx), [SubmitForm.tsx](frontend/src/widgets/submit-page/ui/SubmitForm.tsx)), но связь рвётся в нескольких местах. Security-разрывы (публичная картинка, OOM/MIME, валидация полей) вынесены в секцию Безопасность ниже — здесь только функциональные.
+
+#### Бэк
+
+- **🔴 `created_at` не проставляется и не отдаётся — даты заявок фейковые.** [Base](backend/src/models/base.py#L9) объявляет `created_at: datetime | None` (nullable, без default), а [create_request](backend/src/api/energy_drink_add_request.py#L54-L64) его не задаёт → в БД `NULL`. Плюс схема [`EnergyDrinkAddRequestRead`](backend/src/schemas/energy_drink_add_request.py#L5) его не содержит → фронт делает `created_at || new Date()` ([:15](frontend/src/entities/submission/api/submissionApi.ts#L15)) и при каждом релоуде показывает «сегодня».
+
+  **Фикс:** проставлять `created_at=datetime.utcnow()` при создании (или `server_default=func.now()` в модели + миграция) и добавить `created_at: datetime` в `EnergyDrinkAddRequestRead`.
+
+- **🔴 Нет времени решения (`resolved_at`) — карточка approved/rejected не показывает дату.** Фронт ждёт `resolved_at` ([types.ts:15](frontend/src/entities/submission/model/types.ts#L15)), бэк не отдаёт. Блок `sub.resolved_at && (…)` в [SubmissionsTab](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx#L184) никогда не рендерится.
+
+  **Фикс:** проставлять `updated_at=datetime.utcnow()` в [update_request_status](backend/src/api/energy_drink_add_request.py#L110) и отдавать его как `resolved_at` (или отдельное поле) в схеме.
+
+- **🔴 `status` в PATCH не валидируется — принимает любую строку.** [update_request_status](backend/src/api/energy_drink_add_request.py#L130) делает `db_request.status = status_update.status` без проверки против `EnergyDrinkAddRequestStatus`. Можно записать `status="banana"`. Также нет guard'а на переход: уже resolved-заявку можно ремодерировать (а картинка уже обнулена — повторный approve без фото).
+
+  **Фикс:** типизировать поле в [схеме](backend/src/schemas/energy_drink_add_request.py#L20) как `status: EnergyDrinkAddRequestStatus` (Pydantic отвалидирует enum). Запретить переход из терминального состояния (403/409 если `db_request.status != PENDING`).
+
+- **🟡 Approve не создаёт реальный напиток.** [update_request_status](backend/src/api/energy_drink_add_request.py#L130) только меняет статус; `energy_drinks` запись не появляется. Админ заводит карточку руками (так и написано в confirm-диалоге [SubmissionsTab:43](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx#L43)).
+
+  **Фикс (на выбор):** (a) при `approved` создавать черновик `EnergyDrink` из полей заявки (`name`, `price`, `no_sugar`, image) и возвращать его `id`, чтобы фронт сразу вёл админа на `/admin/drinks/{id}/edit` дозаполнить метрики; либо (b) явно оставить ручным и убрать ожидание авто-создания. Решение зафиксировать в [api.md](api.md).
+
+- **🟡 Нет `DELETE /api/add-requests/{id}`.** User не может отменить свою `pending`-заявку, админ не может удалить спам. Список копится.
+
+  **Фикс:** `DELETE /{id}` с проверкой «владелец своей pending-заявки ИЛИ admin», `204 No Content`.
+
+- **🟡 Список без сортировки и фильтра.** [get_requests](backend/src/api/energy_drink_add_request.py#L71) отдаёт в порядке БД, без `ORDER BY`, без фильтра по статусу, без пагинации. Фронт тянет всё и фильтрует/сортирует на клиенте.
+
+  **Фикс:** `ORDER BY created_at DESC`; опц. query-параметр `?status=pending` и пагинация `limit/offset`. Это же закрывает счётчики на дашборде без перекачки всех заявок.
+
+- **🟢 Нет rate-limit на создание.** В отличие от [reviews.py:30](backend/src/api/reviews.py#L30) (`@limiter.limit("5/minute")`), `POST /api/add-requests/` ничем не ограничен — спам-заявками легко завалить очередь.
+
+  **Фикс:** навесить `@limiter.limit("5/minute")` + аргумент `request: Request` по образцу reviews.
+
+#### Фронт (после бэка)
+
+- **🔴 Причина отклонения теряется по дороге — `admin_comment` не доходит до API.** Бэк уже принимает `admin_comment` ([схема:21](backend/src/schemas/energy_drink_add_request.py#L21)), но цепочка фронта его дропает: [SubmissionsTab](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx#L64) передаёт reason → [provider.updateStatus](frontend/src/shared/lib/submissions/submissions-provider.tsx#L44) игнорирует аргумент → [action](frontend/src/shared/lib/submissions/actions.ts#L28) шлёт только `status` → [api](frontend/src/entities/submission/api/submissionApi.ts#L75) `body: { status }`. Прокинуть `admin_comment` через всю цепочку.
+
+- **🟡 `admin_comment` не мапится на отображение.** [mapBackendToFrontend](frontend/src/entities/submission/api/submissionApi.ts#L5) не присваивает `reject_reason = item.admin_comment`. Даже с фиксом выше причина не отрисуется на карточке.
+
+- **🟡 В форме нет `no_sugar`.** [submissionApi.create](frontend/src/entities/submission/api/submissionApi.ts#L35) хардкодит `'false'`, в [SubmitForm](frontend/src/widgets/submit-page/ui/SubmitForm.tsx) нет тоггла. Если поле нужно в заявке — добавить чекбокс.
 
 ### 🛡 Безопасность
 
