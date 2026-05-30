@@ -461,6 +461,12 @@ body::before {
 .section-head {
   display: flex; justify-content: space-between; align-items: baseline;
   margin-bottom: 8px;
+  gap: 12px; flex-wrap: wrap;
+}
+.section-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.section-count {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 400;
+  color: var(--txt-quiet);
 }
 .section-title {
   font-family: var(--font-title); font-weight: 700;

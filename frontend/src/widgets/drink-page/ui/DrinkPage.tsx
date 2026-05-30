@@ -44,6 +44,48 @@ const SORT_LABELS: Record<ReviewSort, string> = {
   rating_asc: 'Низкая оценка',
 }
 
+type RatingFilter = 'all' | '5' | '4' | '3' | '2' | '1'
+
+const RATING_FILTER_LABELS: Record<RatingFilter, string> = {
+  all: 'Все оценки',
+  '5': '5 звёзд',
+  '4': '4+ звезды',
+  '3': '3+ звезды',
+  '2': '2+ звезды',
+  '1': '1+ звезда',
+}
+
+type ReviewPeriod = 'all' | 'year' | 'month' | 'week'
+
+const PERIOD_LABELS: Record<ReviewPeriod, string> = {
+  all: 'За всё время',
+  year: 'За год',
+  month: 'За месяц',
+  week: 'За неделю',
+}
+
+const PERIOD_MS: Record<Exclude<ReviewPeriod, 'all'>, number> = {
+  year: 365 * 24 * 60 * 60 * 1000,
+  month: 30 * 24 * 60 * 60 * 1000,
+  week: 7 * 24 * 60 * 60 * 1000,
+}
+
+function filterReviews(reviews: Review[], rating: RatingFilter, period: ReviewPeriod): Review[] {
+  let arr = reviews
+  if (rating !== 'all') {
+    const min = Number(rating)
+    arr = arr.filter((r) => Math.round(calcRating(r)) >= min)
+  }
+  if (period !== 'all') {
+    const cutoff = Date.now() - PERIOD_MS[period]
+    arr = arr.filter((r) => {
+      const t = Date.parse(r.created_at ?? '')
+      return Number.isFinite(t) && t >= cutoff
+    })
+  }
+  return arr
+}
+
 function averageMetrics(reviews: Review[]): ReviewMetrics | null {
   if (reviews.length === 0) return null
   const sum = METRIC_KEYS.reduce<Record<string, number>>((acc, k) => ({ ...acc, [k]: 0 }), {})
@@ -89,6 +131,8 @@ export function DrinkPage({
   const router = useRouter()
   const [formOpen, setFormOpen] = useState(autoOpenReview)
   const [sort, setSort] = useState<ReviewSort>('date_desc')
+  const [ratingFilter, setRatingFilter] = useState<RatingFilter>('all')
+  const [period, setPeriod] = useState<ReviewPeriod>('all')
   const formRef = useRef<HTMLDivElement>(null)
 
   // Reset form-open when drink changes.
@@ -120,7 +164,10 @@ export function DrinkPage({
   )
   const avgMetrics = useMemo(() => averageMetrics(userReviews), [userReviews])
   const avgRating = useMemo(() => averageRating(userReviews), [userReviews])
-  const sortedOthers = useMemo(() => sortedReviews(otherReviews, sort), [otherReviews, sort])
+  const visibleOthers = useMemo(
+    () => sortedReviews(filterReviews(otherReviews, ratingFilter, period), sort),
+    [otherReviews, ratingFilter, period, sort],
+  )
 
   async function handleDelete() {
     if (!myReview) return
@@ -175,15 +222,41 @@ export function DrinkPage({
         ) : null
       )}
 
-      {sortedOthers.length > 0 && (
+      {otherReviews.length > 0 && (
         <section className="other-reviews-section">
           <div className="section-head">
-            <h2 className="section-title">Отзывы сообщества</h2>
+            <h2 className="section-title">
+              Отзывы сообщества
+              {visibleOthers.length !== otherReviews.length && (
+                <span className="section-count"> · {visibleOthers.length} из {otherReviews.length}</span>
+              )}
+            </h2>
             <div className="section-tools">
+              <select
+                className="select-min"
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e.target.value as RatingFilter)}
+                aria-label="Фильтр по оценке"
+              >
+                {(Object.keys(RATING_FILTER_LABELS) as RatingFilter[]).map((k) => (
+                  <option key={k} value={k}>{RATING_FILTER_LABELS[k]}</option>
+                ))}
+              </select>
+              <select
+                className="select-min"
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as ReviewPeriod)}
+                aria-label="Фильтр по периоду"
+              >
+                {(Object.keys(PERIOD_LABELS) as ReviewPeriod[]).map((k) => (
+                  <option key={k} value={k}>{PERIOD_LABELS[k]}</option>
+                ))}
+              </select>
               <select
                 className="select-min"
                 value={sort}
                 onChange={(e) => setSort(e.target.value as ReviewSort)}
+                aria-label="Сортировка"
               >
                 {(Object.keys(SORT_LABELS) as ReviewSort[]).map((k) => (
                   <option key={k} value={k}>{SORT_LABELS[k]}</option>
@@ -191,11 +264,18 @@ export function DrinkPage({
               </select>
             </div>
           </div>
-          <div className="other-rev-grid">
-            {sortedOthers.map((r) => (
-              <UserReviewCard key={r.id} review={r} />
-            ))}
-          </div>
+          {visibleOthers.length > 0 ? (
+            <div className="other-rev-grid">
+              {visibleOthers.map((r) => (
+                <UserReviewCard key={r.id} review={r} />
+              ))}
+            </div>
+          ) : (
+            <div className="empty" style={{ padding: '32px 20px' }}>
+              <Icons.beaker />
+              <p>Нет отзывов под выбранный фильтр.</p>
+            </div>
+          )}
         </section>
       )}
 
