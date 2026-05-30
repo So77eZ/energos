@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Submission, SubmissionStatus } from '@entities/submission'
 import { useConfirm } from '@shared/lib/confirm'
 import { useSubmissions } from '@shared/lib/submissions'
@@ -31,6 +31,7 @@ export function SubmissionsTab() {
   const { all, updateStatus } = useSubmissions()
   const confirm = useConfirm()
   const [filter, setFilter] = useState<FilterId>('pending')
+  const [rejectTarget, setRejectTarget] = useState<Submission | null>(null)
 
   const filtered = useMemo(() => {
     if (filter === 'all') return all
@@ -52,19 +53,14 @@ export function SubmissionsTab() {
     }
   }
 
-  async function reject(s: Submission) {
-    const ok = await confirm({
-      title: 'Отклонить заявку?',
-      body: `Заявка «${s.drink_name}» от ${s.user_name} будет отклонена.`,
-      confirmLabel: 'Отклонить',
-      danger: true,
-    })
-    if (ok) {
-      try {
-        await updateStatus(s.id, 'rejected', 'Не прошло модерацию')
-      } catch (err) {
-        console.error(err)
-      }
+  async function confirmReject(reason: string) {
+    if (!rejectTarget) return
+    try {
+      await updateStatus(rejectTarget.id, 'rejected', reason)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setRejectTarget(null)
     }
   }
 
@@ -103,12 +99,108 @@ export function SubmissionsTab() {
               key={s.id}
               sub={s}
               onApprove={() => approve(s)}
-              onReject={() => reject(s)}
+              onReject={() => setRejectTarget(s)}
             />
           ))}
         </div>
       )}
+
+      {rejectTarget && (
+        <RejectModal
+          sub={rejectTarget}
+          onCancel={() => setRejectTarget(null)}
+          onConfirm={confirmReject}
+        />
+      )}
     </>
+  )
+}
+
+const REJECT_PRESETS = [
+  'Дубль — уже есть в каталоге',
+  'Это не энергетик',
+  'Мало данных для карточки',
+  'Спам / мусор',
+]
+
+interface RejectModalProps {
+  sub: Submission
+  onCancel: () => void
+  onConfirm: (reason: string) => void
+}
+
+function RejectModal({ sub, onCancel, onConfirm }: RejectModalProps) {
+  const [reason, setReason] = useState('')
+  const valid = reason.trim().length > 0
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onCancel()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onCancel])
+
+  return (
+    <div
+      className="confirm-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reject-title"
+      onClick={onCancel}
+    >
+      <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+        <h3 id="reject-title" className="confirm-title">Отклонить заявку?</h3>
+        <p className="confirm-body">
+          Заявка «{sub.drink_name}» от {sub.user_name} будет отклонена. Причина будет видна автору в «Мои заявки».
+        </p>
+
+        <div className="submit-field" style={{ marginBottom: 16 }}>
+          <label className="submit-label">
+            Причина отклонения <span className="req">*</span>
+          </label>
+          <div className="reject-chips">
+            {REJECT_PRESETS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={`reject-chip${reason.trim() === p ? ' active' : ''}`}
+                onClick={() => setReason(p)}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <textarea
+            className="submit-textarea"
+            placeholder="Опиши причину или выбери пресет выше. Этот текст увидит автор заявки."
+            rows={3}
+            maxLength={500}
+            autoFocus
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <div className="submit-hint">
+            <span>{reason.length}/500</span>
+            {!valid && <span className="submit-err">причина обязательна</span>}
+          </div>
+        </div>
+
+        <div className="confirm-actions">
+          <button type="button" className="cta-ghost" onClick={onCancel}>
+            Отмена
+          </button>
+          <button
+            type="button"
+            className="cta-primary cta-primary-danger"
+            disabled={!valid}
+            onClick={() => onConfirm(reason.trim())}
+          >
+            <Icons.x w={12} /> Отклонить
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

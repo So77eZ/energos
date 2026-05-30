@@ -27,6 +27,7 @@ export function SubmitForm({ currentUser, onSubmitted }: SubmitFormProps) {
   const [name, setName]       = useState('')
   const [comment, setComment] = useState('')
   const [price, setPrice]     = useState('')
+  const [noSugar, setNoSugar] = useState(false)
   const [photo, setPhoto]     = useState<string | null>(null)
   const [photoName, setPhotoName] = useState('')
   const [dragOver, setDragOver]   = useState(false)
@@ -73,6 +74,7 @@ export function SubmitForm({ currentUser, onSubmitted }: SubmitFormProps) {
         drink_name: trimmedName,
         comment: comment.trim() || null,
         price: price === '' ? null : parseFloat(price),
+        no_sugar: noSugar,
         photo,
       })
       toast({ kind: 'ok', msg: `Заявка №${item.id} отправлена — ждёт модерации` })
@@ -156,6 +158,26 @@ export function SubmitForm({ currentUser, onSubmitted }: SubmitFormProps) {
             <div className="submit-hint">
               <span>{name.length}/{NAME_MAX}</span>
               {!nameValid && name && <span className="submit-err">минимум {NAME_MIN} символа</span>}
+            </div>
+          </div>
+
+          <div className="submit-field">
+            <label className="submit-label">
+              Без сахара <span className="req">*</span>
+            </label>
+            <label className="adm-toggle">
+              <input
+                type="checkbox"
+                checked={noSugar}
+                onChange={(e) => setNoSugar(e.target.checked)}
+              />
+              <span className="adm-toggle-track"><span className="adm-toggle-thumb" /></span>
+              <span className="adm-toggle-label">
+                {noSugar ? 'Без сахара · zero-sugar' : 'С сахаром'}
+              </span>
+            </label>
+            <div className="submit-hint">
+              <span>Укажи, если это zero-sugar вариант</span>
             </div>
           </div>
 

@@ -2527,6 +2527,21 @@ body::before {
   padding-top: 4px;
 }
 
+/* Reject modal preset chips */
+.reject-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.reject-chip {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.3px;
+  padding: 5px 10px; border-radius: 999px;
+  border: 1px solid var(--line-strong); background: var(--bg-input);
+  color: var(--txt-dim); cursor: pointer;
+  transition: color .12s, border-color .12s, background .12s;
+}
+.reject-chip:hover { color: var(--txt); border-color: var(--c-pink); }
+.reject-chip.active {
+  color: var(--c-pink); border-color: var(--c-pink);
+  background: rgba(255,46,136,0.10);
+}
+
 /* Leaderboard */
 .lb-table {
   background: var(--bg-card); border: 1px solid var(--line);

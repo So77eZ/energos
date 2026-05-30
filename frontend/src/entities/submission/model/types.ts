@@ -7,6 +7,7 @@ export interface Submission {
   drink_name: string
   comment: string | null
   price: number | null
+  no_sugar: boolean
   /** Base64 data-URL OR remote URL. Will be replaced by uploaded url once
    *  backend ships POST /uploads. */
   photo: string | null
@@ -20,5 +21,6 @@ export interface SubmissionCreate {
   drink_name: string
   comment: string | null
   price: number | null
+  no_sugar: boolean
   photo: string | null
 }

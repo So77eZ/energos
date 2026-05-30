@@ -27,11 +27,12 @@ export async function addSubmissionAction(data: SubmissionCreate): Promise<Submi
 
 export async function updateSubmissionStatusAction(
   id: number,
-  status: SubmissionStatus
+  status: SubmissionStatus,
+  adminComment?: string | null
 ): Promise<Submission> {
   const token = await getToken()
   if (!token) throw new Error('Not authorized')
-  const item = await submissionApi.updateStatus(id, status, token)
+  const item = await submissionApi.updateStatus(id, status, token, adminComment)
   revalidatePath('/admin')
   return item
 }

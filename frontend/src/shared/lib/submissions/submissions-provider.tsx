@@ -43,7 +43,7 @@ export function SubmissionsProvider({ children }: { children: ReactNode }) {
 
   const updateStatus = useCallback(
     async (id: number, status: SubmissionStatus, rejectReason?: string) => {
-      const item = await updateSubmissionStatusAction(id, status)
+      const item = await updateSubmissionStatusAction(id, status, rejectReason)
       setItems((prev) => prev.map((s) => (s.id === id ? item : s)))
     },
     []

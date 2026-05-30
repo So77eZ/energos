@@ -272,13 +272,17 @@
 
   **Фикс:** навесить `@limiter.limit("5/minute")` + аргумент `request: Request` по образцу reviews.
 
-#### Фронт (после бэка)
+#### Фронт
 
-- **🔴 Причина отклонения теряется по дороге — `admin_comment` не доходит до API.** Бэк уже принимает `admin_comment` ([схема:21](backend/src/schemas/energy_drink_add_request.py#L21)), но цепочка фронта его дропает: [SubmissionsTab](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx#L64) передаёт reason → [provider.updateStatus](frontend/src/shared/lib/submissions/submissions-provider.tsx#L44) игнорирует аргумент → [action](frontend/src/shared/lib/submissions/actions.ts#L28) шлёт только `status` → [api](frontend/src/entities/submission/api/submissionApi.ts#L75) `body: { status }`. Прокинуть `admin_comment` через всю цепочку.
+- **✅ Причина отклонения доходит до API.** `admin_comment` прокинут через всю цепочку [api](frontend/src/entities/submission/api/submissionApi.ts) → [action](frontend/src/shared/lib/submissions/actions.ts) → [provider](frontend/src/shared/lib/submissions/submissions-provider.tsx). Модалка отклонения [RejectModal](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx) с textarea причины + чипами-пресетами заменила хардкод «Не прошло модерацию».
 
-- **🟡 `admin_comment` не мапится на отображение.** [mapBackendToFrontend](frontend/src/entities/submission/api/submissionApi.ts#L5) не присваивает `reject_reason = item.admin_comment`. Даже с фиксом выше причина не отрисуется на карточке.
+- **✅ `admin_comment` мапится на отображение** — `reject_reason = item.admin_comment` в [mapBackendToFrontend](frontend/src/entities/submission/api/submissionApi.ts). Видно и в админ-карточке, и в «Мои заявки».
 
-- **🟡 В форме нет `no_sugar`.** [submissionApi.create](frontend/src/entities/submission/api/submissionApi.ts#L35) хардкодит `'false'`, в [SubmitForm](frontend/src/widgets/submit-page/ui/SubmitForm.tsx) нет тоггла. Если поле нужно в заявке — добавить чекбокс.
+- **✅ Тоггл `no_sugar` в форме** — switch «Без сахара» в [SubmitForm](frontend/src/widgets/submit-page/ui/SubmitForm.tsx), реальное значение уходит в `formData` (убран хардкод `'false'`).
+
+- **🔴 E — approve→черновик (ждёт бэк).** Бэкендер делает создание `EnergyDrink` с `is_draft` + publish-эндпоинт. Дизайн-мокап готов (`frontendNew/.../page-admin.jsx` — `createDraftFromSubmission`, гейтинг публикации по метрикам, баннер черновика). Портировать в боевой `frontend/` после появления эндпоинтов.
+
+- **🟡 Реальные даты в карточке заявки (ждёт бэк).** Пока бэк не отдаёт `created_at`/`resolved_at` (см. задачи Бэк выше), фронт фоллбэчит дату на `new Date()` — при релоуде «сегодня». После фикса бэка убрать фоллбэк в [submissionApi](frontend/src/entities/submission/api/submissionApi.ts) и маппить `resolved_at`.
 
 ### 🛡 Безопасность
 

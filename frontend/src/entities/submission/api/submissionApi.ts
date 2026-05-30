@@ -10,9 +10,11 @@ function mapBackendToFrontend(item: any): Submission {
     drink_name: item.name,
     comment: item.comment,
     price: item.price,
+    no_sugar: !!item.no_sugar,
     photo: item.status === 'pending' ? `/api/add-requests/${item.id}/image` : null, // Backend clears image on resolve
     status: item.status as SubmissionStatus,
     created_at: item.created_at || new Date().toISOString(),
+    reject_reason: item.admin_comment ?? null,
   }
 }
 
@@ -32,7 +34,7 @@ export const submissionApi = {
     if (data.price != null) {
       formData.append('price', String(data.price))
     }
-    formData.append('no_sugar', 'false') // or pass if we had it
+    formData.append('no_sugar', String(data.no_sugar))
     if (data.comment) {
       formData.append('comment', data.comment)
     }
@@ -64,15 +66,20 @@ export const submissionApi = {
   updateStatus: async (
     id: number,
     status: SubmissionStatus,
-    token: string
+    token: string,
+    adminComment?: string | null
   ): Promise<Submission> => {
+    const body: { status: SubmissionStatus; admin_comment?: string } = { status }
+    if (adminComment != null && adminComment !== '') {
+      body.admin_comment = adminComment
+    }
     const raw = await httpRequest<any>(`/api/add-requests/${id}/status`, {
       method: 'PATCH',
       headers: {
         ...bearerHeaders(token),
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(body),
     })
     return mapBackendToFrontend(raw)
   },
