@@ -2,7 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import { DrinkCard, enrichDrinks } from '@entities/drink'
 import type { Drink, EnrichedDrink } from '@entities/drink'
 import type { Review } from '@entities/review'
@@ -43,8 +44,22 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   const enriched = useMemo(() => enrichDrinks(initialDrinks, allReviews), [initialDrinks, allReviews])
   const hero = useMemo(() => pickHero(enriched), [enriched])
   const { filtered } = useFilterDrinks(enriched)
-  const [page, setPage] = useState(1)
   const { view } = useCatalogSearch()
+
+  // page хранится в URL (?page=N) — переживает back-навигацию и шарится.
+  // State — источник для рендера, URL — зеркало (паттерн как в ComparePage).
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [page, setPage] = useState(() => Number(searchParams.get('page')) || 1)
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (page <= 1) params.delete('page')
+    else params.set('page', String(page))
+    const qs = params.toString()
+    router.replace(qs ? `/?${qs}` : '/', { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
 
   // [min, max] цен — границы для слайдера в filter-popover'е. Игнорируем напитки
   // без цены; если их вообще нет — fallback [0, 500] чтобы слайдер не сломался.

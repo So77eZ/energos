@@ -2542,6 +2542,24 @@ body::before {
   background: rgba(255,46,136,0.10);
 }
 
+/* Loading skeletons (route loading.tsx) */
+@keyframes skel-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skel {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-input) 37%, var(--bg-card) 63%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--r-md);
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; }
+}
+.skel-strip { height: 120px; margin-bottom: 20px; }
+.skel-sortbar { height: 52px; margin-bottom: 16px; border-radius: var(--r-sm); }
+.skel-card { height: 360px; }
+
 /* Leaderboard */
 .lb-table {
   background: var(--bg-card); border: 1px solid var(--line);

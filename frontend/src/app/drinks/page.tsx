@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { drinkApi } from '@entities/drink'
 import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
@@ -17,8 +18,14 @@ export default async function DrinkRoute({ searchParams }: Props) {
     getToken(),
   ])
 
-  const activeDrink =
-    (id ? drinks.find((d) => String(d.id) === id) : null) ?? drinks[0] ?? null
+  // id задан, но напитка с таким id нет → честная 404 (не молчаливый фоллбэк на первый).
+  if (id) {
+    const found = drinks.find((d) => String(d.id) === id)
+    if (!found) notFound()
+  }
+
+  // Без id — индекс /drinks показывает первый напиток (намеренно).
+  const activeDrink = (id ? drinks.find((d) => String(d.id) === id) : null) ?? drinks[0] ?? null
 
   if (!activeDrink) {
     return (

@@ -18,9 +18,14 @@ export function useFilterDrinks(drinks: EnrichedDrink[]) {
 
   const filtered = useMemo(() => {
     let result = drinks
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter((d) => d.name.toLowerCase().includes(q))
+    if (search.trim()) {
+      // Токены в любом порядке: «burn киви яблоко» находит «BURN Яблоко, киви».
+      // Каждый токен должен встречаться в имени (как подстрока), порядок не важен.
+      const tokens = search.toLowerCase().split(/\s+/).filter(Boolean)
+      result = result.filter((d) => {
+        const name = d.name.toLowerCase()
+        return tokens.every((t) => name.includes(t))
+      })
     }
     if (tiers.length > 0) {
       result = result.filter((d) => d.tier != null && tiers.includes(d.tier))
