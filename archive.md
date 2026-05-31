@@ -5,6 +5,14 @@
 
 ---
 
+## Сравнение напитков: «только различающиеся» + золото победителя
+
+- ~~**Side-by-side сравнение с тогглером «Только различающиеся» + золотая обводка победителя**~~ ✅ Страница `/compare` уже имела side-by-side бары + ★-победителя; добавлено недостающее:
+  - **Тоггл «Только различающиеся»** ([ComparePage.tsx](frontend/src/widgets/compare-page/ui/ComparePage.tsx)) — свитч (переиспользован `.filt-toggle`) над метриками; `visibleMetrics` прячет строки где показанные (округлённые до 0.1, как видит юзер) значения совпадают у всех. Пустое состояние «Все метрики совпадают».
+  - **Золотая рамка победителя** ([globals.css](frontend/src/app/globals.css)): `.cmp-bar-cell.winner` и звезда `.cmp-winner` переведены с accent-цвета на `color-mix(var(--c-amber) 72%, accent 28%)` — «трофейное» золото, оттенок которого плывёт с акцентом темы. Победитель по метрике = max value.
+
+---
+
 ## Техдолг фронта: чистка dead-code (glass shim + enrichDrinks)
 
 - ~~**Compatibility-shim `.glass` / `.glass-surface`**~~ ✅ Удалён из [globals.css](frontend/src/app/globals.css). Аудит показал: `.glass-surface` — ноль потребителей; `.glass` использовал только `shared/ui/Card`, а сам `Card` нигде не импортировался. Снесён и shim-блок, и мёртвый компонент `Card` (Card.tsx + index.ts). `.card-glass` (реальная карточка каталога) — другой класс, не тронут.
