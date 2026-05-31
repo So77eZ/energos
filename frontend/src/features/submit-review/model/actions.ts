@@ -53,13 +53,17 @@ export async function saveReviewAction(
   redirect(`/drinks?id=${drinkId}`)
 }
 
-export async function deleteReviewAction(reviewId: number, drinkId: number): Promise<void> {
+export async function deleteReviewAction(
+  reviewId: number,
+  drinkId: number,
+): Promise<{ error: string } | void> {
   const token = await getToken()
   if (!token) redirect('/auth/login')
   try {
     await reviewApi.remove(reviewId, token)
-  } catch {
-    // ignore
+  } catch (e) {
+    if (e instanceof RateLimitError) return { error: e.message }
+    return { error: e instanceof Error ? e.message : 'Не удалось удалить отзыв' }
   }
   revalidateTag('reviews')
   redirect(`/drinks?id=${drinkId}`)

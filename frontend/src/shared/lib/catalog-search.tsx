@@ -58,11 +58,20 @@ const Ctx = createContext<PageSearchCtx>({
 
 function SearchResetter() {
   const pathname = usePathname()
-  const { setSearch, setSearchItems, setFilterOpen } = useContext(Ctx)
+  const {
+    setSearch, setSearchItems, setFilterOpen,
+    setSort, setTiers, setPriceRange, setOnlyNew, setNoSugarOnly, setView,
+  } = useContext(Ctx)
   useEffect(() => {
     setSearch('')
     setSearchItems([])
     setFilterOpen(false)
+    setSort('name')
+    setTiers([])
+    setPriceRange(null)
+    setOnlyNew(false)
+    setNoSugarOnly(false)
+    setView('grid')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
   return null

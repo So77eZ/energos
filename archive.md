@@ -5,6 +5,14 @@
 
 ---
 
+## Техдолг фронта: сброс фильтров + ошибки удаления отзыва
+
+- ~~**`sort`/`noSugarOnly` не сбрасывались при смене маршрута**~~ ✅ `SearchResetter` в [catalog-search.tsx](frontend/src/shared/lib/catalog-search.tsx) теперь сбрасывает все восемь полей контекста (добавлены `sort`, `tiers`, `priceRange`, `onlyNew`, `noSugarOnly`, `view`), а не только `search`/`searchItems`/`filterOpen`. «Сначала дороже» больше не висит после ухода со страницы.
+- ~~**`deleteReviewAction` молча игнорировал ошибки**~~ ✅ Экшен в [actions.ts](frontend/src/features/submit-review/model/actions.ts) возвращает `{ error }` (с обработкой `RateLimitError` по образцу `saveReviewAction`) вместо `// ignore`; редирект только при успехе. [DrinkPage.handleDelete](frontend/src/widgets/drink-page/ui/DrinkPage.tsx) показывает `toast({ kind: 'err' })` при провале.
+- ~~**`avgReview` использует `userReviews[0]` как базу**~~ ✅ Уже было исправлено ранее — `DrinkPage` считает `averageMetrics(userReviews)` и передаёт `metrics`/`count`/`rating` явными пропами в `AvgReviewCard`, без spread'а чужого отзыва. Пункт в backlog был устаревшим.
+
+---
+
 ## Фильтрация отзывов по оценке и периоду (коммит `997a6ed`)
 
 - ~~**Фильтрация отзывов по рейтингу и дате**~~ ✅ На странице напитка под отзывами рядом с сортировкой добавлены два `.select-min`: фильтр по оценке (Все / 5 / 4+ / 3+ / 2+ / 1+, по округлённому `calcRating`) и по периоду (всё время / год / месяц / неделя, по `created_at`). [DrinkPage.tsx](frontend/src/widgets/drink-page/ui/DrinkPage.tsx). Секция держится пока есть отзывы вообще — при пустом фильтре контролы остаются + empty-state; счётчик «N из M» при активном фильтре.
