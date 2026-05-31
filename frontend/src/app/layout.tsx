@@ -37,8 +37,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Always-load набор: JetBrains Mono (--font-sans дефолт + --font-mono),
+            Russo One (--font-display), Exo 2 (--font-title). Опциональные
+            Share Tech Mono / Orbitron / Rajdhani подгружаются динамически в
+            applyFont() (см. user-preferences.ts), когда юзер их выбрал. */}
         <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Russo+One&family=Exo+2:wght@400;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;600;700&family=Rajdhani:wght@400;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Russo+One&family=Exo+2:wght@400;600;700&display=swap"
           rel="stylesheet"
         />
       </head>

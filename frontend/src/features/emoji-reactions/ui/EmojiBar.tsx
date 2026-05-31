@@ -22,8 +22,21 @@ export function EmojiBar({ reviewId }: EmojiBarProps) {
   const [reactions, setReactions] = useState<ReviewEmoji[]>([])
   const [loading, setLoading] = useState(true)
   const [pickerOpen, setPickerOpen] = useState(false)
+  // Picker по умолчанию раскрывается вверх; если над якорем мало места
+  // (отзыв близко к верху viewport) — флипаем вниз, чтобы не уехать за край.
+  const [dropUp, setDropUp] = useState(true)
   const [pending, setPending] = useState(false)
   const pickerAnchorRef = useRef<HTMLDivElement | null>(null)
+
+  function togglePicker() {
+    if (!pickerOpen) {
+      const rect = pickerAnchorRef.current?.getBoundingClientRect()
+      // Примерная высота picker'а + зазор. Если над якорем меньше — вниз.
+      const PICKER_H = 52
+      setDropUp(!rect || rect.top > PICKER_H)
+    }
+    setPickerOpen((v) => !v)
+  }
 
   // Загружаем реакции при mount + при смене reviewId.
   useEffect(() => {
@@ -141,7 +154,7 @@ export function EmojiBar({ reviewId }: EmojiBarProps) {
         <button
           type="button"
           className="emoji-add"
-          onClick={() => setPickerOpen((v) => !v)}
+          onClick={togglePicker}
           aria-expanded={pickerOpen}
           aria-haspopup="menu"
           title="Добавить реакцию"
@@ -149,7 +162,7 @@ export function EmojiBar({ reviewId }: EmojiBarProps) {
           <Icons.plus w={12} />
         </button>
         {pickerOpen && (
-          <div className="emoji-picker" role="menu">
+          <div className={`emoji-picker${dropUp ? '' : ' is-down'}`} role="menu">
             {PRESET_EMOJIS.map((e) => (
               <button
                 key={e}

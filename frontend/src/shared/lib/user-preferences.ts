@@ -2,10 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-// Список доступных шрифтов. Первые 4 подгружаются из Google Fonts через
-// <link> в layout.tsx — если добавляешь новый, не забудь дописать туда же,
-// иначе он молча упадёт в системный sans.
-// Monocraft self-hosted: файл /public/fonts/Monocraft.ttc, @font-face в globals.css.
+// Список доступных шрифтов.
+//
+// Загрузка:
+//  - JetBrains Mono грузится всегда (дефолт --font-sans + --font-mono) через
+//    <link> в layout.tsx, вместе с Russo One (--font-display) и Exo 2 (--font-title).
+//  - Share Tech Mono / Orbitron / Rajdhani — опциональные: грузятся динамически
+//    через ensureFontLoaded() только когда юзер реально их выбрал, чтобы не тянуть
+//    три неиспользуемых семейства на каждый первый рендер (~экономия трафика).
+//  - Monocraft self-hosted: /public/fonts/Monocraft.woff2, @font-face в globals.css.
+//
+// Добавляешь новый Google-шрифт — допиши href в FONT_HREFS (если опциональный)
+// либо в <link> layout.tsx (если должен грузиться всегда), иначе упадёт в fallback.
 export const FONTS = [
   { id: 'JetBrains Mono', label: 'JetBrains Mono' },
   { id: 'Share Tech Mono', label: 'Share Tech Mono' },
@@ -13,6 +21,30 @@ export const FONTS = [
   { id: 'Rajdhani', label: 'Rajdhani' },
   { id: 'Monocraft', label: 'Monocraft' },
 ] as const
+
+// Google Fonts CSS-href для опциональных шрифтов (не входят в always-load набор
+// layout.tsx). JetBrains Mono / Monocraft тут нет — первый всегда загружен,
+// второй self-hosted.
+const FONT_HREFS: Partial<Record<string, string>> = {
+  'Share Tech Mono': 'https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap',
+  'Orbitron':        'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap',
+  'Rajdhani':        'https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap',
+}
+
+// Один раз вставляет <link rel=stylesheet> для опционального шрифта. No-op если
+// шрифт всегда-загружен/self-hosted или уже подгружен ранее.
+function ensureFontLoaded(font: string): void {
+  if (typeof document === 'undefined') return
+  const href = FONT_HREFS[font]
+  if (!href) return
+  const id = `font-dyn-${font.replace(/\s+/g, '-').toLowerCase()}`
+  if (document.getElementById(id)) return
+  const link = document.createElement('link')
+  link.id = id
+  link.rel = 'stylesheet'
+  link.href = href
+  document.head.appendChild(link)
+}
 
 export type FontId = (typeof FONTS)[number]['id']
 
@@ -51,6 +83,7 @@ function writePrefs(prefs: Prefs): void {
 
 export function applyFont(font: FontId): void {
   if (typeof document === 'undefined') return
+  ensureFontLoaded(font)
   document.documentElement.style.setProperty('--font-sans', `"${font}"`)
 }
 

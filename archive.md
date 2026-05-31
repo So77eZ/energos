@@ -5,6 +5,17 @@
 
 ---
 
+## Техдолг фронта: шрифты, emoji-picker, тема, Monocraft
+
+- ~~**Все Google Fonts грузятся всегда**~~ ✅ [layout.tsx](frontend/src/app/layout.tsx) грузит только always-load набор (JetBrains Mono / Russo One / Exo 2). Опциональные Share Tech Mono / Orbitron / Rajdhani подгружаются динамически через `ensureFontLoaded()` в [applyFont](frontend/src/shared/lib/user-preferences.ts) только когда юзер их выбрал — три неиспользуемых семейства больше не тянутся на каждый первый рендер.
+- ~~**`FONT_INIT_SCRIPT` не валидирует значение шрифта**~~ ✅ Устарел — `readPrefs()` в [user-preferences.ts](frontend/src/shared/lib/user-preferences.ts) проверяет `font` против `FONTS` и падает на дефолт при мусоре. Отдельного inline-скрипта больше нет.
+- ~~**Emoji-picker позиционируется только вверх**~~ ✅ [EmojiBar](frontend/src/features/emoji-reactions/ui/EmojiBar.tsx) меряет место над якорем при открытии (`getBoundingClientRect`) и флипает вниз (класс `.is-down`, [globals.css](frontend/src/app/globals.css)) когда сверху < 52px — у верхних отзывов picker больше не уезжает за viewport.
+- ~~**Мусор `energos_favorites_mock` в localStorage**~~ ✅ One-shot `localStorage.removeItem('energos_favorites_mock')` на mount в [FavoritesProvider](frontend/src/shared/lib/favorites/favorites-provider.tsx).
+- ~~**Monocraft.ttc — 5.9MB**~~ ✅ Сконвертирован в `.woff2` через fontTools (взят regular weight 400 из 12-шрифтовой коллекции): **5.9MB → 446KB (-92%)**. `@font-face` в [globals.css](frontend/src/app/globals.css) переведён на `format('woff2')`, исходный `.ttc` удалён.
+- ~~**Анимация перехода dark↔light (flash)**~~ ✅ [theme-provider.tsx](frontend/src/shared/lib/theme/theme-provider.tsx) оборачивает смену темы в View Transitions API (кроссфейд `.35s`). Только на явном dark↔light (не первый рендер, не accent/toggle), с guard на `prefers-reduced-motion` и graceful no-op где API не поддержан.
+
+---
+
 ## Техдолг фронта: сброс фильтров + ошибки удаления отзыва
 
 - ~~**`sort`/`noSugarOnly` не сбрасывались при смене маршрута**~~ ✅ `SearchResetter` в [catalog-search.tsx](frontend/src/shared/lib/catalog-search.tsx) теперь сбрасывает все восемь полей контекста (добавлены `sort`, `tiers`, `priceRange`, `onlyNew`, `noSugarOnly`, `view`), а не только `search`/`searchItems`/`filterOpen`. «Сначала дороже» больше не висит после ухода со страницы.

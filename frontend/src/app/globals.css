@@ -2,16 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Monocraft self-hosted (нет на Google Fonts). Файл лежит в public/fonts/.
-   format("collection") = TrueType Collection (.ttc) — поддерживается всеми
-   современными браузерами. font-display: swap — не блокирует рендер.
-   TODO: 5.9MB → конвертнуть в .woff2 (~1.5MB), см. improvements.md. */
+/* Monocraft self-hosted (нет на Google Fonts). Файл в public/fonts/.
+   woff2 (446KB) — сконвертирован из исходного .ttc (5.9MB, -92%) через
+   fontTools, взят regular (weight 400). font-display: swap — не блокирует рендер. */
 @font-face {
   font-family: 'Monocraft';
-  src: url('/fonts/Monocraft.ttc') format('collection');
+  src: url('/fonts/Monocraft.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+}
+
+/* Кроссфейд при переключении dark↔light (View Transitions API, см.
+   theme-provider.tsx). Где API не поддержан — правила игнорируются. */
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: .35s; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1340,8 +1348,17 @@ body::before {
   z-index: 20;
   animation: emoji-picker-in .12s ease-out;
 }
+/* Флип вниз, когда над якорем мало места (верхние отзывы). */
+.emoji-picker.is-down {
+  bottom: auto; top: calc(100% + 6px);
+  animation-name: emoji-picker-in-down;
+}
 @keyframes emoji-picker-in {
   from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes emoji-picker-in-down {
+  from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .emoji-picker-item {
