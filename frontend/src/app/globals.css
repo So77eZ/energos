@@ -3332,21 +3332,3 @@ body::before {
   .lb-row .lb-stat { grid-column: 2; grid-row: 2; padding-left: 0; }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   COMPATIBILITY SHIMS — kept while legacy pages are migrated.
-   Remove once every consumer has moved off `.glass` / `.glass-surface`.
-   ═══════════════════════════════════════════════════════════════════ */
-@layer utilities {
-  .glass {
-    background: var(--bg-card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(var(--accent-rgb), 0.25);
-  }
-  .glass-surface {
-    background: var(--bg-surface);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid var(--line);
-  }
-}

@@ -5,6 +5,13 @@
 
 ---
 
+## Техдолг фронта: чистка dead-code (glass shim + enrichDrinks)
+
+- ~~**Compatibility-shim `.glass` / `.glass-surface`**~~ ✅ Удалён из [globals.css](frontend/src/app/globals.css). Аудит показал: `.glass-surface` — ноль потребителей; `.glass` использовал только `shared/ui/Card`, а сам `Card` нигде не импортировался. Снесён и shim-блок, и мёртвый компонент `Card` (Card.tsx + index.ts). `.card-glass` (реальная карточка каталога) — другой класс, не тронут.
+- ~~**`enrichDrinks` дважды на drink-странице**~~ ❌ Признан невалидным, убран из backlog. `enrichDrinks` уже O(n+m) (индексация отзывов в `Map`), везде в `useMemo` либо разовый вызов в server-компоненте. Разные роуты (главная vs `/drinks`) не рендерятся одновременно — «соседства» нет. Единственная микро-дупликация (активный напиток энричится в `enrichDrink` + повторно внутри `enrichDrinks(pool)` для SimilarRail) ничтожна. Провайдер/кэш = оверинжиниринг.
+
+---
+
 ## Техдолг фронта: prefers-reduced-motion
 
 - ~~**`prefers-reduced-motion` — глушить декоративную анимацию**~~ ✅ Гибрид CSS + JS:
