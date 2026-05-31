@@ -28,7 +28,7 @@ const PALETTES: Record<Shade, CanPalette> = {
   light: { body: 0xe6ecf3, capTop: 0xc8d0dc, capBot: 0xa8b2c0 },
 }
 
-function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string, shade: Shade): () => void {
+function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string, shade: Shade, animate: boolean): () => void {
   const isLeft = side === 'left'
   const palette = PALETTES[shade]
 
@@ -201,6 +201,33 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
 
   function onEnter() { hovering = true }
   function onLeave() { hovering = false }
+
+  function disposeAll() {
+    scene.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (mesh.geometry) mesh.geometry.dispose()
+      if (mesh.material) {
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+        mats.forEach((m) => m.dispose())
+      }
+    })
+    renderer.dispose()
+  }
+
+  // prefers-reduced-motion: показываем банки статичным кадром — без rAF-цикла,
+  // hover-разгона и орбиты льдинок. Элемент остаётся (как у liquid-bg), глушим
+  // только движение. resize перерисовывает единичный кадр.
+  if (!animate) {
+    resize()
+    renderer.render(scene, camera)
+    const onResize = () => { resize(); renderer.render(scene, camera) }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      disposeAll()
+    }
+  }
+
   canvas.addEventListener('mouseenter', onEnter)
   canvas.addEventListener('mouseleave', onLeave)
 
@@ -328,15 +355,7 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     window.removeEventListener('resize', onResize)
     canvas.removeEventListener('mouseenter', onEnter)
     canvas.removeEventListener('mouseleave', onLeave)
-    scene.traverse((o) => {
-      const mesh = o as THREE.Mesh
-      if (mesh.geometry) mesh.geometry.dispose()
-      if (mesh.material) {
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-        mats.forEach((m) => m.dispose())
-      }
-    })
-    renderer.dispose()
+    disposeAll()
   }
 }
 
@@ -352,9 +371,9 @@ export function ThreeCans() {
   const rightRef = useRef<HTMLCanvasElement>(null)
 
   // Уважаем системную настройку «уменьшить движение»: банки крутятся/орбитят
-  // непрерывно (idle-wobble + кубы-льдинки), так что для reduce-motion вовсе
-  // не монтируем сцену. Lazy-init синхронно, чтобы reduced-юзер не словил
-  // mount→unmount-мигание при клиентской навигации.
+  // непрерывно (idle-wobble + кубы-льдинки + hover-разгон). При reduce-motion
+  // НЕ прячем банки, а рендерим статичным кадром (как у liquid-bg — глушим
+  // только движение). Lazy-init синхронно, чтобы не словить лишний remount.
   const [reduced, setReduced] = useState(
     () => typeof window !== 'undefined'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -367,14 +386,11 @@ export function ThreeCans() {
   }, [])
 
   useEffect(() => {
-    if (reduced) return
     const cleanups: Array<() => void> = []
-    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent, 'dark'))
-    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent, 'light'))
+    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent, 'dark', !reduced))
+    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent, 'light', !reduced))
     return () => cleanups.forEach((c) => c())
   }, [leftAccent, rightAccent, reduced])
-
-  if (reduced) return null
 
   return (
     <div className="three-bg" aria-hidden="true">
