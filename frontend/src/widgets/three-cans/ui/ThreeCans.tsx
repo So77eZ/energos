@@ -362,7 +362,7 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
 const ACCENT_CYCLE: Array<keyof typeof ACCENT_MAP> = ['cyan', 'pink', 'lime', 'amber', 'purple']
 
 export function ThreeCans() {
-  const { accent } = useTheme()
+  const { accent, motion } = useTheme()
   // Left can uses the active accent; right can uses the next one in the cycle
   // so the pair always reads as two distinct hues no matter the theme choice.
   const leftAccent = ACCENT_MAP[accent].rgb
@@ -374,16 +374,19 @@ export function ThreeCans() {
   // непрерывно (idle-wobble + кубы-льдинки + hover-разгон). При reduce-motion
   // НЕ прячем банки, а рендерим статичным кадром (как у liquid-bg — глушим
   // только движение). Lazy-init синхронно, чтобы не словить лишний remount.
-  const [reduced, setReduced] = useState(
+  const [systemReduce, setSystemReduce] = useState(
     () => typeof window !== 'undefined'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   )
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const onChange = () => setReduced(mq.matches)
+    const onChange = () => setSystemReduce(mq.matches)
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)
   }, [])
+
+  // Профильный оверрайд 'always' бьёт системную настройку (см. motion-preference спеку).
+  const reduced = systemReduce && motion !== 'always'
 
   useEffect(() => {
     const cleanups: Array<() => void> = []

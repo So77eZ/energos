@@ -242,14 +242,16 @@ body::before {
    liquid-bg оставляем видимым (цвет), но блобы перестают дрейфовать.
    3D-банки не монтируются вовсе — гейтятся в JS (matchMedia, ThreeCans.tsx). */
 @media (prefers-reduced-motion: reduce) {
-  .lb-blob,                /* дрейф блобов жидкого фона — стоп, фон остаётся */
-  .ticker-row,
-  .ticker-tag::before,
-  .auth-vis-glow,
-  .auth-vis-can,
-  .auth-line,
-  .age-gate::before,
-  .age-gate::after {
+  /* :root:not([data-force-motion]) — профильный оверрайд «Анимации: Всегда вкл.»
+     снимает заморозку даже при системном reduce (см. motion-preference спеку). */
+  :root:not([data-force-motion]) .lb-blob,   /* дрейф блобов жидкого фона — стоп, фон остаётся */
+  :root:not([data-force-motion]) .ticker-row,
+  :root:not([data-force-motion]) .ticker-tag::before,
+  :root:not([data-force-motion]) .auth-vis-glow,
+  :root:not([data-force-motion]) .auth-vis-can,
+  :root:not([data-force-motion]) .auth-line,
+  :root:not([data-force-motion]) .age-gate::before,
+  :root:not([data-force-motion]) .age-gate::after {
     animation: none !important;
   }
 }
@@ -2374,6 +2376,10 @@ body::before {
   font-family: var(--font-mono); font-size: 10px;
   color: var(--txt-quiet); letter-spacing: 1.5px; text-transform: uppercase;
 }
+.twk-hint {
+  margin-top: 8px; font-size: 11px; line-height: 1.4;
+  color: var(--txt-quiet);
+}
 
 /* Segmented control (dark/light) */
 .twk-seg {
@@ -3075,6 +3081,30 @@ body::before {
   display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
   margin-top: 10px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOTION NOTICE — одноразовый баннер о урезанных анимациях (reduce-motion).
+   Показывается только reduce-motion юзеру → без motion-анимации входа.
+   ═══════════════════════════════════════════════════════════════════ */
+.motion-notice {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  z-index: 940; max-width: calc(100vw - 32px);
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 11px 14px;
+  background: var(--bg-card); backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  font-size: 12.5px; line-height: 1.4; color: var(--txt-dim);
+}
+.motion-notice a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.motion-notice-close {
+  flex-shrink: 0; width: 24px; height: 24px;
+  display: grid; place-items: center;
+  background: transparent; border: 0; border-radius: 6px;
+  color: var(--txt-quiet); cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.motion-notice-close:hover { background: var(--bg-input); color: var(--txt); }
 
 /* ═══════════════════════════════════════════════════════════════════
    TOASTS — non-blocking transient notifications (bottom-right stack)

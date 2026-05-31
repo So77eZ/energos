@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { ACCENT_MAP, DEFAULT_PREFS, STORAGE_KEY } from './constants'
-import type { Accent, Theme, ThemePrefs } from './types'
+import type { Accent, Motion, Theme, ThemePrefs } from './types'
 
 interface ThemeContextValue extends ThemePrefs {
   setTheme: (t: Theme) => void
@@ -11,6 +11,7 @@ interface ThemeContextValue extends ThemePrefs {
   setLiquidBg: (v: boolean) => void
   setGrain: (v: boolean) => void
   setScanlines: (v: boolean) => void
+  setMotion: (v: Motion) => void
   update: (patch: Partial<ThemePrefs>) => void
 }
 
@@ -22,6 +23,8 @@ function applyToDOM(prefs: ThemePrefs) {
   const accent = ACCENT_MAP[prefs.accent]
   html.style.setProperty('--accent', accent.hex)
   html.style.setProperty('--accent-rgb', accent.rgb)
+  // 'always' → атрибут, на который скоупится reduced-motion CSS (отключает заморозку).
+  html.toggleAttribute('data-force-motion', prefs.motion === 'always')
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -76,6 +79,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setLiquidBg: (v) => update({ liquidBg: v }),
     setGrain: (v) => update({ grain: v }),
     setScanlines: (v) => update({ scanlines: v }),
+    setMotion: (v) => update({ motion: v }),
     update,
   }
 
