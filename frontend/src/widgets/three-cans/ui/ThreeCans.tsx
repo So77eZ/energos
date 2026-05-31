@@ -126,8 +126,13 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
       transparent: true,
       opacity: 0.5,
       flatShading: true,
+      // Льдинки орбитят кольцом вокруг банки: задняя половина орбиты иначе
+      // перекрывается непрозрачным телом банки и пропадает. depthTest:false
+      // + renderOrder рисует их поверх — лёд всегда виден, плавает вокруг.
+      depthTest: false,
     })
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), mat)
+    mesh.renderOrder = 2
     const data: CubeData = {
       mat,
       baseOpacity: 0.5,
