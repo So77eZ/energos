@@ -5,6 +5,15 @@
 
 ---
 
+## Техдолг фронта: prefers-reduced-motion
+
+- ~~**`prefers-reduced-motion` — глушить декоративную анимацию**~~ ✅ Гибрид CSS + JS:
+  - **CSS** ([globals.css](frontend/src/app/globals.css)): блок `@media (prefers-reduced-motion: reduce)` прячет `.liquid-bg` (жидкие блобы) и `.app.has-scan::after` (CRT-развёртку), замораживает бесконечные keyframes у ticker (`tick`/`pulse`), auth-визуала (`authCanSpin`/`linePulse`/blob) и age-gate-блобов. Базовые fade/scale-переходы оставлены.
+  - **JS** ([ThreeCans.tsx](frontend/src/widgets/three-cans/ui/ThreeCans.tsx)): 3D-банки крутятся непрерывно (idle-wobble + орбита льдинок), поэтому при reduce-motion компонент вовсе не монтирует Three.js-сцену (`matchMedia`, lazy-init + listener на смену настройки) — экономит ещё и WebGL/CPU.
+  - Кроссфейд смены темы (View Transitions) уже учитывал reduced-motion с прошлого спринта.
+
+---
+
 ## Техдолг фронта: шрифты, emoji-picker, тема, Monocraft
 
 - ~~**Все Google Fonts грузятся всегда**~~ ✅ [layout.tsx](frontend/src/app/layout.tsx) грузит только always-load набор (JetBrains Mono / Russo One / Exo 2). Опциональные Share Tech Mono / Orbitron / Rajdhani подгружаются динамически через `ensureFontLoaded()` в [applyFont](frontend/src/shared/lib/user-preferences.ts) только когда юзер их выбрал — три неиспользуемых семейства больше не тянутся на каждый первый рендер.

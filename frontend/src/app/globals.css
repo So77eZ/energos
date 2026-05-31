@@ -233,6 +233,25 @@ body::before {
    контекста static-контент .page рисуется ПОД positioned .three-bg. */
 .main { position: relative; z-index: 1; }
 .page { position: relative; z-index: 1; }
+
+/* ─── Accessibility: prefers-reduced-motion ───────────────────────
+   Системная настройка «уменьшить движение» (вестибулярные расстройства,
+   укачивание, эпилепсия). Глушим декоративную бесконечную анимацию;
+   базовые fade/scale-переходы оставляем. 3D-банки не монтируются вовсе —
+   гейтятся отдельно в JS (matchMedia в ThreeCans.tsx). */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-bg { display: none; }            /* жидкий фон-блобы целиком */
+  .app.has-scan::after { display: none; }  /* CRT-развёртка (scanlines) */
+  .ticker-row,
+  .ticker-tag::before,
+  .auth-vis-glow,
+  .auth-vis-can,
+  .auth-line,
+  .age-gate::before,
+  .age-gate::after {
+    animation: none !important;
+  }
+}
 .hdr  { z-index: 50; }
 
 /* ═══════════════════════════════════════════════════════════════════

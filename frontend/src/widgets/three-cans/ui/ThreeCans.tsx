@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { ACCENT_MAP, useTheme } from '@shared/lib/theme'
 
@@ -351,12 +351,30 @@ export function ThreeCans() {
   const leftRef = useRef<HTMLCanvasElement>(null)
   const rightRef = useRef<HTMLCanvasElement>(null)
 
+  // Уважаем системную настройку «уменьшить движение»: банки крутятся/орбитят
+  // непрерывно (idle-wobble + кубы-льдинки), так что для reduce-motion вовсе
+  // не монтируем сцену. Lazy-init синхронно, чтобы reduced-юзер не словил
+  // mount→unmount-мигание при клиентской навигации.
+  const [reduced, setReduced] = useState(
+    () => typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
   useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = () => setReduced(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  useEffect(() => {
+    if (reduced) return
     const cleanups: Array<() => void> = []
     if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent, 'dark'))
     if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent, 'light'))
     return () => cleanups.forEach((c) => c())
-  }, [leftAccent, rightAccent])
+  }, [leftAccent, rightAccent, reduced])
+
+  if (reduced) return null
 
   return (
     <div className="three-bg" aria-hidden="true">
