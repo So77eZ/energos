@@ -961,6 +961,24 @@ body::before {
   font-family: var(--font-sans); font-size: 11px; font-weight: 500;
   color: var(--txt-quiet); margin-left: 2px;
 }
+/* Рейтинг + кнопка сравнения справа в подвале карточки. */
+.card-foot-right { display: flex; align-items: center; gap: 8px; }
+.card-compare {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: var(--r-sm);
+  color: var(--txt-quiet);
+  background: var(--bg-input);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: color .14s, border-color .14s, background .14s, transform .12s;
+}
+.card-compare:hover {
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  background: rgba(var(--accent-rgb), 0.1);
+}
+.card-compare:active { transform: scale(0.92); }
 .card-hover-line {
   position: absolute; left: 0; right: 0; top: 0; height: 2px;
   opacity: 0; transition: opacity .2s;
