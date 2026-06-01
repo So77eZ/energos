@@ -4,6 +4,7 @@ import { ROUTES } from '@shared/config/routes'
 import { getToken } from '@shared/lib/session'
 import { authApi } from '@entities/user'
 import { reviewApi, calcRating } from '@entities/review'
+import { timeAgo } from '@shared/lib/time-ago'
 import { drinkApi } from '@entities/drink'
 import { Icons } from '@shared/ui/icons'
 import { HeaderSearchBar } from './HeaderSearchBar'
@@ -34,7 +35,7 @@ export async function Header() {
       who: r.username ?? 'Гость',
       drinkName: nameById.get(r.energy_drink_id)!,
       score: calcRating(r),
-      createdAt: r.created_at!,
+      ago: timeAgo(r.created_at!),
     }))
 
   return (

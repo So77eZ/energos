@@ -1,14 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { timeAgo } from '@shared/lib/time-ago'
-
 export interface TickerItem {
   id: number
   who: string
   drinkName: string
   score: number
-  createdAt: string
+  ago: string
 }
 
 export function HeaderTicker({ items }: { items: TickerItem[] }) {
@@ -54,7 +52,7 @@ export function HeaderTicker({ items }: { items: TickerItem[] }) {
               <span className="ticker-mark">◢</span>
               <b>{a.who}</b> оценил <span className="ticker-target">{a.drinkName}</span>
               <span className="ticker-score"> · {a.score.toFixed(1)}★</span>
-              <span className="ticker-ago">{timeAgo(a.createdAt)}</span>
+              <span className="ticker-ago">{a.ago}</span>
             </span>
           ))}
         </div>
