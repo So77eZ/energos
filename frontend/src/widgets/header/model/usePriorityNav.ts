@@ -67,6 +67,9 @@ export function usePriorityNav(items: NavItem[]): PriorityNavResult {
       ro.disconnect()
       window.removeEventListener('resize', schedule)
     }
+    // dep = items.length: NAV_ITEMS статичен, набор меняется только при смене роли
+    // (admin добавляет пункт → длина меняется). Если появятся свопы равной длины
+    // с другой шириной — менять на [items] + мемоизация на стороне вызова.
   }, [items.length])
 
   return {
