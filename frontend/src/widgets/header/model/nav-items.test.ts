@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isActive, NAV_ITEMS, MOBILE_TABS, navItemsFor } from './nav-items'
+import { isActive, NAV_ITEMS, MOBILE_TABS, navItemsFor, sheetItemsFor } from './nav-items'
 
 describe('isActive', () => {
   it('корень совпадает только точно', () => {
@@ -26,6 +26,24 @@ describe('navItemsFor', () => {
   })
   it('admin видит admin-пункт', () => {
     expect(navItemsFor(true).some((i) => i.adminOnly)).toBe(true)
+  })
+})
+
+describe('sheetItemsFor', () => {
+  it('исключает разделы, которые есть в bottom-tabs', () => {
+    const hrefs = sheetItemsFor(false).map((i) => i.href)
+    // Каталог и Сравнение — табы, их не должно быть в sheet
+    expect(hrefs).not.toContain('/')
+    expect(hrefs.some((h) => h.startsWith('/compare'))).toBe(false)
+  })
+  it('включает не-таб разделы (Tier, Словарь, Отзывы, Предложить)', () => {
+    const labels = sheetItemsFor(false).map((i) => i.label)
+    expect(labels).toContain('Tier list')
+    expect(labels).toContain('Словарь')
+  })
+  it('admin-пункт только при isAdmin', () => {
+    expect(sheetItemsFor(false).some((i) => i.adminOnly)).toBe(false)
+    expect(sheetItemsFor(true).some((i) => i.adminOnly)).toBe(true)
   })
 })
 

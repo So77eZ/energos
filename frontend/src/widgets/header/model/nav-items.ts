@@ -42,5 +42,5 @@ export function sheetItemsFor(isAdmin: boolean): NavItem[] {
 export function isActive(pathname: string, href: string): boolean {
   const base = href.split('?')[0]
   if (base === '/') return pathname === '/'
-  return pathname === base || pathname.startsWith(base + '/') || pathname.startsWith(base)
+  return pathname === base || pathname.startsWith(base + '/')
 }
