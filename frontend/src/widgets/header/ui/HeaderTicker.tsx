@@ -16,15 +16,12 @@ export function HeaderTicker({ items }: { items: TickerItem[] }) {
   const [duration, setDuration] = useState(80)
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const onVis = () => setFrozen(mq.matches || document.hidden)
+    // reduced-motion заморозку делает gated CSS (уважает data-force-motion);
+    // здесь — только пауза анимации на скрытой вкладке.
+    const onVis = () => setFrozen(document.hidden)
     onVis()
-    mq.addEventListener('change', onVis)
     document.addEventListener('visibilitychange', onVis)
-    return () => {
-      mq.removeEventListener('change', onVis)
-      document.removeEventListener('visibilitychange', onVis)
-    }
+    return () => document.removeEventListener('visibilitychange', onVis)
   }, [])
 
   // Длительность от ширины контента (≈ 90px/сек), а не фикс 80s.

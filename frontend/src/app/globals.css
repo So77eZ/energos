@@ -3423,6 +3423,7 @@ body::before {
 /* ─── Mobile header bits (скрыты на desktop) ──────────────────── */
 .hdr-mobile-crumb, .hdr-mobile-btn { display: none; }
 @media (max-width: 768px) {
+  .hdr-inner { display: flex; align-items: center; gap: 10px; }
   .hdr-nav { display: none; }
   .hdr-search { display: none; }
   .hdr-mobile-crumb { display: flex; align-items: center; gap: 6px; margin-left: 10px; color: var(--txt-dim); font-size: 13px; }
@@ -3503,5 +3504,4 @@ body::before {
 /* ─── Live ticker (additions) ─────────────────────────────────── */
 .ticker-row.frozen { animation: none; }
 .ticker-mark { color: var(--accent); }
-@media (prefers-reduced-motion: reduce) { .ticker-row { animation: none; } }
 @media (max-width: 768px) { .ticker { display: none; } }
