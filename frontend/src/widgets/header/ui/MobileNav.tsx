@@ -19,29 +19,51 @@ interface MobileNavProps {
 
 export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
   const pathname = usePathname()
-  const { moreOpen, searchOpen, tabsHidden, setMoreOpen, setSearchOpen } = useMobileNav()
+  const { moreOpen, searchOpen, tabsHidden, overlayOpen, setMoreOpen, setSearchOpen } = useMobileNav()
   const [mounted, setMounted] = useState(false)
   const lastFocus = useRef<HTMLElement | null>(null)
-  const overlayOpen = moreOpen || searchOpen
 
   useEffect(() => setMounted(true), [])
   useScrollLock(overlayOpen)
 
-  // Esc закрывает; запоминаем фокус при открытии, возвращаем при закрытии.
+  // Esc закрывает; focus-trap внутри открытого диалога; возврат фокуса при закрытии.
   useEffect(() => {
-    if (overlayOpen) {
-      lastFocus.current = document.activeElement as HTMLElement
-      const onKey = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          setMoreOpen(false)
-          setSearchOpen(false)
+    if (!overlayOpen) {
+      lastFocus.current?.focus?.()
+      lastFocus.current = null
+      return
+    }
+    lastFocus.current = document.activeElement as HTMLElement
+    const dialog = document.querySelector<HTMLElement>(moreOpen ? '.mob-sheet' : '.mob-search')
+    const focusables = dialog
+      ? Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
+          ),
+        )
+      : []
+    focusables[0]?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMoreOpen(false)
+        setSearchOpen(false)
+        return
+      }
+      if (e.key === 'Tab' && focusables.length > 0) {
+        const first = focusables[0]
+        const last = focusables[focusables.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
         }
       }
-      document.addEventListener('keydown', onKey)
-      return () => document.removeEventListener('keydown', onKey)
     }
-    lastFocus.current?.focus?.()
-  }, [overlayOpen, setMoreOpen, setSearchOpen])
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [overlayOpen, moreOpen, setMoreOpen, setSearchOpen])
 
   const currentLabel = navItemsFor(isAdmin).find((i) => isActive(pathname, i.href))?.label ?? ''
   const sheetItems = sheetItemsFor(isAdmin)
@@ -53,7 +75,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
         <span className="hdr-crumb-sep">/</span>
         <span className="hdr-crumb-label">{currentLabel}</span>
       </div>
-      <button type="button" className="hdr-mobile-btn hdr-mobile-search" onClick={() => setSearchOpen(true)} aria-label="Поиск">
+      <button type="button" className="hdr-mobile-btn hdr-mobile-search" onClick={() => setSearchOpen(true)} aria-label="Поиск" aria-expanded={searchOpen}>
         <Icons.search w={18} />
       </button>
       <button
@@ -103,7 +125,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
         moreOpen &&
         createPortal(
           <div className="mob-sheet-overlay" onClick={() => setMoreOpen(false)}>
-            <div className="mob-sheet" role="dialog" aria-label="Меню" onClick={(e) => e.stopPropagation()}>
+            <div className="mob-sheet" role="dialog" aria-label="Меню" aria-modal="true" onClick={(e) => e.stopPropagation()}>
               <div className="mob-sheet-grab" />
               <div className="mob-sheet-head">
                 <span className="mob-sheet-title">Меню</span>
@@ -145,7 +167,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
         searchOpen &&
         createPortal(
           <div className="mob-search-overlay" onClick={() => setSearchOpen(false)}>
-            <div className="mob-search" role="dialog" aria-label="Поиск" onClick={(e) => e.stopPropagation()}>
+            <div className="mob-search" role="dialog" aria-label="Поиск" aria-modal="true" onClick={(e) => e.stopPropagation()}>
               <HeaderSearchBar forceInput />
               <button type="button" className="mob-search-close" onClick={() => setSearchOpen(false)} aria-label="Закрыть">
                 <Icons.x w={16} />

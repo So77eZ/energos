@@ -7,6 +7,7 @@ export interface MobileNavState {
   moreOpen: boolean
   searchOpen: boolean
   tabsHidden: boolean
+  overlayOpen: boolean
   setMoreOpen: (v: boolean) => void
   setSearchOpen: (v: boolean) => void
 }
@@ -34,17 +35,22 @@ export function useMobileNav(): MobileNavState {
       setTabsHidden(false)
       return
     }
+    lastY.current = window.scrollY
     function onScroll() {
       if (ticking.current) return
       ticking.current = true
       requestAnimationFrame(() => {
         const y = window.scrollY
-        if (y > lastY.current && y > 80) setTabsHidden(true)
-        else setTabsHidden(false)
+        if (y > lastY.current && y > 80) {
+          setTabsHidden(true)
+          clearTimeout(idle.current)
+          idle.current = setTimeout(() => setTabsHidden(false), 150) // показать при остановке
+        } else {
+          setTabsHidden(false)
+          clearTimeout(idle.current)
+        }
         lastY.current = y
         ticking.current = false
-        clearTimeout(idle.current)
-        idle.current = setTimeout(() => setTabsHidden(false), 150)
       })
     }
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -54,5 +60,5 @@ export function useMobileNav(): MobileNavState {
     }
   }, [overlayOpen])
 
-  return { moreOpen, searchOpen, tabsHidden, setMoreOpen, setSearchOpen }
+  return { moreOpen, searchOpen, tabsHidden, overlayOpen, setMoreOpen, setSearchOpen }
 }
