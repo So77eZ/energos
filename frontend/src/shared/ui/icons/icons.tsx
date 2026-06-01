@@ -373,11 +373,31 @@ const telegram: IconFC = (p = {}) => {
   )
 }
 
+const dots: IconFC = (p = {}) => {
+  const { w = 16, ...rest } = p
+  return (
+    <svg viewBox="0 0 24 24" width={w} height={w} fill="currentColor" stroke="none" {...rest}>
+      <circle cx="5" cy="12" r="2" />
+      <circle cx="12" cy="12" r="2" />
+      <circle cx="19" cy="12" r="2" />
+    </svg>
+  )
+}
+
+const chevron: IconFC = (p = {}) => {
+  const { w = 14, ...rest } = p
+  return (
+    <svg viewBox="0 0 24 24" width={w} height={w} fill="none" stroke="currentColor" strokeWidth={2} {...rest}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
+}
+
 export const Icons = {
   bolt, star, starOutline, search, sliders, map, msg, user, candyOff, flame,
   arrow, arrowL, trend, rouble, pulse, pkg, flask, trophy, plus, edit, trash,
   x, check, lock, layers, grid, sparkle, book, award, sun, moon, upload,
-  beaker, scale, spinner, filter, drop, github, telegram,
+  beaker, scale, spinner, filter, drop, github, telegram, dots, chevron,
 } as const
 
 export type IconName = keyof typeof Icons
