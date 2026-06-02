@@ -14,7 +14,7 @@ export interface PriorityNavResult {
   measureRef: RefObject<HTMLDivElement | null>
 }
 
-export function usePriorityNav(items: NavItem[]): PriorityNavResult {
+export function usePriorityNav(items: NavItem[], pinMore = false): PriorityNavResult {
   const navRef = useRef<HTMLDivElement | null>(null)
   const measureRef = useRef<HTMLDivElement | null>(null)
   const [visibleCount, setVisibleCount] = useState(items.length)
@@ -47,7 +47,7 @@ export function usePriorityNav(items: NavItem[]): PriorityNavResult {
       const moreWidth = moreEl ? moreEl.offsetWidth + 2 : 82
       const itemWidths = itemEls.map((el) => el.offsetWidth + 2)
 
-      const count = computeVisibleCount({ itemWidths, moreWidth, available, pinMore: false })
+      const count = computeVisibleCount({ itemWidths, moreWidth, available, pinMore })
       setVisibleCount((prev) => (prev === count ? prev : count))
     }
 
@@ -70,12 +70,14 @@ export function usePriorityNav(items: NavItem[]): PriorityNavResult {
     // dep = items.length: NAV_ITEMS статичен, набор меняется только при смене роли
     // (admin добавляет пункт → длина меняется). Если появятся свопы равной длины
     // с другой шириной — менять на [items] + мемоизация на стороне вызова.
-  }, [items.length])
+    // dep = pinMore: пересчёт нужен при переключении гачапона (pinMore меняет,
+    // нужно ли резервировать место под кнопку «Ещё» при полностью влезающем меню).
+  }, [items.length, pinMore])
 
   return {
     visible: items.slice(0, visibleCount),
     overflow: items.slice(visibleCount),
-    showMore: visibleCount < items.length,
+    showMore: pinMore || visibleCount < items.length,
     navRef,
     measureRef,
   }

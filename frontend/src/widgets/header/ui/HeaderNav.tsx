@@ -5,14 +5,16 @@ import { usePriorityNav } from '../model/usePriorityNav'
 import { NavLink } from './NavLink'
 import { MoreMenu } from './MoreMenu'
 import { Icons } from '@shared/ui/icons'
+import { useTheme } from '@shared/lib/theme'
 
 interface HeaderNavProps {
   isAdmin: boolean
 }
 
 export function HeaderNav({ isAdmin }: HeaderNavProps) {
+  const { gachapon } = useTheme()
   const items = navItemsFor(isAdmin)
-  const { visible, overflow, showMore, navRef, measureRef } = usePriorityNav(items)
+  const { visible, overflow, showMore, navRef, measureRef } = usePriorityNav(items, gachapon)
 
   return (
     <div className="hdr-nav-flow" ref={navRef}>
