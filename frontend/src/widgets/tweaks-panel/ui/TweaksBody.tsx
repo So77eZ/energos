@@ -103,6 +103,15 @@ export function TweaksBody() {
           />
           <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
         </label>
+        <label className="twk-toggle">
+          <span className="twk-toggle-label">Кнопка Гачапон</span>
+          <input
+            type="checkbox"
+            checked={theme.gachapon}
+            onChange={(e) => theme.setGachapon(e.target.checked)}
+          />
+          <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
+        </label>
       </section>
 
       <section className="twk-section">

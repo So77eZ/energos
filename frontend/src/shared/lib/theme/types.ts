@@ -10,4 +10,6 @@ export interface ThemePrefs {
   grain: boolean
   scanlines: boolean
   motion: Motion
+  /** Показывать триггер гачапона (рулетки) в навигации. */
+  gachapon: boolean
 }

@@ -15,6 +15,7 @@ export const DEFAULT_PREFS: ThemePrefs = {
   grain: true,
   scanlines: true,
   motion: 'system',
+  gachapon: true,
 }
 
 export const STORAGE_KEY = 'energos_theme'

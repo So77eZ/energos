@@ -12,6 +12,7 @@ interface ThemeContextValue extends ThemePrefs {
   setGrain: (v: boolean) => void
   setScanlines: (v: boolean) => void
   setMotion: (v: Motion) => void
+  setGachapon: (v: boolean) => void
   update: (patch: Partial<ThemePrefs>) => void
 }
 
@@ -80,6 +81,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setGrain: (v) => update({ grain: v }),
     setScanlines: (v) => update({ scanlines: v }),
     setMotion: (v) => update({ motion: v }),
+    setGachapon: (v) => update({ gachapon: v }),
     update,
   }
 
