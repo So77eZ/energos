@@ -53,8 +53,17 @@ export function GachaponMachine({
     void strip.offsetWidth
     strip.style.transition = `transform ${dur}s cubic-bezier(0.19, 1, 0.22, 1)`
     strip.style.transform = `translateX(${final}px)`
-    const t = setTimeout(() => onLand(target), dur * 1000 + 120)
-    return () => clearTimeout(t)
+    // Приземление по transitionend (детерминированно); setTimeout — фолбэк, если
+    // событие не придёт (прерванный transition). done-гард от двойного вызова.
+    let done = false
+    const land = () => { if (done) return; done = true; onLand(target) }
+    const onEnd = (e: TransitionEvent) => { if (e.propertyName === 'transform') land() }
+    strip.addEventListener('transitionend', onEnd)
+    const t = setTimeout(land, dur * 1000 + 250)
+    return () => {
+      clearTimeout(t)
+      strip.removeEventListener('transitionend', onEnd)
+    }
   }, [phase, reel, winIndex, dur, onLand])
 
   if (!mounted) return null
