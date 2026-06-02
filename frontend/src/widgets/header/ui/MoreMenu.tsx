@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Icons } from '@shared/ui/icons'
 import { isActive, type NavItem } from '../model/nav-items'
+import { useTheme } from '@shared/lib/theme'
+import { useGachapon } from '@shared/lib/gachapon'
 
 interface MoreMenuProps {
   overflow: NavItem[]
@@ -12,6 +14,8 @@ interface MoreMenuProps {
 
 export function MoreMenu({ overflow }: MoreMenuProps) {
   const pathname = usePathname()
+  const { gachapon } = useTheme()
+  const { open: openGachapon } = useGachapon()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const overflowActive = overflow.some((r) => isActive(pathname, r.href))
@@ -50,6 +54,18 @@ export function MoreMenu({ overflow }: MoreMenuProps) {
       </button>
       {open && (
         <div className="hdr-more-menu" role="menu">
+          {gachapon && (
+            <button
+              type="button"
+              role="menuitem"
+              className="hdr-more-item"
+              onClick={() => { setOpen(false); openGachapon() }}
+            >
+              <Icons.dice w={15} />
+              <span>Рулетка</span>
+              <span className="hdr-more-tag">случайный</span>
+            </button>
+          )}
           {overflow.map((r) => {
             const Icon = Icons[r.icon]
             const active = isActive(pathname, r.href)

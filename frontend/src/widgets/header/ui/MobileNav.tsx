@@ -10,6 +10,8 @@ import { useScrollLock } from '@shared/lib/useScrollLock'
 import { isActive, MOBILE_TABS, sheetItemsFor, navItemsFor } from '../model/nav-items'
 import { useMobileNav } from '../model/useMobileNav'
 import { HeaderSearchBar } from './HeaderSearchBar'
+import { useTheme } from '@shared/lib/theme'
+import { useGachapon } from '@shared/lib/gachapon'
 
 interface MobileNavProps {
   isAdmin: boolean
@@ -20,6 +22,8 @@ interface MobileNavProps {
 export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
   const pathname = usePathname()
   const { moreOpen, searchOpen, tabsHidden, overlayOpen, setMoreOpen, setSearchOpen } = useMobileNav()
+  const { gachapon } = useTheme()
+  const { open: openGachapon } = useGachapon()
   const [mounted, setMounted] = useState(false)
   const lastFocus = useRef<HTMLElement | null>(null)
 
@@ -134,6 +138,15 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
                 </button>
               </div>
               <div className="mob-sheet-body">
+                {gachapon && (
+                  <button
+                    type="button"
+                    className="mob-sheet-cta"
+                    onClick={() => { setMoreOpen(false); openGachapon() }}
+                  >
+                    <Icons.dice w={14} /> Случайный напиток
+                  </button>
+                )}
                 {!hasUser && (
                   <Link href={ROUTES.auth.login} className="mob-sheet-cta" onClick={() => setMoreOpen(false)}>
                     <Icons.lock w={14} /> Войти / Регистрация
