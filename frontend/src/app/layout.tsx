@@ -6,6 +6,7 @@ import { Header } from '@widgets/header/ui/Header'
 import { Footer } from '@widgets/footer/ui/Footer'
 import { ScrollToTop } from '@widgets/scroll-to-top/ui/ScrollToTop'
 import { CatalogSearchProvider } from '@shared/lib/catalog-search'
+import { GachaponProvider } from '@shared/lib/gachapon'
 import { ConfirmProvider } from '@shared/lib/confirm'
 import { FavoritesProvider } from '@shared/lib/favorites'
 import { getToken } from '@shared/lib/session'
@@ -73,12 +74,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <SubmissionsProvider>
                   <FavoritesProvider initial={initialFavorites} userId={user?.id ?? null}>
                     <AppShell>
-                      <CatalogSearchProvider>
-                        <Header />
-                        <main className="main">{children}</main>
-                        <Footer />
-                        <ScrollToTop />
-                      </CatalogSearchProvider>
+                      <GachaponProvider>
+                        <CatalogSearchProvider>
+                          <Header />
+                          <main className="main">{children}</main>
+                          <Footer />
+                          <ScrollToTop />
+                        </CatalogSearchProvider>
+                      </GachaponProvider>
                     </AppShell>
                   </FavoritesProvider>
                 </SubmissionsProvider>
