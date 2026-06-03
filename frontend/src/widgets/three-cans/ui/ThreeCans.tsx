@@ -219,10 +219,24 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     renderer.dispose()
   }
 
+  // Разложить льдинки по их орбите один раз (в анимации это делает tick на
+  // каждом кадре). Без этого в статичном кадре все кубы остаются в (0,0,0) —
+  // слипаются в центре банки. speedMul=1 → radiusMul=1, поворот не нужен.
+  function layoutCubesStatic() {
+    cubes.forEach(({ mesh, data }) => {
+      const ox = Math.cos(data.orbitA) * data.orbitR
+      const oz = Math.sin(data.orbitA) * data.orbitR
+      mesh.position.x = ox
+      mesh.position.z = oz * Math.cos(data.orbitTilt)
+      mesh.position.y = data.orbitYOffset + oz * Math.sin(data.orbitTilt)
+    })
+  }
+
   // prefers-reduced-motion: показываем банки статичным кадром — без rAF-цикла,
   // hover-разгона и орбиты льдинок. Элемент остаётся (как у liquid-bg), глушим
   // только движение. resize перерисовывает единичный кадр.
   if (!animate) {
+    layoutCubesStatic()
     resize()
     renderer.render(scene, camera)
     const onResize = () => { resize(); renderer.render(scene, camera) }
