@@ -10,6 +10,7 @@ import { useScrollLock } from '@shared/lib/useScrollLock'
 import { isActive, MOBILE_TABS, sheetItemsFor, navItemsFor } from '../model/nav-items'
 import { useMobileNav } from '../model/useMobileNav'
 import { HeaderSearchBar } from './HeaderSearchBar'
+import { NavMenuLink } from './NavMenuLink'
 import { useTheme } from '@shared/lib/theme'
 import { useGachapon } from '@shared/lib/gachapon'
 
@@ -159,22 +160,15 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
                   </Link>
                 )}
                 <div className="mob-sheet-list">
-                  {sheetItems.map((r) => {
-                    const Icon = Icons[r.icon]
-                    const active = isActive(pathname, r.href)
-                    return (
-                      <Link
-                        key={r.href}
-                        href={r.href}
-                        className={`mob-sheet-item${active ? ' active' : ''}`}
-                        onClick={() => setMoreOpen(false)}
-                      >
-                        <Icon w={16} />
-                        <span>{r.label}</span>
-                        <Icons.arrow w={12} />
-                      </Link>
-                    )
-                  })}
+                  {sheetItems.map((r) => (
+                    <NavMenuLink
+                      key={r.href}
+                      item={r}
+                      className="mob-sheet-item"
+                      iconSize={16}
+                      onNavigate={() => setMoreOpen(false)}
+                    />
+                  ))}
                 </div>
               </div>
             </div>

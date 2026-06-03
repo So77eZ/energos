@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Icons } from '@shared/ui/icons'
@@ -8,6 +7,7 @@ import { isActive, type NavItem } from '../model/nav-items'
 import { useTheme } from '@shared/lib/theme'
 import { useGachapon } from '@shared/lib/gachapon'
 import { usePopover } from '@shared/lib/usePopover'
+import { NavMenuLink } from './NavMenuLink'
 
 interface MoreMenuProps {
   overflow: NavItem[]
@@ -62,23 +62,16 @@ export function MoreMenu({ overflow }: MoreMenuProps) {
               <span className="hdr-more-tag">случайный</span>
             </button>
           )}
-          {overflow.map((r) => {
-            const Icon = Icons[r.icon]
-            const active = isActive(pathname, r.href)
-            return (
-              <Link
-                key={r.href}
-                href={r.href}
-                role="menuitem"
-                className={`hdr-more-item${active ? ' active' : ''}`}
-                onClick={() => setOpen(false)}
-              >
-                <Icon w={15} />
-                <span>{r.label}</span>
-                <Icons.arrow w={12} />
-              </Link>
-            )
-          })}
+          {overflow.map((r) => (
+            <NavMenuLink
+              key={r.href}
+              item={r}
+              className="hdr-more-item"
+              iconSize={15}
+              role="menuitem"
+              onNavigate={() => setOpen(false)}
+            />
+          ))}
         </div>
       )}
     </div>
