@@ -3,8 +3,7 @@
 import { navItemsFor } from '../model/nav-items'
 import { usePriorityNav } from '../model/usePriorityNav'
 import { NavLink } from './NavLink'
-import { MoreMenu } from './MoreMenu'
-import { Icons } from '@shared/ui/icons'
+import { MoreMenu, MoreButtonInner } from './MoreMenu'
 import { useTheme } from '@shared/lib/theme'
 
 interface HeaderNavProps {
@@ -30,9 +29,7 @@ export function HeaderNav({ isAdmin }: HeaderNavProps) {
           <NavLink key={`m-${item.href}`} item={item} measure />
         ))}
         <span className="nav-link hdr-more-btn" data-mm>
-          <Icons.dots w={16} />
-          <span className="nav-link-lbl">Ещё</span>
-          <Icons.chevron w={12} />
+          <MoreButtonInner />
         </span>
       </div>
     </div>

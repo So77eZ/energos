@@ -12,6 +12,19 @@ interface MoreMenuProps {
   overflow: NavItem[]
 }
 
+/** Внутренность кнопки «Ещё» (иконки + лейбл). Общая для реальной кнопки и
+ *  скрытого замерочного ряда в HeaderNav — иначе ширины рассинхронятся и
+ *  priority+ расчёт переполнения собьётся. */
+export function MoreButtonInner() {
+  return (
+    <>
+      <Icons.dots w={16} />
+      <span className="nav-link-lbl">Ещё</span>
+      <Icons.chevron w={12} />
+    </>
+  )
+}
+
 export function MoreMenu({ overflow }: MoreMenuProps) {
   const pathname = usePathname()
   const { gachapon } = useTheme()
@@ -48,9 +61,7 @@ export function MoreMenu({ overflow }: MoreMenuProps) {
         aria-haspopup="true"
         aria-expanded={open}
       >
-        <Icons.dots w={16} />
-        <span className="nav-link-lbl">Ещё</span>
-        <Icons.chevron w={12} />
+        <MoreButtonInner />
       </button>
       {open && (
         <div className="hdr-more-menu" role="menu">
