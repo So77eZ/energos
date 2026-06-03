@@ -11,7 +11,9 @@ const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/drinks', '/taste-map']
 const FILTER_PAGES = ['/', '/taste-map']
 const PLACEHOLDER = 'Поиск напитка, бренда, метрики…'
 
-export function HeaderSearchBar({ forceInput = false }: { forceInput?: boolean } = {}) {
+export function HeaderSearchBar(
+  { forceInput = false, onSubmit }: { forceInput?: boolean; onSubmit?: () => void } = {},
+) {
   const pathname = usePathname()
   const router = useRouter()
   const { search, setSearch, filterOpen, setFilterOpen, noSugarOnly, sort, searchItems } = useCatalogSearch()
@@ -19,6 +21,9 @@ export function HeaderSearchBar({ forceInput = false }: { forceInput?: boolean }
   const containerRef = useRef<HTMLDivElement>(null)
 
   const isReviews = pathname === '/drinks'
+  // Live-результаты (dropdown) показываем на /drinks и в мобильном оверлее
+  // (forceInput): там каталог скрыт за оверлеем, нужен видимый список совпадений.
+  const showResults = isReviews || forceInput
   const showFilterToggle = FILTER_PAGES.includes(pathname)
   const hasActiveFilters = noSugarOnly || sort !== 'name'
 
@@ -49,7 +54,7 @@ export function HeaderSearchBar({ forceInput = false }: { forceInput?: boolean }
     )
   }
 
-  const matchingItems = isReviews && search
+  const matchingItems = showResults && search
     ? searchItems.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()))
     : []
 
@@ -65,13 +70,18 @@ export function HeaderSearchBar({ forceInput = false }: { forceInput?: boolean }
           value={search}
           onChange={(e) => {
             setSearch(e.target.value)
-            if (isReviews) setDropdownOpen(true)
+            if (showResults) setDropdownOpen(true)
           }}
-          onFocus={() => { if (isReviews && search) setDropdownOpen(true) }}
+          onFocus={() => { if (showResults && search) setDropdownOpen(true) }}
+          onKeyDown={(e) => {
+            // В мобильном оверлее submit (Enter / кнопка «Поиск» клавиатуры)
+            // закрывает оверлей — иначе он перекрывает отфильтрованный каталог.
+            if (e.key === 'Enter') { e.preventDefault(); onSubmit?.() }
+          }}
         />
         <kbd>⌘K</kbd>
 
-        {isReviews && dropdownOpen && matchingItems.length > 0 && (
+        {showResults && dropdownOpen && matchingItems.length > 0 && (
           <ul className="search-dropdown" role="listbox">
             {matchingItems.map((d) => (
               <li key={d.id}>
@@ -82,6 +92,7 @@ export function HeaderSearchBar({ forceInput = false }: { forceInput?: boolean }
                     router.push(ROUTES.reviews(d.id))
                     setDropdownOpen(false)
                     setSearch('')
+                    onSubmit?.()
                   }}
                 >
                   <span className="search-dropdown-thumb">

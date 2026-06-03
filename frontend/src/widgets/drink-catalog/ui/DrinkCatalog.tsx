@@ -57,7 +57,13 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
     priceRange, setPriceRange,
     onlyNew, setOnlyNew,
     noSugarOnly, setNoSugarOnly,
+    setSearchItems,
   } = useCatalogSearch()
+
+  // Источник для live-результатов поиска (мобильный оверлей + /drinks dropdown).
+  useEffect(() => {
+    setSearchItems(enriched.map((d) => ({ id: d.id, name: d.name, image_url: d.image_url })))
+  }, [enriched, setSearchItems])
 
   // Состояние каталога (page + sort + фильтры + view) живёт в URL — переживает
   // back-навигацию и шарится. State — источник для рендера, URL — зеркало.
