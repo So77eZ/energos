@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from '@shared/lib/theme'
+import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
 
@@ -17,20 +18,15 @@ const STORAGE_KEY = 'energos_motion_notice'
 
 export function MotionNotice() {
   const { motion } = useTheme()
-  // Стартуем как «закрыто», чтобы SSR и первый клиентский рендер совпали (null);
-  // реальное состояние подтягиваем в effect (matchMedia + localStorage — client-only).
-  const [systemReduce, setSystemReduce] = useState(false)
+  // systemReduce стартует false (hydration-safe, см. хук); dismissed — тоже
+  // «закрыто» на SSR/первом рендере, реальное значение из localStorage в effect.
+  const systemReduce = usePrefersReducedMotion()
   const [dismissed, setDismissed] = useState(true)
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setSystemReduce(mq.matches)
-    const onChange = () => setSystemReduce(mq.matches)
-    mq.addEventListener('change', onChange)
     let stored = false
     try { stored = localStorage.getItem(STORAGE_KEY) != null } catch {}
     setDismissed(stored)
-    return () => mq.removeEventListener('change', onChange)
   }, [])
 
   function close() {

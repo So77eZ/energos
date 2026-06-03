@@ -6,6 +6,7 @@ import { drinkApi, enrichDrinks, type EnrichedDrink } from '@entities/drink'
 import { reviewApi } from '@entities/review'
 import { ROUTES } from '@shared/config/routes'
 import { useTheme } from '@shared/lib/theme'
+import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
 import { buildSpin } from './reel'
 import { GachaponMachine, type GachaponPhase } from './GachaponMachine'
 
@@ -27,15 +28,7 @@ export function GachaponProvider({ children }: { children: ReactNode }) {
   const cacheRef = useRef<EnrichedDrink[] | null>(null)
   const openRef = useRef(false)
 
-  // prefers-reduced-motion отслеживаем через listener (не вызываем matchMedia на каждый рендер).
-  const [reducedMotion, setReducedMotion] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const onChange = () => setReducedMotion(mq.matches)
-    onChange()
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
+  const reducedMotion = usePrefersReducedMotion()
   // Длительность спина: уважает «Анимации: всегда вкл.» (motion === 'always').
   const dur = reducedMotion && motion !== 'always' ? 0.35 : 7
 
