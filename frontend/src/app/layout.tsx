@@ -10,6 +10,8 @@ import { GachaponProvider } from '@shared/lib/gachapon'
 import { ConfirmProvider } from '@shared/lib/confirm'
 import { FavoritesProvider } from '@shared/lib/favorites'
 import { getToken } from '@shared/lib/session'
+import { cookies } from 'next/headers'
+import { FONT_COOKIE, OPTIONAL_FONT_HREFS, fontLinkId, isFontId } from '@shared/lib/fonts'
 import { SubmissionsProvider } from '@shared/lib/submissions'
 import { ThemeProvider, THEME_INIT_SCRIPT } from '@shared/lib/theme'
 import { ToastProvider } from '@shared/lib/toast'
@@ -32,6 +34,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         favoritesApi.list(token).catch(() => []),
       ])
     : [null, [] as number[]]
+
+  // Выбранный опциональный шрифт — из cookie (дубль localStorage-преференса),
+  // чтобы отдать его <link> уже на сервере и не ловить FOUT после гидрации.
+  const rawFont = (await cookies()).get(FONT_COOKIE)?.value
+  const decodedFont = rawFont ? decodeURIComponent(rawFont) : undefined
+  const selectedFont = isFontId(decodedFont) ? decodedFont : null
+  const optionalFontHref = selectedFont ? OPTIONAL_FONT_HREFS[selectedFont] : undefined
+
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
@@ -39,13 +49,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Always-load набор: JetBrains Mono (--font-sans дефолт + --font-mono),
-            Russo One (--font-display), Exo 2 (--font-title). Опциональные
-            Share Tech Mono / Orbitron / Rajdhani подгружаются динамически в
-            applyFont() (см. user-preferences.ts), когда юзер их выбрал. */}
+            Russo One (--font-display), Exo 2 (--font-title). */}
         <link
           href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Russo+One&family=Exo+2:wght@400;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* Выбранный опциональный шрифт (Share Tech Mono / Orbitron / Rajdhani)
+            отдаём по cookie уже на сервере — без FOUT. id общий с клиентским
+            ensureFontLoaded (user-preferences.ts), чтобы не грузить дважды. */}
+        {selectedFont && optionalFontHref && (
+          <link id={fontLinkId(selectedFont)} href={optionalFontHref} rel="stylesheet" />
+        )}
       </head>
       <body>
         <Script
