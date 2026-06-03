@@ -28,7 +28,7 @@ export async function Header() {
   const nameById = new Map(drinks.map((d) => [d.id, d.name]))
   const tickerItems: TickerItem[] = reviews
     .filter((r) => r.created_at && nameById.has(r.energy_drink_id))
-    .sort((a, b) => (b.created_at! > a.created_at! ? 1 : -1))
+    .sort((a, b) => (b.created_at! > a.created_at! ? 1 : b.created_at! < a.created_at! ? -1 : 0))
     .slice(0, TICKER_LIMIT)
     .map((r) => ({
       id: r.id,
