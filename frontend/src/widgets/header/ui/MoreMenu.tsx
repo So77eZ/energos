@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Icons } from '@shared/ui/icons'
 import { isActive, type NavItem } from '../model/nav-items'
 import { useTheme } from '@shared/lib/theme'
 import { useGachapon } from '@shared/lib/gachapon'
+import { usePopover } from '@shared/lib/usePopover'
 
 interface MoreMenuProps {
   overflow: NavItem[]
@@ -33,24 +34,8 @@ export function MoreMenu({ overflow }: MoreMenuProps) {
   const ref = useRef<HTMLDivElement>(null)
   const overflowActive = overflow.some((r) => isActive(pathname, r.href))
 
-  useEffect(() => {
-    if (!open) return
-    const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDoc)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDoc)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
-
-  // Закрыть при смене маршрута.
-  useEffect(() => setOpen(false), [pathname])
+  // Закрытие по клику вне / Esc / смене маршрута.
+  usePopover(ref, open, () => setOpen(false))
 
   return (
     <div className="hdr-more" ref={ref}>
