@@ -181,7 +181,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
         createPortal(
           <div className="mob-search-overlay" onClick={() => setSearchOpen(false)}>
             <div className="mob-search" role="dialog" aria-label="Поиск" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-              <HeaderSearchBar forceInput />
+              <HeaderSearchBar forceInput onSubmit={() => setSearchOpen(false)} />
               <button type="button" className="mob-search-close" onClick={() => setSearchOpen(false)} aria-label="Закрыть">
                 <Icons.x w={16} />
               </button>
