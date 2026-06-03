@@ -109,7 +109,12 @@ export function GachaponMachine({
                       className="gacha-cell-glow"
                       style={{ background: `radial-gradient(ellipse at center 60%, rgba(${d.blend},0.30), transparent 70%)` }}
                     />
-                    <EnergyCan can={d.can} name={d.name} w={64} h={140} />
+                    {d.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={d.image_url} alt={d.name} className="gacha-cell-img" />
+                    ) : (
+                      <EnergyCan can={d.can} name={d.name} w={64} h={140} />
+                    )}
                     <div className="gacha-cell-name">{splitDrinkBrand(cleanDrinkName(d.name)).brand}</div>
                   </div>
                 ))}

@@ -3486,6 +3486,10 @@ body::before {
   display: flex; align-items: center; gap: 8px; padding: 12px; margin-bottom: 10px;
   border-radius: 10px; background: rgba(var(--accent-rgb), .12); color: var(--accent);
   text-decoration: none; font-weight: 600;
+  /* width:100% + сброс UA-стилей кнопки: гачапон-CTA это <button>, а логин — <a>;
+     без этого button ужимается под контент, а ссылка растягивается. */
+  width: 100%; box-sizing: border-box; text-align: left;
+  border: none; cursor: pointer; font-family: inherit; font-size: inherit;
 }
 .mob-sheet-list { display: flex; flex-direction: column; gap: 2px; }
 .mob-sheet-item {
@@ -3572,6 +3576,11 @@ body::before {
 }
 .gacha-cell-glow { position: absolute; inset: 0; opacity: 0.8; }
 .gacha-cell svg { position: relative; z-index: 1; }
+.gacha-cell-img {
+  position: relative; z-index: 1;
+  max-height: 140px; width: auto; object-fit: contain;
+  filter: drop-shadow(0 14px 18px rgba(0,0,0,.55));
+}
 .gacha-cell-name {
   position: relative; z-index: 1;
   font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.6px;
