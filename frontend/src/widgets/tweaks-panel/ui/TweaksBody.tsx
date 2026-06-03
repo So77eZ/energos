@@ -103,6 +103,43 @@ export function TweaksBody() {
           />
           <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
         </label>
+        <label className="twk-toggle">
+          <span className="twk-toggle-label">Кнопка Гачапон</span>
+          <input
+            type="checkbox"
+            checked={theme.gachapon}
+            onChange={(e) => theme.setGachapon(e.target.checked)}
+          />
+          <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
+        </label>
+      </section>
+
+      <section className="twk-section">
+        <span className="twk-section-title">Анимации</span>
+        <div className="twk-seg" role="radiogroup" aria-label="Анимации">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={theme.motion === 'system'}
+            className={`twk-seg-btn${theme.motion === 'system' ? ' active' : ''}`}
+            onClick={() => theme.setMotion('system')}
+          >
+            По системе
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={theme.motion === 'always'}
+            className={`twk-seg-btn${theme.motion === 'always' ? ' active' : ''}`}
+            onClick={() => theme.setMotion('always')}
+          >
+            Всегда вкл.
+          </button>
+        </div>
+        <p className="twk-hint">
+          «По системе» уважает настройку ОС «уменьшить движение». «Всегда вкл.» —
+          анимации (фон, 3D-банки) работают независимо от системы.
+        </p>
       </section>
     </div>
   )

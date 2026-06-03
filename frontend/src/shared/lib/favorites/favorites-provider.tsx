@@ -4,7 +4,7 @@
 // из layout (server-side fetch с токеном). Toggle идёт через server action, который
 // сам читает token из httpOnly-куки. Оптимистичный update + revert при ошибке.
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useToast } from '@shared/lib/toast'
 import { toggleFavoriteAction } from './actions'
 
@@ -32,6 +32,12 @@ export function FavoritesProvider({ children, initial = [], userId = null }: Fav
   const [favorites, setFavorites] = useState<number[]>(initial)
   const [pendingCount, setPendingCount] = useState(0)
   const { toast } = useToast()
+
+  // One-shot cleanup: старый mock-провайдер писал избранное в localStorage.
+  // С переходом на API-based провайдер ключ больше не читается — убираем мусор.
+  useEffect(() => {
+    localStorage.removeItem('energos_favorites_mock')
+  }, [])
 
   const isFavorite = useCallback(
     (drinkId: number): boolean => favorites.includes(drinkId),

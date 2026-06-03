@@ -11,7 +11,7 @@ const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/drinks', '/taste-map']
 const FILTER_PAGES = ['/', '/taste-map']
 const PLACEHOLDER = 'Поиск напитка, бренда, метрики…'
 
-export function HeaderSearchBar() {
+export function HeaderSearchBar({ forceInput = false }: { forceInput?: boolean } = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const { search, setSearch, filterOpen, setFilterOpen, noSugarOnly, sort, searchItems } = useCatalogSearch()
@@ -37,7 +37,7 @@ export function HeaderSearchBar() {
   // рендерим ту же визуальную плашку, но как Link на каталог. Так header
   // одинаков на всех страницах; навигация не сдвигается влево из-за пустого
   // слота, и юзер при клике сразу попадает туда где поиск работает.
-  if (!SEARCH_PAGES.includes(pathname)) {
+  if (!forceInput && !SEARCH_PAGES.includes(pathname)) {
     return (
       <div className="hdr-search">
         <Link href={ROUTES.home} className="search search-link" title="Поиск напитков в каталоге">

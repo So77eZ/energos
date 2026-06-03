@@ -17,6 +17,7 @@ import {
 import type { User } from '@entities/user'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
+import { useToast } from '@shared/lib/toast'
 import { deleteReviewAction } from '@features/submit-review/model/actions'
 import { ReviewForm } from '@features/submit-review/ui/ReviewForm'
 import { DrinkNav } from './DrinkNav'
@@ -129,6 +130,7 @@ export function DrinkPage({
   autoOpenReview = false,
 }: DrinkPageProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [formOpen, setFormOpen] = useState(autoOpenReview)
   const [sort, setSort] = useState<ReviewSort>('date_desc')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>('all')
@@ -172,7 +174,8 @@ export function DrinkPage({
   async function handleDelete() {
     if (!myReview) return
     if (!confirm('Удалить ваш отзыв?')) return
-    await deleteReviewAction(myReview.id, activeDrink.id)
+    const res = await deleteReviewAction(myReview.id, activeDrink.id)
+    if (res?.error) toast({ msg: res.error, kind: 'err' })
   }
 
   return (

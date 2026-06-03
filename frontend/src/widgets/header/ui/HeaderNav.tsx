@@ -1,55 +1,37 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Icons } from '@shared/ui/icons'
-import { ROUTES } from '@shared/config/routes'
+import { navItemsFor } from '../model/nav-items'
+import { usePriorityNav } from '../model/usePriorityNav'
+import { NavLink } from './NavLink'
+import { MoreMenu, MoreButtonInner } from './MoreMenu'
+import { useTheme } from '@shared/lib/theme'
 
 interface HeaderNavProps {
   isAdmin: boolean
 }
 
-const ITEMS = [
-  { href: ROUTES.home,      label: 'Каталог',       icon: 'grid'   },
-  { href: ROUTES.tasteMap,  label: 'Карта вкусов',  icon: 'map'    },
-  { href: ROUTES.tier,      label: 'Tier list',     icon: 'trophy' },
-  { href: ROUTES.compare(), label: 'Сравнение',     icon: 'scale'  },
-  { href: ROUTES.glossary,  label: 'Словарь',       icon: 'book'   },
-  { href: ROUTES.submit,    label: 'Предложить',    icon: 'plus'   },
-  { href: ROUTES.reviews(), label: 'Отзывы',        icon: 'msg'    },
-] as const
-
 export function HeaderNav({ isAdmin }: HeaderNavProps) {
-  const pathname = usePathname()
+  const { gachapon } = useTheme()
+  const items = navItemsFor(isAdmin)
+  const { visible, overflow, showMore, navRef, measureRef } = usePriorityNav(items, gachapon)
 
   return (
-    <>
-      {ITEMS.map(({ href, label, icon }) => {
-        const Icon = Icons[icon]
-        const active = pathname === href || (href !== '/' && pathname.startsWith(href))
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`nav-link${active ? ' active' : ''}`}
-            aria-current={active ? 'page' : undefined}
-          >
-            <Icon w={14} />
-            <span className="nav-link-lbl">{label}</span>
-          </Link>
-        )
-      })}
+    <div className="hdr-nav-flow" ref={navRef}>
+      <div className="hdr-nav-items">
+        {visible.map((item) => (
+          <NavLink key={item.href} item={item} />
+        ))}
+        {showMore && <MoreMenu overflow={overflow} />}
+      </div>
 
-      {isAdmin && (
-        <Link
-          href={ROUTES.admin.drinks}
-          className={`nav-link${pathname.startsWith('/admin') ? ' active' : ''}`}
-          aria-current={pathname.startsWith('/admin') ? 'page' : undefined}
-        >
-          <Icons.sliders w={14} />
-          <span className="nav-link-lbl">Управление</span>
-        </Link>
-      )}
-    </>
+      <div className="hdr-nav-measure" ref={measureRef} aria-hidden="true">
+        {items.map((item) => (
+          <NavLink key={`m-${item.href}`} item={item} measure />
+        ))}
+        <span className="nav-link hdr-more-btn" data-mm>
+          <MoreButtonInner />
+        </span>
+      </div>
+    </div>
   )
 }

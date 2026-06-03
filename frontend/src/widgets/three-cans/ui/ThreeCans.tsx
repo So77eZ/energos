@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { ACCENT_MAP, useTheme } from '@shared/lib/theme'
 
@@ -28,7 +28,7 @@ const PALETTES: Record<Shade, CanPalette> = {
   light: { body: 0xe6ecf3, capTop: 0xc8d0dc, capBot: 0xa8b2c0 },
 }
 
-function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string, shade: Shade): () => void {
+function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string, shade: Shade, animate: boolean): () => void {
   const isLeft = side === 'left'
   const palette = PALETTES[shade]
 
@@ -126,8 +126,13 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
       transparent: true,
       opacity: 0.5,
       flatShading: true,
+      // Льдинки орбитят кольцом вокруг банки: задняя половина орбиты иначе
+      // перекрывается непрозрачным телом банки и пропадает. depthTest:false
+      // + renderOrder рисует их поверх — лёд всегда виден, плавает вокруг.
+      depthTest: false,
     })
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), mat)
+    mesh.renderOrder = 2
     const data: CubeData = {
       mat,
       baseOpacity: 0.5,
@@ -201,6 +206,47 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
 
   function onEnter() { hovering = true }
   function onLeave() { hovering = false }
+
+  function disposeAll() {
+    scene.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (mesh.geometry) mesh.geometry.dispose()
+      if (mesh.material) {
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+        mats.forEach((m) => m.dispose())
+      }
+    })
+    renderer.dispose()
+  }
+
+  // Разложить льдинки по их орбите один раз (в анимации это делает tick на
+  // каждом кадре). Без этого в статичном кадре все кубы остаются в (0,0,0) —
+  // слипаются в центре банки. speedMul=1 → radiusMul=1, поворот не нужен.
+  function layoutCubesStatic() {
+    cubes.forEach(({ mesh, data }) => {
+      const ox = Math.cos(data.orbitA) * data.orbitR
+      const oz = Math.sin(data.orbitA) * data.orbitR
+      mesh.position.x = ox
+      mesh.position.z = oz * Math.cos(data.orbitTilt)
+      mesh.position.y = data.orbitYOffset + oz * Math.sin(data.orbitTilt)
+    })
+  }
+
+  // prefers-reduced-motion: показываем банки статичным кадром — без rAF-цикла,
+  // hover-разгона и орбиты льдинок. Элемент остаётся (как у liquid-bg), глушим
+  // только движение. resize перерисовывает единичный кадр.
+  if (!animate) {
+    layoutCubesStatic()
+    resize()
+    renderer.render(scene, camera)
+    const onResize = () => { resize(); renderer.render(scene, camera) }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      disposeAll()
+    }
+  }
+
   canvas.addEventListener('mouseenter', onEnter)
   canvas.addEventListener('mouseleave', onLeave)
 
@@ -328,22 +374,14 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     window.removeEventListener('resize', onResize)
     canvas.removeEventListener('mouseenter', onEnter)
     canvas.removeEventListener('mouseleave', onLeave)
-    scene.traverse((o) => {
-      const mesh = o as THREE.Mesh
-      if (mesh.geometry) mesh.geometry.dispose()
-      if (mesh.material) {
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-        mats.forEach((m) => m.dispose())
-      }
-    })
-    renderer.dispose()
+    disposeAll()
   }
 }
 
 const ACCENT_CYCLE: Array<keyof typeof ACCENT_MAP> = ['cyan', 'pink', 'lime', 'amber', 'purple']
 
 export function ThreeCans() {
-  const { accent } = useTheme()
+  const { accent, motion } = useTheme()
   // Left can uses the active accent; right can uses the next one in the cycle
   // so the pair always reads as two distinct hues no matter the theme choice.
   const leftAccent = ACCENT_MAP[accent].rgb
@@ -351,12 +389,30 @@ export function ThreeCans() {
   const leftRef = useRef<HTMLCanvasElement>(null)
   const rightRef = useRef<HTMLCanvasElement>(null)
 
+  // Уважаем системную настройку «уменьшить движение»: банки крутятся/орбитят
+  // непрерывно (idle-wobble + кубы-льдинки + hover-разгон). При reduce-motion
+  // НЕ прячем банки, а рендерим статичным кадром (как у liquid-bg — глушим
+  // только движение). Lazy-init синхронно, чтобы не словить лишний remount.
+  const [systemReduce, setSystemReduce] = useState(
+    () => typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = () => setSystemReduce(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  // Профильный оверрайд 'always' бьёт системную настройку (см. motion-preference спеку).
+  const reduced = systemReduce && motion !== 'always'
+
   useEffect(() => {
     const cleanups: Array<() => void> = []
-    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent, 'dark'))
-    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent, 'light'))
+    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent, 'dark', !reduced))
+    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent, 'light', !reduced))
     return () => cleanups.forEach((c) => c())
-  }, [leftAccent, rightAccent])
+  }, [leftAccent, rightAccent, reduced])
 
   return (
     <div className="three-bg" aria-hidden="true">

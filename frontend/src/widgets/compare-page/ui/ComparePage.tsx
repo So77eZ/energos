@@ -35,6 +35,9 @@ export function ComparePage({ drinks }: ComparePageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [picked, setPicked] = useState<number[]>(() => parseInitial(searchParams))
+  // «Только различающиеся» — прячет метрики с одинаковым (по показанному, до 0.1)
+  // значением у всех сравниваемых, как side-by-side у DNS.
+  const [onlyDiffering, setOnlyDiffering] = useState(false)
 
   // Sync state → URL (so comparisons are shareable).
   useEffect(() => {
@@ -76,6 +79,16 @@ export function ComparePage({ drinks }: ComparePageProps) {
     }
     return out
   }, [items])
+
+  // Метрики к показу: при «только различающиеся» оставляем строки, где
+  // показанные (округлённые до 0.1) значения не совпадают у всех напитков.
+  const visibleMetrics = useMemo(() => {
+    if (!onlyDiffering) return METRIC_KEYS
+    return METRIC_KEYS.filter((k) => {
+      const shown = new Set(items.map((d) => d.metrics![k].toFixed(1)))
+      return shown.size > 1
+    })
+  }, [onlyDiffering, items])
 
   return (
     <div className="page page-compare">
@@ -187,8 +200,24 @@ export function ComparePage({ drinks }: ComparePageProps) {
             </div>
           </div>
 
+          <div className="cmp-metric-bar">
+            <label className="filt-toggle">
+              <input
+                type="checkbox"
+                checked={onlyDiffering}
+                onChange={(e) => setOnlyDiffering(e.target.checked)}
+              />
+              <span className="filt-toggle-track" />
+              <span className="filt-toggle-lbl">Только различающиеся</span>
+            </label>
+          </div>
+
           <div className="cmp-metric-rows">
-            {METRIC_KEYS.map((k) => {
+            {visibleMetrics.length === 0 ? (
+              <div className="cmp-metric-empty">
+                Все метрики совпадают у выбранных напитков.
+              </div>
+            ) : visibleMetrics.map((k) => {
               const Icon = MetricShapes[k]
               return (
                 <div key={k} className="cmp-metric-row">

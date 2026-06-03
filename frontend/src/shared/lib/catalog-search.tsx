@@ -58,11 +58,22 @@ const Ctx = createContext<PageSearchCtx>({
 
 function SearchResetter() {
   const pathname = usePathname()
-  const { setSearch, setSearchItems, setFilterOpen } = useContext(Ctx)
+  const {
+    setSearch, setSearchItems, setFilterOpen,
+    setSort, setTiers, setPriceRange, setOnlyNew, setNoSugarOnly,
+  } = useContext(Ctx)
+  // На уходе со страницы чистим поиск и фильтры (свежий каталог при возврате),
+  // но НЕ view: grid/heat — display-преференс, а не фильтр, и должен переживать
+  // навигацию (как тема/шрифт).
   useEffect(() => {
     setSearch('')
     setSearchItems([])
     setFilterOpen(false)
+    setSort('name')
+    setTiers([])
+    setPriceRange(null)
+    setOnlyNew(false)
+    setNoSugarOnly(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
   return null

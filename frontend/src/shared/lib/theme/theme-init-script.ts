@@ -13,4 +13,5 @@ var h=document.documentElement;
 h.setAttribute('data-theme',t);
 h.style.setProperty('--accent',a.hex);
 h.style.setProperty('--accent-rgb',a.rgb);
+if(p.motion==='always')h.setAttribute('data-force-motion','');
 }catch(e){}})();`

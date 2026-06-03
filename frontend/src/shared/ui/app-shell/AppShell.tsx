@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { useTheme } from '@shared/lib/theme'
 import { AgeGate } from '@widgets/age-gate/ui/AgeGate'
+import { MotionNotice } from '@widgets/motion-notice/ui/MotionNotice'
 import { TweaksPanel } from '@widgets/tweaks-panel/ui/TweaksPanel'
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -22,6 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
       {children}
       <TweaksPanel />
+      <MotionNotice />
       <AgeGate />
     </div>
   )

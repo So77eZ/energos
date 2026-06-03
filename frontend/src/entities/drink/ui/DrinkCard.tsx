@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { CSSProperties, MouseEvent } from 'react'
 import { ROUTES } from '@shared/config/routes'
 import { useFavorites } from '@shared/lib/favorites'
@@ -30,11 +31,20 @@ export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
   // Для гостей toggle сам выдаст info-toast — нам тут ничего проверять не надо.
   const { toggle, isFavorite } = useFavorites()
   const isFav = isFavorite(drink.id)
+  const router = useRouter()
 
   function onFavClick(e: MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
     void toggle(drink.id, drink.name)
+  }
+
+  // Карточка — <Link> на напиток; кнопка сравнения уводит на /compare, поэтому
+  // гасим переход по карточке (preventDefault) и всплытие, навигируем вручную.
+  function onCompareClick(e: MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    router.push(ROUTES.compare([drink.id]))
   }
 
   return (
@@ -98,16 +108,27 @@ export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
               <span className="card-price-val" style={{ color: 'var(--txt-quiet)', fontSize: '11px' }}>—</span>
             )}
           </div>
-          <div className="card-rate">
-            {drink.rating != null ? (
-              <>
-                <Icons.star w={12} />
-                <span>{drink.rating.toFixed(1)}</span>
-                <span className="card-rev">· {drink.reviewCount}</span>
-              </>
-            ) : (
-              <span className="card-rev" style={{ color: 'var(--accent)' }}>Оцените первым</span>
-            )}
+          <div className="card-foot-right">
+            <div className="card-rate">
+              {drink.rating != null ? (
+                <>
+                  <Icons.star w={12} />
+                  <span>{drink.rating.toFixed(1)}</span>
+                  <span className="card-rev">· {drink.reviewCount}</span>
+                </>
+              ) : (
+                <span className="card-rev" style={{ color: 'var(--accent)' }}>Оцените первым</span>
+              )}
+            </div>
+            <button
+              type="button"
+              className="card-compare"
+              onClick={onCompareClick}
+              aria-label={`Сравнить «${drink.name}»`}
+              title="Добавить в сравнение"
+            >
+              <Icons.scale w={14} />
+            </button>
           </div>
         </div>
       </div>

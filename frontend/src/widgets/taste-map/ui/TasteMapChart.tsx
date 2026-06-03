@@ -98,7 +98,7 @@ export function TasteMapChart({ drinks }: TasteMapChartProps) {
               {/* main axes */}
               <line x1={PAD} y1={VIEWBOX_H - PAD} x2={VIEWBOX_W - PAD} y2={VIEWBOX_H - PAD} stroke="var(--line-strong)" />
               <line x1={PAD} y1={PAD} x2={PAD} y2={VIEWBOX_H - PAD} stroke="var(--line-strong)" />
-              <text x={VIEWBOX_W - PAD} y={VIEWBOX_H - PAD - 8} textAnchor="end" fill="var(--accent)" fontFamily="'JetBrains Mono', monospace" fontSize="11" letterSpacing="1">
+              <text x={VIEWBOX_W - PAD} y={VIEWBOX_H - PAD + 42} textAnchor="end" fill="var(--accent)" fontFamily="'JetBrains Mono', monospace" fontSize="11" letterSpacing="1">
                 {METRIC_LABELS[axisX].toUpperCase()} →
               </text>
               <text x={PAD + 8} y={PAD - 12} fill="var(--accent)" fontFamily="'JetBrains Mono', monospace" fontSize="11" letterSpacing="1">

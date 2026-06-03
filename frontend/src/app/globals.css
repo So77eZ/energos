@@ -2,16 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Monocraft self-hosted (нет на Google Fonts). Файл лежит в public/fonts/.
-   format("collection") = TrueType Collection (.ttc) — поддерживается всеми
-   современными браузерами. font-display: swap — не блокирует рендер.
-   TODO: 5.9MB → конвертнуть в .woff2 (~1.5MB), см. improvements.md. */
+/* Monocraft self-hosted (нет на Google Fonts). Файл в public/fonts/.
+   woff2 (446KB) — сконвертирован из исходного .ttc (5.9MB, -92%) через
+   fontTools, взят regular (weight 400). font-display: swap — не блокирует рендер. */
 @font-face {
   font-family: 'Monocraft';
-  src: url('/fonts/Monocraft.ttc') format('collection');
+  src: url('/fonts/Monocraft.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+}
+
+/* Кроссфейд при переключении dark↔light (View Transitions API, см.
+   theme-provider.tsx). Где API не поддержан — правила игнорируются. */
+::view-transition-old(root),
+::view-transition-new(root) { animation-duration: .35s; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -225,6 +233,29 @@ body::before {
    контекста static-контент .page рисуется ПОД positioned .three-bg. */
 .main { position: relative; z-index: 1; }
 .page { position: relative; z-index: 1; }
+
+/* ─── Accessibility: prefers-reduced-motion ───────────────────────
+   Системная настройка «уменьшить движение» (вестибулярные расстройства,
+   укачивание, эпилепсия). ЗАМОРАЖИВАЕМ движение, но НЕ прячем элементы —
+   иначе перекрыли бы явные тогглы юзера в TweaksPanel (цветной фон/шум/
+   сканлайны рулятся только тогглами; сканлайны/шум статичны — их тут нет).
+   liquid-bg оставляем видимым (цвет), но блобы перестают дрейфовать.
+   3D-банки рендерятся статичным кадром (без rAF/орбиты) — гейтятся в JS
+   (matchMedia, ThreeCans.tsx), сам элемент остаётся видимым. */
+@media (prefers-reduced-motion: reduce) {
+  /* :root:not([data-force-motion]) — профильный оверрайд «Анимации: Всегда вкл.»
+     снимает заморозку даже при системном reduce (см. motion-preference спеку). */
+  :root:not([data-force-motion]) .lb-blob,   /* дрейф блобов жидкого фона — стоп, фон остаётся */
+  :root:not([data-force-motion]) .ticker-row,
+  :root:not([data-force-motion]) .ticker-tag::before,
+  :root:not([data-force-motion]) .auth-vis-glow,
+  :root:not([data-force-motion]) .auth-vis-can,
+  :root:not([data-force-motion]) .auth-line,
+  :root:not([data-force-motion]) .age-gate::before,
+  :root:not([data-force-motion]) .age-gate::after {
+    animation: none !important;
+  }
+}
 .hdr  { z-index: 50; }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -335,7 +366,6 @@ body::before {
 .search-dropdown-thumb img { width: 100%; height: 100%; object-fit: contain; }
 .search-dropdown-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.hdr-nav { display: flex; align-items: center; gap: 2px; }
 .nav-link {
   display: flex; align-items: center; gap: 6px;
   padding: 7px 10px; border-radius: var(--r-sm);
@@ -343,8 +373,6 @@ body::before {
 }
 .nav-link:hover { color: var(--accent); background: var(--bg-input); }
 .nav-link.active { color: var(--accent); background: rgba(var(--accent-rgb),0.10); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),0.3); }
-.nav-link-lbl { display: none; }
-@media (min-width: 1280px) { .nav-link-lbl { display: inline; } }
 
 .nav-cta {
   margin-left: 6px;
@@ -931,6 +959,24 @@ body::before {
   font-family: var(--font-sans); font-size: 11px; font-weight: 500;
   color: var(--txt-quiet); margin-left: 2px;
 }
+/* Рейтинг + кнопка сравнения справа в подвале карточки. */
+.card-foot-right { display: flex; align-items: center; gap: 8px; }
+.card-compare {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: var(--r-sm);
+  color: var(--txt-quiet);
+  background: var(--bg-input);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: color .14s, border-color .14s, background .14s, transform .12s;
+}
+.card-compare:hover {
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  background: rgba(var(--accent-rgb), 0.1);
+}
+.card-compare:active { transform: scale(0.92); }
 .card-hover-line {
   position: absolute; left: 0; right: 0; top: 0; height: 2px;
   opacity: 0; transition: opacity .2s;
@@ -1340,8 +1386,17 @@ body::before {
   z-index: 20;
   animation: emoji-picker-in .12s ease-out;
 }
+/* Флип вниз, когда над якорем мало места (верхние отзывы). */
+.emoji-picker.is-down {
+  bottom: auto; top: calc(100% + 6px);
+  animation-name: emoji-picker-in-down;
+}
 @keyframes emoji-picker-in {
   from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes emoji-picker-in-down {
+  from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .emoji-picker-item {
@@ -2211,7 +2266,7 @@ body::before {
 
 .cmp-metric-rows {
   display: flex; flex-direction: column; gap: 10px;
-  padding-top: 14px; border-top: 1px dashed var(--line);
+  padding-top: 12px;
 }
 .cmp-metric-row { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: center; }
 .cmp-metric-name {
@@ -2224,12 +2279,25 @@ body::before {
   gap: 8px; align-items: center;
   padding: 4px 6px; border-radius: 4px;
 }
-.cmp-bar-cell.winner { background: rgba(var(--accent-rgb), 0.06); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.3); }
+/* Победитель метрики: «трофейное» золото, подмешанное текущим accent'ом —
+   при смене акцента темы оттенок золота плывёт вместе с ним. */
+.cmp-bar-cell.winner {
+  --cmp-gold: color-mix(in srgb, var(--c-amber) 72%, rgb(var(--accent-rgb)) 28%);
+  background: color-mix(in srgb, var(--cmp-gold) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cmp-gold) 55%, transparent);
+}
 .cmp-bar-brand { font-family: var(--font-mono); font-size: 10px; color: var(--txt-dim); letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cmp-bar { height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
 .cmp-bar-fill { height: 100%; transition: width .3s ease; }
 .cmp-bar-val { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--txt); text-align: right; }
-.cmp-winner { color: var(--c-amber); margin-left: 2px; }
+.cmp-winner { color: var(--cmp-gold, var(--c-amber)); margin-left: 2px; }
+
+.cmp-metric-bar { display: flex; justify-content: flex-end; padding-top: 14px; border-top: 1px dashed var(--line); }
+.cmp-metric-empty {
+  padding: 18px 6px; text-align: center;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.5px;
+  color: var(--txt-quiet);
+}
 
 .cmp-picker {
   background: var(--bg-card); border: 1px solid var(--line);
@@ -2323,6 +2391,10 @@ body::before {
 .twk-section-title {
   font-family: var(--font-mono); font-size: 10px;
   color: var(--txt-quiet); letter-spacing: 1.5px; text-transform: uppercase;
+}
+.twk-hint {
+  margin-top: 8px; font-size: 11px; line-height: 1.4;
+  color: var(--txt-quiet);
 }
 
 /* Segmented control (dark/light) */
@@ -3027,6 +3099,30 @@ body::before {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   MOTION NOTICE — одноразовый баннер о урезанных анимациях (reduce-motion).
+   Показывается только reduce-motion юзеру → без motion-анимации входа.
+   ═══════════════════════════════════════════════════════════════════ */
+.motion-notice {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  z-index: 940; max-width: calc(100vw - 32px);
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 11px 14px;
+  background: var(--bg-card); backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  font-size: 12.5px; line-height: 1.4; color: var(--txt-dim);
+}
+.motion-notice a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.motion-notice-close {
+  flex-shrink: 0; width: 24px; height: 24px;
+  display: grid; place-items: center;
+  background: transparent; border: 0; border-radius: 6px;
+  color: var(--txt-quiet); cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.motion-notice-close:hover { background: var(--bg-input); color: var(--txt); }
+
+/* ═══════════════════════════════════════════════════════════════════
    TOASTS — non-blocking transient notifications (bottom-right stack)
    ═══════════════════════════════════════════════════════════════════ */
 .toast-host {
@@ -3296,21 +3392,278 @@ body::before {
   .lb-row .lb-stat { grid-column: 2; grid-row: 2; padding-left: 0; }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   COMPATIBILITY SHIMS — kept while legacy pages are migrated.
-   Remove once every consumer has moved off `.glass` / `.glass-surface`.
-   ═══════════════════════════════════════════════════════════════════ */
-@layer utilities {
-  .glass {
-    background: var(--bg-card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(var(--accent-rgb), 0.25);
+/* ─── Nav: priority+ desktop ──────────────────────────────────── */
+.hdr-nav { display: flex; align-items: center; gap: 12px; position: relative; min-width: 0; }
+.hdr-nav-flow { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.hdr-nav-items { display: flex; align-items: center; gap: 2px; }
+.hdr-nav-trail { display: flex; align-items: center; flex-shrink: 0; }
+.hdr-nav-measure {
+  position: absolute; left: 0; top: 0; visibility: hidden; pointer-events: none;
+  display: flex; align-items: center; gap: 2px; white-space: nowrap;
+}
+.nav-link-lbl { display: none; }
+@media (min-width: 1280px) { .nav-link-lbl { display: inline; } }
+
+.hdr-more { position: relative; }
+.hdr-more-btn { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; background: none; border: 0; }
+.hdr-more-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px;
+  display: flex; flex-direction: column; gap: 2px; padding: 6px;
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.4); z-index: 60;
+}
+.hdr-more-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px;
+  color: var(--txt); text-decoration: none; font-size: 13px;
+}
+.hdr-more-item:hover { background: rgba(var(--accent-rgb), .08); }
+.hdr-more-item.active { color: var(--accent); }
+.hdr-more-item > span { flex: 1; }
+.hdr-more-item svg:last-child { opacity: .4; }
+
+/* ─── Mobile header bits (скрыты на desktop) ──────────────────── */
+.hdr-mobile-crumb, .hdr-mobile-btn { display: none; }
+@media (max-width: 768px) {
+  .hdr-inner { display: flex; align-items: center; gap: 10px; }
+  .hdr-nav { display: none; }
+  .hdr-search { display: none; }
+  .hdr-mobile-crumb { display: flex; align-items: center; gap: 6px; margin-left: 10px; color: var(--txt-dim); font-size: 13px; }
+  .hdr-crumb-label { color: var(--txt); font-weight: 600; }
+  .hdr-mobile-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border: 0; background: none;
+    color: var(--txt); cursor: pointer;
   }
-  .glass-surface {
-    background: var(--bg-surface);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid var(--line);
+  .hdr-mobile-search { margin-left: auto; }
+  .hdr-mobile-menu { margin-left: 4px; }
+  .burger { display: flex; flex-direction: column; gap: 4px; width: 20px; }
+  .burger span { height: 2px; background: currentColor; border-radius: 2px; }
+}
+
+/* ─── Mobile bottom tabs ──────────────────────────────────────── */
+.mob-tabs { display: none; }
+@media (max-width: 768px) {
+  .mob-tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 800;
+    display: flex; justify-content: space-around; align-items: stretch;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    background: var(--bg-card); border-top: 1px solid var(--line);
+    transition: transform .25s ease;
   }
+  .mob-tabs.hidden { transform: translateY(110%); }
+  .mob-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 8px 0 10px; border: 0; background: none; color: var(--txt-dim);
+    font-size: 10px; cursor: pointer; text-decoration: none;
+  }
+  .mob-tab.active { color: var(--accent); }
+  .mob-tab-avatar {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+    color: var(--bg-deep); font-weight: 700; font-size: 11px;
+  }
+  /* контент (вкл. футер) не должен прятаться под баром */
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0)); }
+}
+
+/* ─── Mobile sheet + search overlay (порталы) ─────────────────── */
+.mob-sheet-overlay, .mob-search-overlay {
+  position: fixed; inset: 0; z-index: 960;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
+  display: flex;
+}
+.mob-sheet-overlay { align-items: flex-end; }
+.mob-sheet {
+  width: 100%; max-height: 80vh; overflow-y: auto;
+  background: var(--bg-card); border-radius: 18px 18px 0 0; padding: 10px 16px 24px;
+  animation: sheet-up .25s ease;
+}
+.mob-sheet-grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 6px auto 12px; }
+.mob-sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.mob-sheet-title { font-weight: 700; }
+.mob-sheet-close, .mob-search-close { border: 0; background: none; color: var(--txt-dim); cursor: pointer; }
+.mob-sheet-cta {
+  display: flex; align-items: center; gap: 8px; padding: 12px; margin-bottom: 10px;
+  border-radius: 10px; background: rgba(var(--accent-rgb), .12); color: var(--accent);
+  text-decoration: none; font-weight: 600;
+}
+.mob-sheet-list { display: flex; flex-direction: column; gap: 2px; }
+.mob-sheet-item {
+  display: flex; align-items: center; gap: 12px; padding: 13px 10px; border-radius: 10px;
+  color: var(--txt); text-decoration: none;
+}
+.mob-sheet-item span { flex: 1; }
+.mob-sheet-item.active { color: var(--accent); background: rgba(var(--accent-rgb), .08); }
+.mob-sheet-item svg:last-child { opacity: .4; }
+
+.mob-search-overlay { align-items: flex-start; }
+.mob-search { width: 100%; display: flex; align-items: center; gap: 8px; padding: 14px 16px; background: var(--bg-card); }
+.mob-search .hdr-search { flex: 1; display: block; }
+
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* ─── Live ticker (additions) ─────────────────────────────────── */
+.ticker-row.frozen { animation: none; }
+.ticker-mark { color: var(--accent); }
+@media (max-width: 768px) { .ticker { display: none; } }
+
+/* ═══ Gachapon — slot-machine overlay ═══════════════════════════ */
+.gacha-overlay {
+  position: fixed; inset: 0; z-index: 960;
+  background: rgba(4,4,9,0.72);
+  backdrop-filter: blur(8px) saturate(130%);
+  -webkit-backdrop-filter: blur(8px) saturate(130%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: gachaFade .2s ease;
+}
+@keyframes gachaFade { from { opacity: 0; } to { opacity: 1; } }
+
+.gacha-machine {
+  width: 100%; max-width: 560px;
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(var(--win-blend), 0.10), transparent 60%),
+    var(--bg-card);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(var(--win-blend),0.12);
+  padding: 20px;
+  animation: gachaPop .26s cubic-bezier(0.2,0.9,0.3,1.2);
+  overflow: hidden;
+}
+@keyframes gachaPop { from { transform: translateY(14px) scale(0.97); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.gacha-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.gacha-head-l { display: flex; flex-direction: column; gap: 3px; }
+.gacha-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-title, var(--font-sans)); font-weight: 800;
+  font-size: 16px; letter-spacing: 2px; color: var(--txt);
+}
+.gacha-badge svg { color: var(--accent); }
+.gacha-sub {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.8px; color: var(--txt-quiet); text-transform: uppercase;
+}
+.gacha-close {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  color: var(--txt-dim); border: 1px solid var(--line);
+  background: var(--bg-input); cursor: pointer; transition: color .12s, border-color .12s;
+}
+.gacha-close:hover { color: var(--c-pink); border-color: rgba(255,46,136,0.4); }
+
+.gacha-window {
+  position: relative; overflow: hidden;
+  height: 184px; border-radius: var(--r-md);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 1px, rgba(255,255,255,0.012) 1px 2px),
+    var(--bg-base);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 2px 20px rgba(0,0,0,0.55);
+}
+.gacha-strip {
+  display: flex; height: 100%; align-items: center;
+  will-change: transform; transform: translateX(0);
+}
+.gacha-cell {
+  position: relative; flex: 0 0 auto; width: 124px; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+}
+.gacha-cell-glow { position: absolute; inset: 0; opacity: 0.8; }
+.gacha-cell svg { position: relative; z-index: 1; }
+.gacha-cell-name {
+  position: relative; z-index: 1;
+  font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.6px;
+  color: var(--txt-quiet); text-transform: uppercase;
+  max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.gacha-fade { position: absolute; top: 0; bottom: 0; width: 30%; pointer-events: none; z-index: 3; }
+.gacha-fade-l { left: 0;  background: linear-gradient(90deg, var(--bg-base), transparent); }
+.gacha-fade-r { right: 0; background: linear-gradient(270deg, var(--bg-base), transparent); }
+
+.gacha-payline {
+  position: absolute; top: 0; bottom: 0; left: 50%; width: 128px;
+  transform: translateX(-50%); z-index: 2; pointer-events: none;
+  border-left: 1px solid rgba(var(--win-blend), 0.55);
+  border-right: 1px solid rgba(var(--win-blend), 0.55);
+  box-shadow: inset 0 0 30px rgba(var(--win-blend), 0.18);
+}
+.gacha-tick {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent;
+}
+.gacha-tick-t { top: 0;    border-top: 9px solid var(--accent); }
+.gacha-tick-b { bottom: 0; border-bottom: 9px solid var(--accent); }
+.gacha-window.landed .gacha-payline {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 44px rgba(var(--win-blend), 0.4), 0 0 24px rgba(var(--win-blend), 0.3);
+  animation: gachaBurst .5s ease;
+}
+@keyframes gachaBurst {
+  0% { box-shadow: inset 0 0 0 rgba(var(--win-blend), 0); }
+  40% { box-shadow: inset 0 0 70px rgba(var(--win-blend), 0.65), 0 0 50px rgba(var(--win-blend), 0.5); }
+  100% { box-shadow: inset 0 0 44px rgba(var(--win-blend), 0.4), 0 0 24px rgba(var(--win-blend), 0.3); }
+}
+
+.gacha-result {
+  min-height: 92px; margin-top: 16px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+.gacha-spinning {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 1px;
+  color: var(--txt-dim); text-transform: uppercase;
+}
+.gacha-dots { display: inline-flex; gap: 4px; }
+.gacha-dots i {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  animation: gachaDot 1s infinite ease-in-out;
+}
+.gacha-dots i:nth-child(2) { animation-delay: .15s; }
+.gacha-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes gachaDot { 0%,100% { opacity: 0.25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } }
+
+.gacha-won {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  animation: gachaWon .4s cubic-bezier(0.2,0.9,0.3,1.2);
+}
+@keyframes gachaWon { from { transform: translateY(8px) scale(0.95); opacity: 0; } to { transform: none; opacity: 1; } }
+.gacha-won-tags { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.gacha-won-rate {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 11px; color: var(--c-amber);
+}
+.gacha-won-brand {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px;
+  color: var(--accent); text-transform: uppercase;
+}
+.gacha-won-name {
+  font-family: var(--font-title, var(--font-sans)); font-weight: 700;
+  font-size: 20px; color: var(--txt); line-height: 1.15; text-wrap: balance;
+}
+.gacha-actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* тег у пункта «Рулетка» в меню «Ещё» */
+.hdr-more-tag {
+  flex: 0 0 auto !important; font-size: 9.5px; letter-spacing: .04em;
+  color: var(--txt-quiet); text-transform: uppercase;
+}
+
+@media (max-width: 560px) {
+  .gacha-machine { padding: 16px; }
+  .gacha-window { height: 158px; }
+  .gacha-cell { width: 96px; }
+  .gacha-payline { width: 100px; }
+  .gacha-won-name { font-size: 17px; }
+  .gacha-actions { width: 100%; }
+  .gacha-actions .cta-primary, .gacha-actions .cta-ghost { flex: 1; justify-content: center; }
+}
+/* reduced-motion: gated на data-force-motion (уважать «Анимации: всегда вкл.») */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-force-motion]) .gacha-window.landed .gacha-payline { animation: none; }
+  :root:not([data-force-motion]) .gacha-dots i { animation: none; opacity: 0.7; }
+  :root:not([data-force-motion]) .gacha-machine,
+  :root:not([data-force-motion]) .gacha-won { animation: none; }
 }
