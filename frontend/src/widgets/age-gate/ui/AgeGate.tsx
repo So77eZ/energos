@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Icons } from '@shared/ui/icons'
+import { useScrollLock } from '@shared/lib/useScrollLock'
 
 /**
  * Soft age gate. Federal law in RU does not restrict energy drink sales by
@@ -29,13 +30,8 @@ export function AgeGate() {
     }
   }, [])
 
-  // Lock body scroll while the gate blocks the viewport.
-  useEffect(() => {
-    if (view !== 'asking' && view !== 'denied') return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
-  }, [view])
+  // Блокируем скролл пока гейт перекрывает вьюпорт (общий хук — iOS-safe).
+  useScrollLock(view === 'asking' || view === 'denied')
 
   if (view === 'loading' || view === 'verified') return null
 
