@@ -102,6 +102,13 @@ export function HomeHero({ drink, rank }: HomeHeroProps) {
             <Link href={ROUTES.reviews(drink.id)} className="cta-ghost">
               Оставить отзыв
             </Link>
+            <Link
+              href={ROUTES.compare([drink.id])}
+              className="cta-ghost"
+              title="Добавить в сравнение"
+            >
+              <Icons.scale w={14} /> Сравнить
+            </Link>
           </div>
         </div>
 
