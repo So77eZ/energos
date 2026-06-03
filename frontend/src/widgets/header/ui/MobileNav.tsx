@@ -39,21 +39,27 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
     }
     lastFocus.current = document.activeElement as HTMLElement
     const dialog = document.querySelector<HTMLElement>(moreOpen ? '.mob-sheet' : '.mob-search')
-    const focusables = dialog
-      ? Array.from(
-          dialog.querySelectorAll<HTMLElement>(
-            'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
-          ),
-        )
-      : []
-    focusables[0]?.focus()
+    // Список фокусируемых пересобираем НА КАЖДЫЙ Tab, а не один раз: контент
+    // диалога меняется (напр. результаты поиска рендерятся после ввода), и
+    // захваченный список устарел бы — часть элементов выпала бы из trap.
+    const getFocusables = () =>
+      dialog
+        ? Array.from(
+            dialog.querySelectorAll<HTMLElement>(
+              'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
+            ),
+          )
+        : []
+    getFocusables()[0]?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setMoreOpen(false)
         setSearchOpen(false)
         return
       }
-      if (e.key === 'Tab' && focusables.length > 0) {
+      if (e.key === 'Tab') {
+        const focusables = getFocusables()
+        if (focusables.length === 0) return
         const first = focusables[0]
         const last = focusables[focusables.length - 1]
         if (e.shiftKey && document.activeElement === first) {
