@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSpin } from './reel'
+import { buildSpin, STRIP_CAP } from './reel'
 import type { EnrichedDrink } from '@entities/drink'
 
 // Минимальные «напитки» — buildSpin использует только идентичность объектов.
@@ -29,5 +29,13 @@ describe('buildSpin', () => {
   it('strip — только элементы пула (без потерь/чужаков)', () => {
     const r = buildSpin(DRINKS, rng0)!
     for (const d of r.strip) expect(DRINKS).toContain(d)
+  })
+  it('большой пул → длина ленты ограничена STRIP_CAP', () => {
+    const big = Array.from({ length: 20 }, (_, i) => drink(i + 1)) // 7*20=140 > cap
+    const r = buildSpin(big, rng0)!
+    expect(r.strip).toHaveLength(STRIP_CAP)
+    expect(r.winIndex).toBe(STRIP_CAP - 3)
+    expect(r.strip[r.winIndex]).toBe(r.winner)
+    for (const d of r.strip) expect(big).toContain(d)
   })
 })
