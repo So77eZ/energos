@@ -1,6 +1,7 @@
 // Compact user review card — avatar, name, date, rating, mini-metrics, comment.
 // Mirrors frontendNew/page-drink.jsx → UserReviewCard.
 
+import { BadgeCluster } from '@entities/achievement'
 import { EmojiBar } from '@features/emoji-reactions'
 import { Icons } from '@shared/ui/icons'
 import { calcRating, type Review } from '../model/types'
@@ -35,7 +36,10 @@ export function UserReviewCard({ review }: UserReviewCardProps) {
         <div className="rev-head-l">
           <span className="rev-avatar" style={{ background: color }}>{letter}</span>
           <div>
-            <div className="rev-username">{review.username ?? 'аноним'}</div>
+            <div className="rev-name-row">
+              <span className="rev-username">{review.username ?? 'аноним'}</span>
+              <BadgeCluster ownedIds={review.authorBadges ?? []} clusterBg="var(--bg-card)" />
+            </div>
             <div className="rev-date">{date}</div>
           </div>
         </div>

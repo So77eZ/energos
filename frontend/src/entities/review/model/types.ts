@@ -16,6 +16,8 @@ export interface Review extends ReviewMetrics {
   from_admin: boolean
   created_at: string | null
   updated_at: string | null
+  /** Висячка: бэкендер подаст `author_badges` (id разблокированных бейджей автора). */
+  authorBadges?: string[]
 }
 
 // from_admin включён — нужен при создании admin-отзыва.
