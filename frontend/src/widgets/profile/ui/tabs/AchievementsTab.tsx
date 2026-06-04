@@ -1,5 +1,4 @@
-import type { EvaluatedAchievement } from '@entities/achievement'
-import { Medal } from '@entities/achievement'
+import { Medal, type EvaluatedAchievement } from '@entities/achievement'
 import { Icons } from '@shared/ui/icons'
 
 interface AchievementsTabProps {

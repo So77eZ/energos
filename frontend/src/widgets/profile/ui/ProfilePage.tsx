@@ -4,8 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { evaluateAchievements } from '@entities/achievement'
 import type { Drink } from '@entities/drink'
-import { enrichDrinks } from '@entities/drink'
-import type { Review } from '@entities/review'
+import { enrichDrinks, tierFromRating } from '@entities/drink'
+import { calcRating, type Review } from '@entities/review'
 import type { User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
 import { ROUTES } from '@shared/config/routes'
@@ -78,11 +78,16 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       : 0
     const nightReviews = reviews.filter((r) => {
       if (!r.created_at) return false
-      const h = new Date(r.created_at).getHours()
+      // created_at — наивный UTC (без оффсета); добавляем Z, чтобы Date не принял
+      // его за локальное. getHours() затем даёт локальный час инстанта (ночь юзера).
+      const iso = r.created_at.endsWith('Z') ? r.created_at : `${r.created_at}Z`
+      const h = new Date(iso).getHours()
       return h >= 0 && h < 4
     }).length
+    // Тир по СОБСТВЕННОЙ оценке юзера (глобальный тир напитка требует всех отзывов,
+    // которых на клиенте нет). «Универсал» = отзывы во всех тирах по своим оценкам.
     const tiersCovered = new Set(
-      reviews.map((r) => enrichedMap.get(r.energy_drink_id)?.tier).filter(Boolean),
+      reviews.map((r) => tierFromRating(calcRating(r))).filter(Boolean),
     ).size
     return evaluateAchievements({
       reviewsCount: reviews.length,
@@ -97,7 +102,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       emojiGivenCount: user.emoji_given_count ?? 0,
       isTop10: user.is_top10 ? 1 : 0,
     })
-  }, [reviews, favIds.length, mySubs.length, approvedCount, enrichedMap, user])
+  }, [reviews, favIds.length, mySubs.length, approvedCount, user])
   const unlockedCount = achievements.filter((a) => a.unlocked).length
 
   // appearance исключён — у вкладки нет badge'а со счётчиком (это настройки).
