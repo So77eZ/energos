@@ -81,7 +81,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
 
   return (
     <>
-      {/* В потоке шапки: крошка + кнопки (видны только ≤768px через CSS) */}
+      {/* В потоке шапки: крошка + кнопки (видны только ≤640px через CSS) */}
       <div className="hdr-mobile-crumb">
         <span className="hdr-crumb-sep">/</span>
         <span className="hdr-crumb-label">{currentLabel}</span>
