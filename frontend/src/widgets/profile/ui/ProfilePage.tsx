@@ -71,16 +71,33 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   const pendingCount = mySubs.filter((s) => s.status === 'pending').length
   const approvedCount = mySubs.filter((s) => s.status === 'approved').length
 
-  const achievements = useMemo(
-    () =>
-      evaluateAchievements({
-        reviewsCount: reviews.length,
-        favoritesCount: favIds.length,
-        submissionsCount: mySubs.length,
-        approvedSubmissionsCount: approvedCount,
-      }),
-    [reviews.length, favIds.length, mySubs.length, approvedCount],
-  )
+  const achievements = useMemo(() => {
+    const reviewsWithComments = reviews.filter((r) => r.comment?.trim()).length
+    const avgSweetnessX10 = reviews.length >= 3
+      ? Math.round((reviews.reduce((acc, r) => acc + r.sweetness, 0) / reviews.length) * 10)
+      : 0
+    const nightReviews = reviews.filter((r) => {
+      if (!r.created_at) return false
+      const h = new Date(r.created_at).getHours()
+      return h >= 0 && h < 4
+    }).length
+    const tiersCovered = new Set(
+      reviews.map((r) => enrichedMap.get(r.energy_drink_id)?.tier).filter(Boolean),
+    ).size
+    return evaluateAchievements({
+      reviewsCount: reviews.length,
+      favoritesCount: favIds.length,
+      submissionsCount: mySubs.length,
+      approvedSubmissionsCount: approvedCount,
+      reviewsWithComments,
+      avgSweetnessX10,
+      nightReviews,
+      tiersCovered,
+      firstReviewerCount: user.first_reviewer_count ?? 0,
+      emojiGivenCount: user.emoji_given_count ?? 0,
+      isTop10: user.is_top10 ? 1 : 0,
+    })
+  }, [reviews, favIds.length, mySubs.length, approvedCount, enrichedMap, user])
   const unlockedCount = achievements.filter((a) => a.unlocked).length
 
   // appearance исключён — у вкладки нет badge'а со счётчиком (это настройки).
