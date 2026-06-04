@@ -2827,36 +2827,11 @@ body::before {
   position: relative;
   background: var(--bg-card); border: 1px solid var(--line);
   border-radius: var(--r-md); padding: 14px;
-  display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center;
+  display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center;
   transition: border-color .2s, transform .2s;
 }
-.ach-card.unlocked.ach-cyan   { border-color: rgba(0,229,255,0.4); }
-.ach-card.unlocked.ach-pink   { border-color: rgba(255,46,136,0.4); }
-.ach-card.unlocked.ach-purple { border-color: rgba(192,132,252,0.4); }
-.ach-card.unlocked.ach-lime,
-.ach-card.unlocked.ach-green  { border-color: rgba(0,255,157,0.4); }
-.ach-card.unlocked.ach-amber  { border-color: rgba(251,191,36,0.4); }
 .ach-card.locked { opacity: 0.55; }
 .ach-card.unlocked:hover { transform: translateY(-2px); }
-.ach-medal {
-  position: relative;
-  width: 56px; height: 56px;
-  display: grid; place-items: center;
-  border-radius: 50%; background: var(--bg-input);
-  border: 1.5px solid var(--line);
-  color: var(--txt-quiet);
-}
-.ach-card.unlocked.ach-cyan   .ach-medal { color: var(--c-cyan);   border-color: rgba(0,229,255,0.6);  box-shadow: 0 0 18px rgba(0,229,255,0.3); }
-.ach-card.unlocked.ach-pink   .ach-medal { color: var(--c-pink);   border-color: rgba(255,46,136,0.6); box-shadow: 0 0 18px rgba(255,46,136,0.3); }
-.ach-card.unlocked.ach-purple .ach-medal { color: var(--c-purple); border-color: rgba(192,132,252,0.6); box-shadow: 0 0 18px rgba(192,132,252,0.3); }
-.ach-card.unlocked.ach-lime   .ach-medal,
-.ach-card.unlocked.ach-green  .ach-medal { color: var(--c-green); border-color: rgba(0,255,157,0.6); box-shadow: 0 0 18px rgba(0,255,157,0.3); }
-.ach-card.unlocked.ach-amber  .ach-medal { color: var(--c-amber);  border-color: rgba(251,191,36,0.6); box-shadow: 0 0 18px rgba(251,191,36,0.3); }
-.ach-lock {
-  position: absolute; bottom: -2px; right: -2px;
-  background: var(--bg-base); border-radius: 50%; padding: 3px;
-  border: 1px solid var(--line); color: var(--txt-quiet);
-}
 .ach-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .ach-name { font-family: var(--font-title); font-weight: 600; font-size: 14px; color: var(--txt); }
 .ach-desc { font-size: 11.5px; color: var(--txt-dim); line-height: 1.4; }
@@ -3684,4 +3659,124 @@ body::before {
   :root:not([data-force-motion]) .gacha-dots i { animation: none; opacity: 0.7; }
   :root:not([data-force-motion]) .gacha-machine,
   :root:not([data-force-motion]) .gacha-won { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ENERGOS — Badges / Achievements (sub-project B)
+   Престиж-медали (bronze/silver/gold/elite) + мини-кластер у ника +
+   locked «ожидает данных». Порт styles-badges.css дизайнера.
+   ═══════════════════════════════════════════════════════════════════ */
+.medal {
+  --mc: #c4cfdb; --mc-hi: #eef4fa; --mc-lo: #7f8b99; --mc-rgb: 196,207,219;
+  --glow: rgba(196,207,219,0.40); --core-bg: var(--bg-card);
+  display: inline-grid; place-items: center;
+  width: var(--sz, 48px); height: var(--sz, 48px); flex-shrink: 0;
+  filter: drop-shadow(0 0 var(--glow-blur, 9px) var(--glow));
+  --clip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+.medal-bronze { --mc: #cf8a4e; --mc-hi: #f4ba80; --mc-lo: #7e4a22; --mc-rgb: 207,138,78;  --glow: rgba(207,138,78,0.42); }
+.medal-silver { --mc: #c4cfdb; --mc-hi: #f1f6fb; --mc-lo: #79859a; --mc-rgb: 196,207,219; --glow: rgba(196,207,219,0.40); }
+.medal-gold   { --mc: #f3c33f; --mc-hi: #ffe89c; --mc-lo: #b3850c; --mc-rgb: 243,195,63;  --glow: rgba(243,195,63,0.50); }
+.medal-elite  { --mc-rgb: 192,132,252; --glow: rgba(192,132,252,0.55); }
+
+.shape-hex    { --clip: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+.shape-shield { --clip: polygon(50% 0%, 100% 0%, 100% 56%, 50% 100%, 0% 56%, 0% 0%); }
+.shape-circle { --clip: circle(50% at 50% 50%); }
+
+.medal-frame {
+  width: 100%; height: 100%; box-sizing: border-box;
+  clip-path: var(--clip); padding: var(--ring, 2.5px);
+  background: linear-gradient(150deg, var(--mc-hi) 0%, var(--mc) 42%, var(--mc-lo) 100%);
+}
+.medal-elite .medal-frame {
+  background: conic-gradient(from 200deg, var(--c-cyan), var(--c-pink), var(--c-purple), var(--c-amber), var(--c-cyan));
+}
+.medal-core {
+  width: 100%; height: 100%; box-sizing: border-box;
+  clip-path: var(--clip); display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 32%, rgba(var(--mc-rgb), 0.20), var(--core-bg) 72%);
+  color: var(--mc-hi);
+}
+.medal-elite .medal-core {
+  color: #eaf3ff;
+  background: radial-gradient(circle at 50% 32%, rgba(192,132,252,0.22), var(--core-bg) 72%);
+}
+.medal-core svg { width: var(--isz, 20px); height: var(--isz, 20px);
+  filter: drop-shadow(0 0 4px rgba(var(--mc-rgb), 0.45)); }
+.medal-elite .medal-core svg { filter: drop-shadow(0 0 5px rgba(192,132,252,0.6)); }
+
+.medal-lg { --sz: 72px; --ring: 3.5px; --isz: 30px; --glow-blur: 16px; }
+.medal-md { --sz: 52px; --ring: 2.8px; --isz: 22px; --glow-blur: 11px; }
+.medal-sm { --sz: 32px; --ring: 2px;   --isz: 14px; --glow-blur: 7px;  }
+
+.medal-elite { animation: eliteGlow 3.6s ease-in-out infinite; }
+@keyframes eliteGlow {
+  0%, 100% { filter: drop-shadow(0 0 var(--glow-blur,9px) rgba(192,132,252,0.45)); }
+  50%      { filter: drop-shadow(0 0 calc(var(--glow-blur,9px) * 1.5) rgba(0,229,255,0.55)); }
+}
+
+/* мини-кластер у ника */
+.mini-badge {
+  --sz: 18px; --ring: 1.6px; --isz: 9px; --glow-blur: 5px;
+  position: relative; display: inline-grid; place-items: center;
+  width: var(--sz); height: var(--sz); flex-shrink: 0; cursor: default;
+  filter: drop-shadow(0 0 var(--glow-blur) var(--glow)); transition: transform .14s ease;
+}
+.mini-badge .medal-frame { padding: var(--ring); }
+.mini-badge .medal-core { background: var(--core-bg); }
+.mini-badge .medal-core svg { filter: none; }
+
+.badge-cluster { display: inline-flex; align-items: center; vertical-align: middle; line-height: 0; }
+.cluster-row { gap: 5px; }
+.cluster-overlap .mini-badge {
+  clip-path: var(--clip); background: var(--cluster-bg, var(--bg-card));
+  padding: 1.6px; box-sizing: content-box;
+}
+.cluster-overlap .mini-badge:not(:first-child) { margin-left: -6px; }
+.cluster-overlap .mini-badge:hover,
+.cluster-overlap .mini-badge:focus-visible { z-index: 6; }
+.mini-badge:hover, .mini-badge:focus-visible { transform: translateY(-2px); outline: none; }
+
+.mini-badge[data-tip]::after, .mini-badge[data-tip]::before {
+  position: absolute; left: 50%; opacity: 0; pointer-events: none;
+  transition: opacity .14s ease, transform .14s ease; z-index: 40;
+}
+.mini-badge[data-tip]::after {
+  content: attr(data-tip); bottom: calc(100% + 9px);
+  transform: translateX(-50%) translateY(3px);
+  background: var(--bg-card); border: 1px solid var(--line-strong); color: var(--txt);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.4px;
+  white-space: nowrap; padding: 5px 9px; border-radius: var(--r-sm);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.55);
+}
+.mini-badge[data-tip]::before {
+  content: ''; bottom: calc(100% + 4px); transform: translateX(-50%) translateY(3px);
+  border: 5px solid transparent; border-top-color: var(--line-strong);
+}
+.mini-badge[data-tip]:hover::after, .mini-badge[data-tip]:focus-visible::after,
+.mini-badge[data-tip]:hover::before, .mini-badge[data-tip]:focus-visible::before {
+  opacity: 1; transform: translateX(-50%) translateY(0);
+}
+
+.rev-name-row { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.rev-name-row .rev-username { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* locked «ожидает данных» */
+.ach-medal-wrap { display: inline-flex; }
+.bl-medal { filter: grayscale(0.85) brightness(0.7); opacity: 0.55; }
+.bl-medal.is-pending { filter: grayscale(0.4) brightness(0.85); opacity: 0.7; }
+.bl-pending {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.5px; color: var(--c-amber);
+  background: rgba(251,191,36,0.10); border: 1px solid rgba(251,191,36,0.32);
+  border-radius: var(--r-sm); padding: 4px 9px;
+}
+.bl-pending svg { width: 12px; height: 12px;
+  animation: hourglass 2.4s ease-in-out infinite; transform-origin: 50% 50%; }
+@keyframes hourglass { 0%,70%,100% { transform: rotate(0); } 85% { transform: rotate(180deg); } }
+
+/* motion-гейт: при системном reduce и без «Анимации: всегда вкл.» — стоп */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-force-motion]) .medal-elite,
+  :root:not([data-force-motion]) .bl-pending svg { animation: none; }
 }

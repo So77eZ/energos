@@ -1,4 +1,4 @@
-import type { EvaluatedAchievement } from '@entities/achievement'
+import { Medal, type EvaluatedAchievement } from '@entities/achievement'
 import { Icons } from '@shared/ui/icons'
 
 interface AchievementsTabProps {
@@ -28,20 +28,18 @@ export function AchievementsTab({ achievements }: AchievementsTabProps) {
 }
 
 function AchCard({ ach }: { ach: EvaluatedAchievement }) {
-  const Icon = Icons[ach.icon]
   return (
-    <div className={`ach-card ach-${ach.hue} ${ach.unlocked ? 'unlocked' : 'locked'}`}>
-      <div className="ach-medal">
-        <Icon w={20} />
-        {!ach.unlocked && (
-          <span className="ach-lock"><Icons.lock w={10} /></span>
-        )}
+    <div className={`ach-card ${ach.unlocked ? 'unlocked' : 'locked'}`}>
+      <div className={`ach-medal-wrap${!ach.unlocked ? ' bl-medal' : ''}${ach.awaitingBackend ? ' is-pending' : ''}`}>
+        <Medal badge={ach} size="md" />
       </div>
       <div className="ach-info">
         <div className="ach-name">{ach.name}</div>
         <div className="ach-desc">{ach.desc}</div>
         {ach.unlocked ? (
           <div className="ach-date">разблокировано</div>
+        ) : ach.awaitingBackend ? (
+          <div className="bl-pending"><Icons.spinner w={12} /> ожидает данных</div>
         ) : (
           <div className="ach-progress">
             <div className="ach-progress-track">

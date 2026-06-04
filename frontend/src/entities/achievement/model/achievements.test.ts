@@ -1,0 +1,60 @@
+import { describe, it, expect } from 'vitest'
+import { evaluateAchievements, topBadgeIds, ACHIEVEMENTS } from './achievements'
+import type { AchievementStats } from './types'
+
+const ZERO: AchievementStats = {
+  reviewsCount: 0, favoritesCount: 0, submissionsCount: 0, approvedSubmissionsCount: 0,
+  reviewsWithComments: 0, avgSweetnessX10: 0, nightReviews: 0, tiersCovered: 0,
+  firstReviewerCount: 0, emojiGivenCount: 0, isTop10: 0,
+}
+
+describe('evaluateAchievements', () => {
+  it('16 бейджей', () => {
+    expect(ACHIEVEMENTS).toHaveLength(16)
+    expect(evaluateAchievements(ZERO)).toHaveLength(16)
+  })
+
+  it('client-порог: 5 отзывов разблокирует «Дегустатор», прогресс 100', () => {
+    const r = evaluateAchievements({ ...ZERO, reviewsCount: 5 })
+    const deg = r.find((a) => a.id === 'five-reviews')!
+    expect(deg.unlocked).toBe(true)
+    expect(deg.progress).toBe(100)
+  })
+
+  it('частичный прогресс округляется и кап 100', () => {
+    const r = evaluateAchievements({ ...ZERO, reviewsCount: 3 })
+    expect(r.find((a) => a.id === 'twenty-reviews')!.progress).toBe(15) // 3/20
+    const big = evaluateAchievements({ ...ZERO, favoritesCount: 99 })
+    expect(big.find((a) => a.id === 'ten-favs')!.progress).toBe(100)
+  })
+
+  it('Сладкоежка: avgSweetnessX10 41 (>4.0) разблокирует, 40 — нет', () => {
+    expect(evaluateAchievements({ ...ZERO, avgSweetnessX10: 41 }).find((a) => a.id === 'sweet-tooth')!.unlocked).toBe(true)
+    expect(evaluateAchievements({ ...ZERO, avgSweetnessX10: 40 }).find((a) => a.id === 'sweet-tooth')!.unlocked).toBe(false)
+  })
+
+  it('backend-метрика 0 → awaitingBackend, >0 снимает флаг', () => {
+    const zero = evaluateAchievements(ZERO).find((a) => a.id === 'top10')!
+    expect(zero.awaitingBackend).toBe(true)
+    expect(zero.unlocked).toBe(false)
+    const got = evaluateAchievements({ ...ZERO, isTop10: 1 }).find((a) => a.id === 'top10')!
+    expect(got.awaitingBackend).toBe(false)
+    expect(got.unlocked).toBe(true)
+  })
+
+  it('client-бейдж не помечается awaitingBackend даже при 0', () => {
+    expect(evaluateAchievements(ZERO).find((a) => a.id === 'first-review')!.awaitingBackend).toBe(false)
+  })
+})
+
+describe('topBadgeIds', () => {
+  it('сортирует по престижу (elite>gold>silver>bronze), берёт N', () => {
+    const top = topBadgeIds(['first-review', 'top10', 'twenty-reviews'], 2) // bronze, elite, gold
+    expect(top.map((b) => b.id)).toEqual(['top10', 'twenty-reviews'])
+  })
+
+  it('неизвестные id отфильтрованы, пустой → []', () => {
+    expect(topBadgeIds(['nope', 'first-review'])).toHaveLength(1)
+    expect(topBadgeIds([])).toEqual([])
+  })
+})
