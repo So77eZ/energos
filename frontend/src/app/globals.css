@@ -3445,14 +3445,18 @@ body::before {
 @media (max-width: 768px) {
   .mob-tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 800;
-    display: flex; justify-content: space-around; align-items: stretch;
+    /* bg тянется на всю ширину (читается как бар), но сами табы центрируем и
+       кап-аем по ширине — иначе на планшетах (768px) они разъезжаются по краям
+       с пустотами между. */
+    display: flex; justify-content: center; align-items: stretch;
     padding-bottom: env(safe-area-inset-bottom, 0);
     background: var(--bg-card); border-top: 1px solid var(--line);
     transition: transform .25s ease;
   }
   .mob-tabs.hidden { transform: translateY(110%); }
   .mob-tab {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 1 1 0; max-width: 100px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
     padding: 8px 0 10px; border: 0; background: none; color: var(--txt-dim);
     font-size: 10px; cursor: pointer; text-decoration: none;
   }
