@@ -35,7 +35,7 @@ test.describe('nav: desktop priority+', () => {
   })
 })
 
-test.describe('nav: mobile (≤768)', () => {
+test.describe('nav: mobile (≤640)', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
   test('bottom-tabs видны, desktop-nav скрыт', async ({ page }) => {

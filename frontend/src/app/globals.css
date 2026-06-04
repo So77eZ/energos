@@ -3339,7 +3339,9 @@ body::before {
   .rev-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 800px) {
-  .hdr-inner { grid-template-columns: 1fr; gap: 10px; }
+  /* hdr-inner НЕ схлопываем в одну колонку: 3-колоночный grid + priority+ nav
+     держат шапку в один ряд вплоть до мобильного брейкпоинта (640px), где
+     включается мобильный хедер (бургер). Раньше 769–800 давали 3 ряда. */
   .stats, .prof-stats { grid-template-columns: repeat(2, 1fr); }
   .grid-regular { grid-template-columns: repeat(2, 1fr); }
   .heatmap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -3422,8 +3424,11 @@ body::before {
 .hdr-more-item svg:last-child { opacity: .4; }
 
 /* ─── Mobile header bits (скрыты на desktop) ──────────────────── */
+/* Брейкпоинт 640: планшеты (641–800, напр. iPad Mini 768) показывают
+   адаптивную desktop-навигацию (priority+: главные иконки + «Ещё»), а не
+   пустой мобильный хедер. Мобильный режим (бургер + bottom-tabs) — ≤640. */
 .hdr-mobile-crumb, .hdr-mobile-btn { display: none; }
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .hdr-inner { display: flex; align-items: center; gap: 10px; }
   .hdr-nav { display: none; }
   .hdr-search { display: none; }
@@ -3442,7 +3447,7 @@ body::before {
 
 /* ─── Mobile bottom tabs ──────────────────────────────────────── */
 .mob-tabs { display: none; }
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .mob-tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 800;
     /* bg тянется на всю ширину (читается как бар), но сами табы центрируем и
@@ -3513,7 +3518,7 @@ body::before {
 /* ─── Live ticker (additions) ─────────────────────────────────── */
 .ticker-row.frozen { animation: none; }
 .ticker-mark { color: var(--accent); }
-@media (max-width: 768px) { .ticker { display: none; } }
+@media (max-width: 640px) { .ticker { display: none; } }
 
 /* ═══ Gachapon — slot-machine overlay ═══════════════════════════ */
 .gacha-overlay {
