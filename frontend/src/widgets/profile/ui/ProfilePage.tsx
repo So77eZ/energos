@@ -9,6 +9,7 @@ import { calcRating, type Review } from '@entities/review'
 import type { User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
 import { readEggs, allLightningFound } from '@shared/lib/easter-eggs'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import { ROUTES } from '@shared/config/routes'
 import { useFavorites } from '@shared/lib/favorites'
 import { useMySubmissions } from '@shared/lib/submissions'
@@ -129,6 +130,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
 
   return (
     <div className="page page-profile">
+      <HiddenBolt id="profile" />
       <section className="prof-hero">
         <div
           className="prof-hero-bg"

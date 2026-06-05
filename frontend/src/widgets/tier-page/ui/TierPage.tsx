@@ -8,6 +8,7 @@ import {
   type Tier,
 } from '@entities/drink'
 import { Icons } from '@shared/ui/icons'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import { ROUTES } from '@shared/config/routes'
 
 interface TierPageProps {
@@ -45,6 +46,7 @@ export function TierPage({ drinks }: TierPageProps) {
 
   return (
     <div className="page page-tier">
+      <HiddenBolt id="tier" />
       <header className="tier-head">
         <div>
           <div className="page-eyebrow">РАНЖИРОВАНИЕ · TIER LIST</div>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import {
   cleanDrinkName,
   EnergyCan,
@@ -92,6 +93,7 @@ export function ComparePage({ drinks }: ComparePageProps) {
 
   return (
     <div className="page page-compare">
+      <HiddenBolt id="compare" />
       <header className="cmp-head">
         <div>
           <div className="page-eyebrow">A/B/C · АНАЛИЗ</div>

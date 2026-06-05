@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
 import { cleanDrinkName, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
@@ -26,6 +27,7 @@ export function HomeHero({ drink, rank }: HomeHeroProps) {
 
   return (
     <section className="hero" style={style}>
+      <HiddenBolt id="hero" />
       <div className="hero-grid">
         <div className="hero-vis">
           <div className="hero-rank">

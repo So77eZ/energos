@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import { blendMetricRGB, cleanDrinkName, splitDrinkBrand, type EnrichedDrink } from '@entities/drink'
 import {
   METRIC_KEYS,
@@ -44,6 +45,7 @@ export function TasteMapChart({ drinks }: TasteMapChartProps) {
 
   return (
     <div className="page page-tastemap">
+      <HiddenBolt id="tastemap" />
       <div className="tm-head">
         <div>
           <div className="page-eyebrow">ВИЗУАЛИЗАЦИЯ · 2D-ПРОЕКЦИЯ</div>
