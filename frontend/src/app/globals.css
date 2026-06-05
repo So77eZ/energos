@@ -3792,12 +3792,14 @@ body::before {
 .cal-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 
 .cal-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-.cal-body { display: inline-flex; flex-direction: column; gap: 4px; min-width: min-content; }
+/* side (дни недели) | main (месяцы над сеткой) — общий left-origin у months и grid */
+.cal-body { display: inline-flex; gap: 4px; align-items: flex-start; min-width: min-content; }
+.cal-side { display: flex; flex-direction: column; gap: 3px; }
+.cal-dow-spacer { height: 12px; }
+.cal-dow { height: 11px; font-family: var(--font-mono); font-size: 8px; color: var(--txt-quiet); line-height: 11px; }
+.cal-main { display: flex; flex-direction: column; gap: 3px; }
 .cal-months { display: flex; height: 12px; }
 .cal-month { font-family: var(--font-mono); font-size: 9px; color: var(--txt-quiet); flex: 0 0 auto; }
-.cal-rows { display: flex; gap: 3px; }
-.cal-dows { display: flex; flex-direction: column; gap: 3px; margin-right: 4px; }
-.cal-dow { height: 11px; font-family: var(--font-mono); font-size: 8px; color: var(--txt-quiet); line-height: 11px; }
 .cal-grid { display: flex; gap: 3px; }
 .cal-week { display: flex; flex-direction: column; gap: 3px; }
 .cal-cell {

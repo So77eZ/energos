@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { buildActivityCalendar, type Review } from '@entities/review'
 
-const DOW = ['', 'Пн', '', 'Ср', '', 'Пт', ''] // подписи через одну
+// Ряды Пн→Вс (ряд 0 = Пн); подписываем Пн/Ср/Пт.
+const DOW = ['Пн', '', 'Ср', '', 'Пт', '', '']
 const MONTHS_FULL = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
 
 function plural(n: number, one: string, few: string, many: string): string {
@@ -40,19 +41,20 @@ export function CalendarHeatmap({ reviews }: { reviews: Review[] }) {
 
       <div className="cal-scroll">
         <div className="cal-body">
-          <div className="cal-months">
-            {cal.weeks.map((_, w) => {
-              const label = cal.monthLabels.find((m) => m.index === w)
-              return (
-                <span key={w} className="cal-month" style={{ width: 14 }}>
-                  {label ? label.label : ''}
-                </span>
-              )
-            })}
+          <div className="cal-side">
+            <span className="cal-dow-spacer" />
+            {DOW.map((d, i) => <span key={i} className="cal-dow">{d}</span>)}
           </div>
-          <div className="cal-rows">
-            <div className="cal-dows">
-              {DOW.map((d, i) => <span key={i} className="cal-dow">{d}</span>)}
+          <div className="cal-main">
+            <div className="cal-months">
+              {cal.weeks.map((_, w) => {
+                const label = cal.monthLabels.find((m) => m.index === w)
+                return (
+                  <span key={w} className="cal-month" style={{ width: 14 }}>
+                    {label ? label.label : ''}
+                  </span>
+                )
+              })}
             </div>
             <div className="cal-grid">
               {cal.weeks.map((week, w) => (
