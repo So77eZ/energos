@@ -6,8 +6,8 @@ import { authApi } from '@entities/user'
 import { reviewApi, calcRating } from '@entities/review'
 import { timeAgo } from '@shared/lib/time-ago'
 import { drinkApi } from '@entities/drink'
-import { Icons } from '@shared/ui/icons'
 import { HeaderSearchBar } from './HeaderSearchBar'
+import { LogoLink } from './LogoLink'
 import { HeaderNav } from './HeaderNav'
 import { HeaderAvatar } from './HeaderAvatar'
 import { MobileNav } from './MobileNav'
@@ -41,13 +41,7 @@ export async function Header() {
   return (
     <header className="hdr">
       <div className="hdr-inner">
-        <Link href={ROUTES.home} className="logo">
-          <span className="logo-bolt">
-            <Icons.bolt w={18} />
-          </span>
-          <span className="logo-word">ENERGOS</span>
-          <span className="logo-meta">/ v3.0</span>
-        </Link>
+        <LogoLink />
 
         {/* Мобильная крошка + кнопки (поиск/бургер) + порталы tabs/sheet/overlay */}
         <MobileNav isAdmin={isAdmin} hasUser={!!currentUser} userAvatar={currentUser?.username?.[0]?.toUpperCase()} />
