@@ -5,8 +5,9 @@ import { Icons } from '@shared/ui/icons'
 
 /** Спрятанная коллекционная молния. Не рендерится, если уже собрана. */
 export function HiddenBolt({ id }: { id: string }) {
-  const { collect, found } = useEasterEggs()
-  if (found(id)) return null
+  const { collect, found, hydrated } = useEasterEggs()
+  // До чтения localStorage не рендерим — иначе собранные молнии мелькают и исчезают.
+  if (!hydrated || found(id)) return null
   return (
     <button
       type="button"

@@ -11,39 +11,49 @@ interface EasterEggsValue {
   collect: (id: string) => void
   found: (id: string) => boolean
   retro: boolean
+  hydrated: boolean
 }
 
 const Ctx = createContext<EasterEggsValue | null>(null)
 
 const MILESTONES = new Set([25, 50, 75])
 
+/** keydown в текстовом поле не должен кормить konami-буфер. */
+function isEditableTarget(t: EventTarget | null): boolean {
+  const el = t as HTMLElement | null
+  if (!el || !el.tagName) return false
+  return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable
+}
+
 export function EasterEggsProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast()
   const [retro, setRetro] = useState(false)
   const [fireworks, setFireworks] = useState(false)
   const [lightning, setLightning] = useState<string[]>([])
-  const clicksRef = useRef(0)
+  const [hydrated, setHydrated] = useState(false)
+  const retroRef = useRef(false)
   const keysRef = useRef<string[]>([])
 
   // init из localStorage (client)
   useEffect(() => {
     const s = readEggs()
-    clicksRef.current = s.logoClicks
     setLightning(s.lightning)
+    setHydrated(true)
   }, [])
 
   // konami
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (isEditableTarget(e.target)) return
       keysRef.current = [...keysRef.current, e.key].slice(-KONAMI.length)
       if (matchKonami(keysRef.current)) {
         keysRef.current = []
-        setRetro((r) => {
-          const next = !r
-          document.documentElement.toggleAttribute('data-retro', next)
-          toast(next ? '🕹 SECRET MODE' : 'retro выкл')
-          return next
-        })
+        // side-effects ВНЕ state-updater (StrictMode дважды вызывает updater).
+        const next = !retroRef.current
+        retroRef.current = next
+        setRetro(next)
+        document.documentElement.toggleAttribute('data-retro', next)
+        toast(next ? '🕹 SECRET MODE' : 'retro выкл')
       }
     }
     window.addEventListener('keydown', onKey)
@@ -51,9 +61,9 @@ export function EasterEggsProvider({ children }: { children: ReactNode }) {
   }, [toast])
 
   const registerLogoClick = useCallback(() => {
-    const n = clicksRef.current + 1
-    clicksRef.current = n
+    // localStorage — источник истины (без дрейфа ref между вкладками/гонок).
     const s = readEggs()
+    const n = s.logoClicks + 1
     writeEggs({ ...s, logoClicks: n })
     if (MILESTONES.has(n)) toast(`Логотип кликнут ${n} раз…`)
     if (n === 100) {
@@ -75,7 +85,7 @@ export function EasterEggsProvider({ children }: { children: ReactNode }) {
   const found = useCallback((id: string) => lightning.includes(id), [lightning])
 
   return (
-    <Ctx.Provider value={{ registerLogoClick, collect, found, retro }}>
+    <Ctx.Provider value={{ registerLogoClick, collect, found, retro, hydrated }}>
       {children}
       {fireworks && <Fireworks onDone={() => setFireworks(false)} />}
     </Ctx.Provider>
