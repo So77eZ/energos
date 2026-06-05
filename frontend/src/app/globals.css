@@ -3780,3 +3780,50 @@ body::before {
   :root:not([data-force-motion]) .medal-elite,
   :root:not([data-force-motion]) .bl-pending svg { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ENERGOS — Calendar heatmap (профиль, активность отзывов)
+   GitHub-style сетка 53 недели, цвет ячейки по числу отзывов/день.
+   ═══════════════════════════════════════════════════════════════════ */
+.cal-section { margin-bottom: 20px; }
+.cal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.cal-title { font-family: var(--font-title, var(--font-sans)); font-weight: 700; font-size: 14px; color: var(--txt); }
+.cal-legend { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; color: var(--txt-quiet); }
+.cal-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+.cal-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+/* side (дни недели) | main (месяцы над сеткой) — общий left-origin у months и grid */
+.cal-body { display: inline-flex; gap: 4px; align-items: flex-start; min-width: min-content; }
+.cal-side { display: flex; flex-direction: column; gap: 3px; }
+.cal-dow-spacer { height: 12px; }
+.cal-dow { height: 11px; font-family: var(--font-mono); font-size: 8px; color: var(--txt-quiet); line-height: 11px; }
+.cal-main { display: flex; flex-direction: column; gap: 3px; }
+.cal-months { display: flex; height: 12px; }
+.cal-month { font-family: var(--font-mono); font-size: 9px; color: var(--txt-quiet); flex: 0 0 auto; }
+.cal-grid { display: flex; gap: 3px; }
+.cal-week { display: flex; flex-direction: column; gap: 3px; }
+.cal-cell {
+  position: relative; width: 11px; height: 11px; border-radius: 3px;
+  background: var(--bg-input); border: 1px solid var(--line);
+}
+.cal-cell[data-level="1"] { background: rgba(var(--accent-rgb), 0.30); border-color: transparent; }
+.cal-cell[data-level="2"] { background: rgba(var(--accent-rgb), 0.55); border-color: transparent; }
+.cal-cell[data-level="3"] { background: rgba(var(--accent-rgb), 0.78); border-color: transparent; }
+.cal-cell[data-level="4"] { background: rgb(var(--accent-rgb)); border-color: transparent; }
+.cal-cell-empty { visibility: hidden; }
+
+/* тултип — паттерн как у .mini-badge[data-tip] */
+.cal-cell[data-tip]::after, .cal-cell[data-tip]::before {
+  position: absolute; left: 50%; bottom: calc(100% + 7px); opacity: 0; pointer-events: none;
+  transition: opacity .12s ease; z-index: 40; transform: translateX(-50%);
+}
+.cal-cell[data-tip]::after {
+  content: attr(data-tip); white-space: nowrap;
+  background: var(--bg-card); border: 1px solid var(--line-strong); color: var(--txt);
+  font-family: var(--font-mono); font-size: 10px; padding: 4px 8px; border-radius: var(--r-sm);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+}
+.cal-cell[data-tip]::before {
+  content: ''; bottom: calc(100% + 3px); border: 4px solid transparent; border-top-color: var(--line-strong);
+}
+.cal-cell[data-tip]:hover::after, .cal-cell[data-tip]:hover::before { opacity: 1; }

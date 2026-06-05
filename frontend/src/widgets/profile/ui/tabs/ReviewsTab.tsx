@@ -8,6 +8,7 @@ import { calcRating, MiniMetrics } from '@entities/review'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
 import { ProfileEmpty } from './ProfileEmpty'
+import { CalendarHeatmap } from '../CalendarHeatmap'
 
 interface ReviewsTabProps {
   reviews: Review[]
@@ -37,6 +38,7 @@ export function ReviewsTab({ reviews, drinkMap, enrichedMap }: ReviewsTabProps) 
 
   return (
     <section className="prof-section">
+      <CalendarHeatmap reviews={reviews} />
       <div className="prof-rev-list">
         {reviews.map((r) => {
           const drink = drinkMap.get(r.energy_drink_id)
