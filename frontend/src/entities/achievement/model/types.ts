@@ -1,5 +1,5 @@
 export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'elite'
-export type AchievementSource = 'client' | 'backend'
+export type AchievementSource = 'client' | 'backend' | 'secret'
 
 export interface AchievementStats {
   reviewsCount: number
@@ -13,6 +13,8 @@ export interface AchievementStats {
   firstReviewerCount: number // backend
   emojiGivenCount: number    // backend
   isTop10: number            // backend, 0|1
+  logoManiac: number         // secret, 0|1 (100 кликов лого)
+  pathfinder: number         // secret, 0|1 (10 молний)
 }
 
 export interface Achievement {
