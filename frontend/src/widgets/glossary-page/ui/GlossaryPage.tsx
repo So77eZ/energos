@@ -1,5 +1,6 @@
 import type { EnrichedDrink } from '@entities/drink'
 import { cleanDrinkName, splitDrinkBrand } from '@entities/drink'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import {
   METRIC_KEYS,
   METRIC_LABELS,
@@ -79,6 +80,7 @@ function pickExtremes(
 export function GlossaryPage({ drinks }: GlossaryPageProps) {
   return (
     <div className="page page-sommelier">
+      <HiddenBolt id="glossary" />
       <header className="som-head">
         <div className="som-head-meta">
           <div className="page-eyebrow">СПРАВОЧНИК · ТУЛКИТ СОМЕЛЬЕ</div>

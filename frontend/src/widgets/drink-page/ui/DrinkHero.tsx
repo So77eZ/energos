@@ -7,6 +7,7 @@ import { Icons } from '@shared/ui/icons'
 import { cleanDrinkName, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
 import type { EnrichedDrink } from '@entities/drink'
 import { HexRadar } from '@entities/review'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 
 interface DrinkHeroProps {
   drink: EnrichedDrink
@@ -31,6 +32,7 @@ export function DrinkHero({ drink, loggedIn, hasMyReview, onWriteReview }: Drink
 
   return (
     <section className="drink-hero" style={style}>
+      <HiddenBolt id="drink" />
       <div className="drink-hero-vis">
         {drink.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element

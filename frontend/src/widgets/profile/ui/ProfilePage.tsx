@@ -8,6 +8,8 @@ import { enrichDrinks, tierFromRating } from '@entities/drink'
 import { calcRating, type Review } from '@entities/review'
 import type { User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
+import { readEggs, allLightningFound } from '@shared/lib/easter-eggs'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import { ROUTES } from '@shared/config/routes'
 import { useFavorites } from '@shared/lib/favorites'
 import { useMySubmissions } from '@shared/lib/submissions'
@@ -71,6 +73,13 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   const pendingCount = mySubs.filter((s) => s.status === 'pending').length
   const approvedCount = mySubs.filter((s) => s.status === 'approved').length
 
+  // Секретные egg-флаги из localStorage (client) → в stats бейджей.
+  const [eggFlags, setEggFlags] = useState({ logoManiac: 0, pathfinder: 0 })
+  useEffect(() => {
+    const s = readEggs()
+    setEggFlags({ logoManiac: s.logoClicks >= 100 ? 1 : 0, pathfinder: allLightningFound(s) ? 1 : 0 })
+  }, [])
+
   const achievements = useMemo(() => {
     const reviewsWithComments = reviews.filter((r) => r.comment?.trim()).length
     const avgSweetnessX10 = reviews.length >= 3
@@ -101,8 +110,10 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       firstReviewerCount: user.first_reviewer_count ?? 0,
       emojiGivenCount: user.emoji_given_count ?? 0,
       isTop10: user.is_top10 ? 1 : 0,
+      logoManiac: eggFlags.logoManiac,
+      pathfinder: eggFlags.pathfinder,
     })
-  }, [reviews, favIds.length, mySubs.length, approvedCount, user])
+  }, [reviews, favIds.length, mySubs.length, approvedCount, user, eggFlags])
   const unlockedCount = achievements.filter((a) => a.unlocked).length
 
   // appearance исключён — у вкладки нет badge'а со счётчиком (это настройки).
@@ -119,6 +130,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
 
   return (
     <div className="page page-profile">
+      <HiddenBolt id="profile" />
       <section className="prof-hero">
         <div
           className="prof-hero-bg"

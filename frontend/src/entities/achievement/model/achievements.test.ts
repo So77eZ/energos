@@ -6,12 +6,13 @@ const ZERO: AchievementStats = {
   reviewsCount: 0, favoritesCount: 0, submissionsCount: 0, approvedSubmissionsCount: 0,
   reviewsWithComments: 0, avgSweetnessX10: 0, nightReviews: 0, tiersCovered: 0,
   firstReviewerCount: 0, emojiGivenCount: 0, isTop10: 0,
+  logoManiac: 0, pathfinder: 0,
 }
 
 describe('evaluateAchievements', () => {
-  it('16 бейджей', () => {
-    expect(ACHIEVEMENTS).toHaveLength(16)
-    expect(evaluateAchievements(ZERO)).toHaveLength(16)
+  it('18 бейджей', () => {
+    expect(ACHIEVEMENTS).toHaveLength(18)
+    expect(evaluateAchievements(ZERO)).toHaveLength(18)
   })
 
   it('client-порог: 5 отзывов разблокирует «Дегустатор», прогресс 100', () => {
@@ -44,6 +45,15 @@ describe('evaluateAchievements', () => {
 
   it('client-бейдж не помечается awaitingBackend даже при 0', () => {
     expect(evaluateAchievements(ZERO).find((a) => a.id === 'first-review')!.awaitingBackend).toBe(false)
+  })
+
+  it('secret-бейджи: 18 всего; logoManiac=1 разблокирует «Логотипоман», awaitingBackend=false', () => {
+    expect(ACHIEVEMENTS).toHaveLength(18)
+    const r = evaluateAchievements({ ...ZERO, logoManiac: 1 })
+    const m = r.find((a) => a.id === 'logo-maniac')!
+    expect(m.unlocked).toBe(true)
+    expect(m.source).toBe('secret')
+    expect(m.awaitingBackend).toBe(false)
   })
 })
 

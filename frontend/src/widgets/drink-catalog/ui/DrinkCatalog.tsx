@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -146,6 +147,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
 
   return (
     <div className="page page-home">
+      <HiddenBolt id="catalog" />
       <ThreeCans />
       <StatsStrip drinks={enriched} />
       {hero && <HomeHero drink={hero} rank={1} />}

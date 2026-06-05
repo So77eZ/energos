@@ -1,4 +1,5 @@
 import { Icons } from '@shared/ui/icons'
+import { HiddenBolt } from '@shared/ui/HiddenBolt'
 
 const TEAM = [
   { role: 'Фронт', name: 'So77eZ',                 url: 'https://github.com/So77eZ' },
@@ -14,6 +15,7 @@ const TELEGRAMS = [
 export function Footer() {
   return (
     <footer className="foot">
+      <HiddenBolt id="footer" />
       <div className="foot-left">
         <span className="foot-logo">
           <Icons.bolt w={14} /> ENERGOS

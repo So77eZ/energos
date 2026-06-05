@@ -18,6 +18,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'pioneer',         name: 'Первопроходец',     desc: 'Отзыв на напиток без других отзывов.', tier: 'gold',  source: 'backend', metric: 'firstReviewerCount',       target: 1 },
   { id: 'activist',        name: 'Активист',          desc: '5 emoji-реакций другим авторам.',    tier: 'elite',  source: 'backend', metric: 'emojiGivenCount',          target: 5 },
   { id: 'top10',           name: 'Топ-10%',           desc: 'Верхние 10% по числу отзывов.',      tier: 'elite',  source: 'backend', metric: 'isTop10',                  target: 1 },
+  { id: 'logo-maniac',     name: 'Логотипоман',       desc: '100 кликов по логотипу.',            tier: 'gold',   source: 'secret',  metric: 'logoManiac',               target: 1 },
+  { id: 'pathfinder',      name: 'Энергетик-следопыт',desc: 'Собери все 10 спрятанных молний.',   tier: 'elite',  source: 'secret',  metric: 'pathfinder',               target: 1 },
 ]
 
 export const ACHIEVEMENT_BY_ID: Record<string, Achievement> =

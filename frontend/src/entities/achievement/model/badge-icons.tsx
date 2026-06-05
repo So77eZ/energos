@@ -25,5 +25,7 @@ export const BADGE_ICONS: Record<string, Glyph> = {
   'pioneer': () => (<svg {...S}><path d="M5 22V3" /><path d="M5 3.5h12l-2.2 4.2L17 12H5" /></svg>),
   'activist': () => (<svg {...S}><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5z" /><path d="M12 15.2c-2.6-1.7-3.6-3-3.6-4.4a1.7 1.7 0 0 1 3.1-1 1.7 1.7 0 0 1 3.1 1c0 1.4-1 2.7-2.6 4.4z" /></svg>),
   'top10': () => (<svg {...S}><path d="M3 7.5 7 11l5-6.5L17 11l4-3.5L19 19H5z" /><path d="M5 19h14" /></svg>),
+  'logo-maniac': () => (<svg {...S}><path d="M13 2 4 14h6l-1 8 9-12h-6z" /><circle cx="12" cy="12" r="10" /></svg>),
+  'pathfinder': () => (<svg {...S}><path d="m12 2 2.4 6.3L21 9l-5 4.2L17.6 20 12 16.4 6.4 20 8 13.2 3 9l6.6-.7z" /></svg>),
   _default: () => (<svg {...S}><circle cx="12" cy="12" r="7" /></svg>),
 }

@@ -6,8 +6,10 @@ interface AchievementsTabProps {
 }
 
 export function AchievementsTab({ achievements }: AchievementsTabProps) {
-  const unlocked = achievements.filter((a) => a.unlocked)
-  const locked = achievements.filter((a) => !a.unlocked)
+  // секретные показываем только после разблокировки (без спойлера)
+  const visible = achievements.filter((a) => a.source !== 'secret' || a.unlocked)
+  const unlocked = visible.filter((a) => a.unlocked)
+  const locked = visible.filter((a) => !a.unlocked)
   const sorted = [...unlocked, ...locked]
 
   return (
