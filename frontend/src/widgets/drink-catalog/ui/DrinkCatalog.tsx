@@ -53,6 +53,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   const hero = useMemo(() => pickHero(enriched), [enriched])
   const { filtered } = useFilterDrinks(enriched)
   const {
+    search,
     view, setView,
     sort, setSort,
     tiers, setTiers,
@@ -131,7 +132,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
     [filtered, hero],
   )
 
-  const resetKey = JSON.stringify({ sort, tiers, priceRange, onlyNew, noSugarOnly })
+  const resetKey = JSON.stringify({ search, sort, tiers, priceRange, onlyNew, noSugarOnly })
   const { count, sentinelRef, showMore, hasMore } = useInfiniteReveal({
     total: gridSource.length,
     chunk: PAGE_SIZE,

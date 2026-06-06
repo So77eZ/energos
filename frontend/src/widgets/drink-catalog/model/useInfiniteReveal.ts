@@ -52,6 +52,9 @@ export function useInfiniteReveal(
   const hasMore = count < total
 
   // Авто-раскрытие: sentinel в зоне видимости (+600px prefetch).
+  // `count` в deps: после раскрытия observer пересоздаётся → повторный observe()
+  // снова стрельнёт, если sentinel всё ещё в rootMargin (короткий контент не
+  // выталкивает его) → цепочка догрузки до заполнения вьюпорта, без «застревания».
   useEffect(() => {
     if (!hasMore) return
     const el = sentinelRef.current
@@ -62,7 +65,7 @@ export function useInfiniteReveal(
     )
     io.observe(el)
     return () => io.disconnect()
-  }, [hasMore, chunk, total])
+  }, [hasMore, chunk, total, count])
 
   const showMore = () => setCount((c) => nextRevealCount(c, chunk, total))
 
