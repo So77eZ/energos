@@ -1041,21 +1041,14 @@ body::before {
 }
 
 /* ─── Pagination (catalog) ────────────────────────────────────── */
-.pager { display: flex; align-items: center; justify-content: center; gap: 12px; padding-top: 8px; }
-.pager-btn {
-  padding: 8px 10px; border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  color: var(--txt-dim);
-  transition: color .15s, border-color .15s, background .15s;
+/* Каталог: бесконечная прокрутка (sentinel + «Показать ещё» + sr-only) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
-.pager-btn:hover:not(:disabled) {
-  color: var(--accent);
-  border-color: rgba(var(--accent-rgb), 0.4);
-  background: var(--bg-input);
-}
-.pager-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.pager-text { font-size: 12.5px; color: var(--txt-dim); font-family: var(--font-mono); letter-spacing: 1px; }
-.pager-text-cur { color: var(--accent); font-weight: 700; }
+.cat-sentinel { width: 100%; height: 1px; }
+.cat-more-row { display: flex; justify-content: center; padding-top: 12px; }
+.cat-more { min-width: 160px; justify-content: center; }
 
 /* ─── Empty state ─────────────────────────────────────────────── */
 .empty {
