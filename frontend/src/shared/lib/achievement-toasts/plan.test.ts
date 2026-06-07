@@ -6,21 +6,26 @@ const ach = (id: string, unlocked: boolean) => ({ id, unlocked }) as unknown as 
 const EV = [ach('a', true), ach('b', false), ach('c', true)]
 
 describe('planUnlockToasts', () => {
-  it('seen===null → seed без тостов', () => {
-    const p = planUnlockToasts(EV, null)
+  it('seeded=false → silent seed без тостов', () => {
+    const p = planUnlockToasts(EV, [], false)
     expect(p.toToast).toEqual([])
     expect(p.nextSeen.sort()).toEqual(['a', 'c'])
   })
-  it('diff: новые unlocked, которых нет в seen', () => {
-    const p = planUnlockToasts(EV, ['a'])
+  it('seeded=false сохраняет уже известные id (egg pre-pop) + сидит остальное молча', () => {
+    const p = planUnlockToasts(EV, ['pathfinder'], false)
+    expect(p.toToast).toEqual([])
+    expect(p.nextSeen.sort()).toEqual(['a', 'c', 'pathfinder'])
+  })
+  it('seeded=true → новые unlocked, которых нет в seen', () => {
+    const p = planUnlockToasts(EV, ['a'], true)
     expect(p.toToast).toEqual(['c'])
     expect(p.nextSeen.sort()).toEqual(['a', 'c'])
   })
-  it('ничего нового → toToast пуст', () => {
-    expect(planUnlockToasts(EV, ['a', 'c']).toToast).toEqual([])
+  it('seeded=true, ничего нового → пусто', () => {
+    expect(planUnlockToasts(EV, ['a', 'c'], true).toToast).toEqual([])
   })
   it('nextSeen сохраняет старые seen даже если уже не unlocked', () => {
-    const p = planUnlockToasts([ach('a', false)], ['a', 'x'])
+    const p = planUnlockToasts([ach('a', false)], ['a', 'x'], true)
     expect(p.toToast).toEqual([])
     expect(p.nextSeen.sort()).toEqual(['a', 'x'])
   })

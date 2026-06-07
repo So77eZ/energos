@@ -3,7 +3,7 @@ import { ACHIEVEMENT_BY_ID, Medal } from '@entities/achievement'
 import { ROUTES } from '@shared/config/routes'
 import type { ToastInput } from '@shared/lib/toast'
 import { planUnlockToasts } from './plan'
-import { readSeen, writeSeen } from './seen'
+import { readSeen, writeSeen, isSeeded, markSeeded } from './seen'
 
 interface ToastDeps {
   toast: (input: ToastInput | string) => number
@@ -23,10 +23,12 @@ export function toastAchievement(ach: Pick<Achievement, 'id' | 'tier' | 'name'>,
 
 /** Diff vs seen-set → тост на каждый новый анлок; первый запуск — silent seed. */
 export function notifyUnlocks(evaluated: EvaluatedAchievement[], deps: ToastDeps): void {
-  const { toToast, nextSeen } = planUnlockToasts(evaluated, readSeen())
+  const seeded = isSeeded()
+  const { toToast, nextSeen } = planUnlockToasts(evaluated, readSeen(), seeded)
   for (const id of toToast) {
     const ach = ACHIEVEMENT_BY_ID[id]
     if (ach) toastAchievement(ach, deps)
   }
   writeSeen(nextSeen)
+  if (!seeded) markSeeded()
 }

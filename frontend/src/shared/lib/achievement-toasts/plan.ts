@@ -5,14 +5,19 @@ export interface UnlockPlan {
   nextSeen: string[]
 }
 
-/** seen===null → первый запуск: seed всех unlocked без тостов. */
-export function planUnlockToasts(evaluated: EvaluatedAchievement[], seen: string[] | null): UnlockPlan {
+/**
+ * `seeded=false` → первый full-seed: вернуть все unlocked в nextSeen БЕЗ тостов
+ * (без ретро-спама), сохранив уже известные id (напр. добавленные яйцами).
+ * `seeded=true` → тостим только unlocked, которых нет в seen.
+ */
+export function planUnlockToasts(
+  evaluated: EvaluatedAchievement[],
+  seen: string[],
+  seeded: boolean,
+): UnlockPlan {
   const unlocked = evaluated.filter((a) => a.unlocked).map((a) => a.id)
-  if (seen === null) {
-    return { toToast: [], nextSeen: unlocked }
-  }
-  const seenSet = new Set(seen)
-  const toToast = unlocked.filter((id) => !seenSet.has(id))
   const nextSeen = [...new Set([...seen, ...unlocked])]
-  return { toToast, nextSeen }
+  if (!seeded) return { toToast: [], nextSeen }
+  const seenSet = new Set(seen)
+  return { toToast: unlocked.filter((id) => !seenSet.has(id)), nextSeen }
 }
