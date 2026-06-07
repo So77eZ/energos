@@ -36,6 +36,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       kind: opts.kind ?? 'info',
       ttl: opts.ttl ?? DEFAULT_TTL,
       action: opts.action,
+      icon: opts.icon,
     }
     setItems((prev) => [...prev, item])
     const timer = setTimeout(() => dismiss(item.id), item.ttl)
@@ -71,10 +72,14 @@ function ToastHost({ items, onClose }: { items: ToastItem[]; onClose: (id: numbe
       {items.map((t) => (
         <div key={t.id} className={`toast toast-${t.kind}`} role="status">
           <span className="toast-icon">
-            {t.kind === 'ok'   && <Icons.check w={14} />}
-            {t.kind === 'err'  && <Icons.x w={14} />}
-            {t.kind === 'info' && <Icons.bolt w={14} />}
-            {t.kind === 'love' && <Icons.bolt w={14} />}
+            {t.icon ?? (
+              <>
+                {t.kind === 'ok'   && <Icons.check w={14} />}
+                {t.kind === 'err'  && <Icons.x w={14} />}
+                {t.kind === 'info' && <Icons.bolt w={14} />}
+                {t.kind === 'love' && <Icons.bolt w={14} />}
+              </>
+            )}
           </span>
           <span className="toast-msg">{t.msg}</span>
           {t.action && (
