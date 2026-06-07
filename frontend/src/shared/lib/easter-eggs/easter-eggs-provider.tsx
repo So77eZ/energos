@@ -1,7 +1,10 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { useToast } from '@shared/lib/toast'
+import { ACHIEVEMENT_BY_ID } from '@entities/achievement'
+import { toastAchievement, markSeen } from '@shared/lib/achievement-toasts'
 import { matchKonami, KONAMI } from './konami'
 import { readEggs, writeEggs, collectLightning, allLightningFound } from './eggs-storage'
 import { Fireworks } from './Fireworks'
@@ -27,6 +30,7 @@ function isEditableTarget(t: EventTarget | null): boolean {
 
 export function EasterEggsProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast()
+  const router = useRouter()
   const [retro, setRetro] = useState(false)
   const [fireworks, setFireworks] = useState(false)
   const [lightning, setLightning] = useState<string[]>([])
@@ -68,9 +72,10 @@ export function EasterEggsProvider({ children }: { children: ReactNode }) {
     if (MILESTONES.has(n)) toast(`Логотип кликнут ${n} раз…`)
     if (n === 100) {
       setFireworks(true)
-      toast('Ты кликнул логотип 100 раз. У тебя слишком много свободного времени')
+      const ach = ACHIEVEMENT_BY_ID['logo-maniac']
+      if (ach) { toastAchievement(ach, { toast, router }); markSeen('logo-maniac') }
     }
-  }, [toast])
+  }, [toast, router])
 
   const collect = useCallback((id: string) => {
     const s = readEggs()
@@ -78,9 +83,13 @@ export function EasterEggsProvider({ children }: { children: ReactNode }) {
     if (next === s) return
     writeEggs(next)
     setLightning(next.lightning)
-    if (allLightningFound(next)) toast('⚡ Все молнии собраны! Бейдж «Энергетик-следопыт»')
-    else toast(`⚡ Молния ${next.lightning.length}/10`)
-  }, [toast])
+    if (allLightningFound(next)) {
+      const ach = ACHIEVEMENT_BY_ID['pathfinder']
+      if (ach) { toastAchievement(ach, { toast, router }); markSeen('pathfinder') }
+    } else {
+      toast(`⚡ Молния ${next.lightning.length}/10`)
+    }
+  }, [toast, router])
 
   const found = useCallback((id: string) => lightning.includes(id), [lightning])
 

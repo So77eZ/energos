@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 export type ToastKind = 'info' | 'ok' | 'err' | 'love'
 
 export interface ToastAction {
@@ -11,9 +13,12 @@ export interface ToastInput {
   /** Auto-dismiss time in ms. Default 3500. */
   ttl?: number
   action?: ToastAction
+  /** Кастомная иконка (напр. медаль ачивки). Перебивает kind-иконку. */
+  icon?: ReactNode
 }
 
-export interface ToastItem extends Required<Omit<ToastInput, 'action'>> {
+export interface ToastItem extends Required<Omit<ToastInput, 'action' | 'icon'>> {
   id: number
   action?: ToastAction
+  icon?: ReactNode
 }
