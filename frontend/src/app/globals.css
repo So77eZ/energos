@@ -3862,6 +3862,11 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
 .egg-bolt {
   display: inline-flex; padding: 2px; color: var(--c-amber); opacity: 0.5; cursor: pointer;
   background: none; border: 0; transition: opacity .15s, transform .15s, color .15s;
+  /* align-self: иначе как flex-ребёнок .page (align stretch) кнопка растягивается
+     на всю ширину → hover-scale уводит иконку вбок («упрыгивает») + гигант-таргет.
+     z-index: поднять над 3D-слоем (.three-can pointer-events:auto перехватывал клик). */
+  align-self: flex-start;
+  position: relative; z-index: 2;
 }
 .egg-bolt:hover { opacity: 1; transform: scale(1.25); color: var(--c-pink); }
 
