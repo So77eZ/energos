@@ -11,6 +11,8 @@ import { logoutAction } from '@features/auth/model/actions'
 import { readEggs, allLightningFound } from '@shared/lib/easter-eggs'
 import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import { ROUTES } from '@shared/config/routes'
+import { useToast } from '@shared/lib/toast'
+import { notifyUnlocks } from '@shared/lib/achievement-toasts'
 import { useFavorites } from '@shared/lib/favorites'
 import { useMySubmissions } from '@shared/lib/submissions'
 import { Icons } from '@shared/ui/icons'
@@ -115,6 +117,12 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
     })
   }, [reviews, favIds.length, mySubs.length, approvedCount, user, eggFlags])
   const unlockedCount = achievements.filter((a) => a.unlocked).length
+
+  // Тост на новые анлоки (diff vs ach_seen; первый визит — silent seed).
+  const { toast } = useToast()
+  useEffect(() => {
+    notifyUnlocks(achievements, { toast, router })
+  }, [achievements, toast, router])
 
   // appearance исключён — у вкладки нет badge'а со счётчиком (это настройки).
   const counts: Record<Exclude<TabId, 'appearance'>, string | number> = {
