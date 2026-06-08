@@ -16,6 +16,9 @@ export type SortOption =
   | 'reviews_asc'
 export type CatalogView = 'grid' | 'heat'
 export type SearchItem = { id: number; name: string; image_url?: string | null }
+/** Какой триггер открыл фильтр-popover — определяет, под какой кнопкой он
+ *  рендерится: 'sortbar' (в потоке каталога) или 'header' (под sticky-шапкой). */
+export type FilterAnchor = 'sortbar' | 'header'
 
 /** Диапазон цены [min, max]. null = ограничения нет. Юзер задаёт через
  *  слайдер в фильтр-popover'е; null когда обе ручки на границах данных. */
@@ -38,10 +41,18 @@ interface PageSearchCtx {
   setNoSugarOnly: (v: boolean) => void
   filterOpen: boolean
   setFilterOpen: (v: boolean) => void
+  /** Под какой кнопкой показать popover (sortbar vs header). */
+  filterAnchor: FilterAnchor
+  setFilterAnchor: (v: FilterAnchor) => void
   view: CatalogView
   setView: (v: CatalogView) => void
   searchItems: SearchItem[]
   setSearchItems: (items: SearchItem[]) => void
+  /** [min, max] цен каталога для слайдера в FilterPanel. Каталог кладёт сюда
+   *  реальные границы; дефолт [0, 500]. В контексте — чтобы header-popover
+   *  (вне DrinkCatalog) тоже имел доступ. */
+  priceBounds: [number, number]
+  setPriceBounds: (v: [number, number]) => void
 }
 
 const Ctx = createContext<PageSearchCtx>({
@@ -52,8 +63,10 @@ const Ctx = createContext<PageSearchCtx>({
   onlyNew: false, setOnlyNew: () => {},
   noSugarOnly: false, setNoSugarOnly: () => {},
   filterOpen: false, setFilterOpen: () => {},
+  filterAnchor: 'sortbar', setFilterAnchor: () => {},
   view: 'grid', setView: () => {},
   searchItems: [], setSearchItems: () => {},
+  priceBounds: [0, 500], setPriceBounds: () => {},
 })
 
 function SearchResetter() {
@@ -87,8 +100,10 @@ export function CatalogSearchProvider({ children }: { children: ReactNode }) {
   const [onlyNew, setOnlyNew] = useState(false)
   const [noSugarOnly, setNoSugarOnly] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
+  const [filterAnchor, setFilterAnchor] = useState<FilterAnchor>('sortbar')
   const [view, setView] = useState<CatalogView>('grid')
   const [searchItems, setSearchItems] = useState<SearchItem[]>([])
+  const [priceBounds, setPriceBounds] = useState<[number, number]>([0, 500])
 
   return (
     <Ctx.Provider value={{
@@ -99,8 +114,10 @@ export function CatalogSearchProvider({ children }: { children: ReactNode }) {
       onlyNew, setOnlyNew,
       noSugarOnly, setNoSugarOnly,
       filterOpen, setFilterOpen,
+      filterAnchor, setFilterAnchor,
       view, setView,
       searchItems, setSearchItems,
+      priceBounds, setPriceBounds,
     }}>
       <SearchResetter />
       {children}

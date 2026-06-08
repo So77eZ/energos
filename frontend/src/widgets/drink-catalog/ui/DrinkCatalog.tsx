@@ -62,6 +62,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
     onlyNew, setOnlyNew,
     noSugarOnly, setNoSugarOnly,
     setSearchItems,
+    setPriceBounds,
   } = useCatalogSearch()
 
   // Источник для live-результатов поиска (мобильный оверлей + /drinks dropdown).
@@ -125,6 +126,10 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
     return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))]
   }, [enriched])
 
+  // Кладём границы цен в контекст — их читает FilterPanel (в т.ч. header-popover,
+  // который рендерится вне этого виджета).
+  useEffect(() => { setPriceBounds(priceBounds) }, [priceBounds, setPriceBounds])
+
   // Exclude hero drink from the grid to avoid duplication on the default view.
   // When the user actively filters/sorts, the hero pin stays — the grid still
   // hides it, but if the filter excludes the hero, the grid is unaffected.
@@ -172,7 +177,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
       {hero && <HomeHero drink={hero} rank={1} />}
 
       <div ref={sortRef} className="cat-anchor">
-        <SortBar priceBounds={priceBounds} />
+        <SortBar />
       </div>
 
       {/* Inline CTA: предложить напиток */}

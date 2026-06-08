@@ -38,17 +38,11 @@ function combine(key: SortKey, dir: Direction): SortOption {
   return `${key}_${dir}` as SortOption
 }
 
-interface SortBarProps {
-  /** [min, max] цен в каталоге — нужен для слайдера в FilterPanel'е.
-   *  Если есть напитки без цены/каталог пустой — каталог должен подсунуть [0, 500]. */
-  priceBounds: [number, number]
-}
-
-export function SortBar({ priceBounds }: SortBarProps) {
+export function SortBar() {
   const {
     sort, setSort,
     tiers, priceRange, onlyNew, noSugarOnly,
-    filterOpen, setFilterOpen,
+    filterOpen, setFilterOpen, filterAnchor, setFilterAnchor,
     view, setView,
   } = useCatalogSearch()
   const { key: activeKey, dir: activeDir } = parseSort(sort)
@@ -134,15 +128,18 @@ export function SortBar({ priceBounds }: SortBarProps) {
           ref={filterBtnRef}
           type="button"
           className="filter-btn"
-          onClick={() => setFilterOpen(!filterOpen)}
-          aria-expanded={filterOpen}
+          onClick={() => {
+            if (filterOpen && filterAnchor === 'sortbar') setFilterOpen(false)
+            else { setFilterAnchor('sortbar'); setFilterOpen(true) }
+          }}
+          aria-expanded={filterOpen && filterAnchor === 'sortbar'}
           aria-haspopup="dialog"
         >
           <Icons.sliders w={14} />
           Фильтры
           {activeFilterCount > 0 && <span className="filter-count">{activeFilterCount}</span>}
         </button>
-        <FilterPanel priceBounds={priceBounds} anchorRef={filterBtnRef} />
+        <FilterPanel anchor="sortbar" anchorRef={filterBtnRef} />
       </div>
     </div>
   )
