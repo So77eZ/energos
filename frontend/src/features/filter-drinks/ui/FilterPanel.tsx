@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useCatalogSearch } from '@shared/lib/catalog-search'
+import { useCatalogSearch, type FilterAnchor } from '@shared/lib/catalog-search'
 import { TIER_COLORS } from '@entities/drink'
 import type { Tier } from '@entities/drink'
 import { Icons } from '@shared/ui/icons'
@@ -9,27 +9,31 @@ import { Icons } from '@shared/ui/icons'
 const TIERS: Tier[] = ['S', 'A', 'B', 'C', 'D']
 
 interface FilterPanelProps {
-  /** Бордюры цены в каталоге [min, max] — определяют диапазон ручек слайдера. */
-  priceBounds: [number, number]
+  /** Какой триггер обслуживает этот инстанс. Popover рендерится только когда
+   *  filterAnchor совпадает — так один стейт `filterOpen` управляет двумя
+   *  co-located popover'ами (под SortBar и под шапкой). */
+  anchor: FilterAnchor
   /** Якорь снаружи (filter-btn) — нужен для click-outside, чтобы клик по
    *  самой кнопке не закрывал popover мгновенно. */
   anchorRef?: React.RefObject<HTMLElement | null>
 }
 
-export function FilterPanel({ priceBounds, anchorRef }: FilterPanelProps) {
+export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
   const {
-    filterOpen, setFilterOpen,
+    filterOpen, setFilterOpen, filterAnchor,
     tiers, setTiers,
     priceRange, setPriceRange,
     onlyNew, setOnlyNew,
     noSugarOnly, setNoSugarOnly,
+    priceBounds,
   } = useCatalogSearch()
 
   const popRef = useRef<HTMLDivElement | null>(null)
+  const shown = filterOpen && filterAnchor === anchor
 
   // Esc — закрыть; клик вне popover'a и вне filter-btn — закрыть.
   useEffect(() => {
-    if (!filterOpen) return
+    if (!shown) return
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setFilterOpen(false)
     }
@@ -49,9 +53,9 @@ export function FilterPanel({ priceBounds, anchorRef }: FilterPanelProps) {
       window.removeEventListener('click', onClick)
       clearTimeout(t)
     }
-  }, [filterOpen, setFilterOpen, anchorRef])
+  }, [shown, setFilterOpen, anchorRef])
 
-  if (!filterOpen) return null
+  if (!shown) return null
 
   const [boundsMin, boundsMax] = priceBounds
   const lo = priceRange?.[0] ?? boundsMin

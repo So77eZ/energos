@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
+import { FilterPanel } from '@features/filter-drinks/ui/FilterPanel'
 
 const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/drinks', '/taste-map']
 const FILTER_PAGES = ['/', '/taste-map']
@@ -16,15 +17,22 @@ export function HeaderSearchBar(
 ) {
   const pathname = usePathname()
   const router = useRouter()
-  const { search, setSearch, filterOpen, setFilterOpen, noSugarOnly, sort, searchItems } = useCatalogSearch()
+  const {
+    search, setSearch, noSugarOnly, sort, searchItems,
+    filterOpen, setFilterOpen, filterAnchor, setFilterAnchor,
+  } = useCatalogSearch()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const hdrFilterBtnRef = useRef<HTMLButtonElement | null>(null)
 
   const isReviews = pathname === '/drinks'
   // Live-результаты (dropdown) показываем на /drinks и в мобильном оверлее
   // (forceInput): там каталог скрыт за оверлеем, нужен видимый список совпадений.
   const showResults = isReviews || forceInput
-  const showFilterToggle = FILTER_PAGES.includes(pathname)
+  // Фильтр-popover держим только в sticky-шапке (не в мобильном поиск-оверлее):
+  // оверлей рендерит второй HeaderSearchBar (forceInput) → иначе на '/' было бы
+  // два header-anchored FilterPanel разом. На мобиле фильтры — через SortBar.
+  const showFilterToggle = !forceInput && FILTER_PAGES.includes(pathname)
   const hasActiveFilters = noSugarOnly || sort !== 'name'
 
   useEffect(() => {
@@ -112,16 +120,24 @@ export function HeaderSearchBar(
       </div>
 
       {showFilterToggle && (
-        <button
-          type="button"
-          className={`hdr-filter-btn${hasActiveFilters ? ' active' : ''}`}
-          onClick={() => setFilterOpen(!filterOpen)}
-          aria-label="Фильтры"
-          aria-pressed={filterOpen}
-        >
-          <Icons.sliders w={16} />
-          {hasActiveFilters && <span className="hdr-filter-dot" />}
-        </button>
+        <div className="filter-anchor">
+          <button
+            ref={hdrFilterBtnRef}
+            type="button"
+            className={`hdr-filter-btn${hasActiveFilters ? ' active' : ''}`}
+            onClick={() => {
+              if (filterOpen && filterAnchor === 'header') setFilterOpen(false)
+              else { setFilterAnchor('header'); setFilterOpen(true) }
+            }}
+            aria-label="Фильтры"
+            aria-expanded={filterOpen && filterAnchor === 'header'}
+            aria-haspopup="dialog"
+          >
+            <Icons.sliders w={16} />
+            {hasActiveFilters && <span className="hdr-filter-dot" />}
+          </button>
+          <FilterPanel anchor="header" anchorRef={hdrFilterBtnRef} />
+        </div>
       )}
     </div>
   )
