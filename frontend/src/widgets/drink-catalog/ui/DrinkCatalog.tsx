@@ -12,6 +12,7 @@ import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
 import { Icons } from '@shared/ui/icons'
 import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
+import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
 import { useInfiniteReveal } from '../model/useInfiniteReveal'
 import { StatsStrip } from '@widgets/stats-strip/ui/StatsStrip'
 import { HomeHero } from '@widgets/home-hero/ui/HomeHero'
@@ -140,6 +141,20 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   })
   const visible = gridSource.slice(0, count)
 
+  // Скролл к каталогу при вводе поиска (раз на переход пусто↔непусто).
+  const sortRef = useRef<HTMLDivElement | null>(null)
+  const reducedMotion = usePrefersReducedMotion()
+  const prevHad = useRef<boolean | null>(null)
+  useEffect(() => {
+    const has = search.trim().length > 0
+    if (prevHad.current === null) { prevHad.current = has; return } // mount — без скролла
+    if (has === prevHad.current) return
+    prevHad.current = has
+    const behavior: ScrollBehavior = reducedMotion ? 'auto' : 'smooth'
+    if (has) sortRef.current?.scrollIntoView({ behavior, block: 'start' })
+    else window.scrollTo({ top: 0, behavior })
+  }, [search, reducedMotion])
+
   if (initialDrinks.length === 0) {
     return (
       <div className="empty">
@@ -156,7 +171,9 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
       <StatsStrip drinks={enriched} />
       {hero && <HomeHero drink={hero} rank={1} />}
 
-      <SortBar priceBounds={priceBounds} />
+      <div ref={sortRef} className="cat-anchor">
+        <SortBar priceBounds={priceBounds} />
+      </div>
 
       {/* Inline CTA: предложить напиток */}
       <Link href="/submit" className="catalog-cta">

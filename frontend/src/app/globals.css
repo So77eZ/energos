@@ -3884,3 +3884,9 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
   :root:not([data-force-motion]) .egg-fw-spark,
   :root:not([data-force-motion]) .logo-flash .logo-bolt { animation: none; }
 }
+
+/* Якорь скролла к каталогу при вводе поиска: отступ под sticky-шапку
+   (.hdr-inner ~54px + .ticker ~28px). Десктоп-онли: на ≤640px поиск живёт в
+   оверлее с useScrollLock — body заморожен, скролл к якорю всё равно затирается
+   восстановлением позиции при закрытии, так что мобильного варианта нет. */
+.cat-anchor { scroll-margin-top: 92px; }
