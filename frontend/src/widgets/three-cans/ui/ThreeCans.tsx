@@ -212,7 +212,7 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
   function onCanvasClick() {
     if (state !== 'active') return                 // клики во время взрыва игнор
     if (spinStartAt == null) spinStartAt = performance.now()
-    spin.accel += SPIN.CLICK_KICK
+    spin = { ...spin, accel: spin.accel + SPIN.CLICK_KICK }
     // juice: микро-сквош, чтобы клик ощущался (банки немые)
     canGroup.scale.setScalar(0.94)
   }
