@@ -16,7 +16,7 @@ export interface AchievementStats {
   logoManiac: number         // secret, 0|1 (100 кликов лого)
   pathfinder: number         // secret, 0|1 (10 молний)
   canBursts: number          // secret, счётчик взрывов банок (клик-разгон)
-  canFastSpin: number        // secret, 0|1 — взрыв за < 2с
+  canFastSpin: number        // secret, 0|1 — взрыв за ≤ 2с
   canCascade: number         // secret, 0|1 — 5 взрывов подряд
 }
 

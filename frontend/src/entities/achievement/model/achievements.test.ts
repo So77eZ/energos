@@ -65,6 +65,7 @@ describe('evaluateAchievements', () => {
     expect(r.find((a) => a.id === 'can-chain')!.source).toBe('secret')
     expect(r.find((a) => a.id === 'can-demolitionist')!.awaitingBackend).toBe(false)
     expect(evaluateAchievements({ ...ZERO, canBursts: 5 }).find((a) => a.id === 'can-demolitionist')!.progress).toBe(50)
+    expect(evaluateAchievements({ ...ZERO, canBursts: 9 }).find((a) => a.id === 'can-demolitionist')!.unlocked).toBe(false)
   })
 })
 
