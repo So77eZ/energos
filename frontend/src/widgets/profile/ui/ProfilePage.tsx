@@ -9,6 +9,7 @@ import { calcRating, type Review } from '@entities/review'
 import type { User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
 import { readEggs, allLightningFound } from '@shared/lib/easter-eggs'
+import { readCanGame, evaluateCanBadges } from '@shared/lib/can-game'
 import { HiddenBolt } from '@shared/ui/HiddenBolt'
 import { ROUTES } from '@shared/config/routes'
 import { useToast } from '@shared/lib/toast'
@@ -82,6 +83,12 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
     setEggFlags({ logoManiac: s.logoClicks >= 100 ? 1 : 0, pathfinder: allLightningFound(s) ? 1 : 0 })
   }, [])
 
+  // Секретные can-game-флаги из localStorage (client) → в stats бейджей.
+  const [canFlags, setCanFlags] = useState({ canBursts: 0, canFastSpin: 0, canCascade: 0 })
+  useEffect(() => {
+    setCanFlags(evaluateCanBadges(readCanGame()))
+  }, [])
+
   const achievements = useMemo(() => {
     const reviewsWithComments = reviews.filter((r) => r.comment?.trim()).length
     const avgSweetnessX10 = reviews.length >= 3
@@ -114,8 +121,11 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       isTop10: user.is_top10 ? 1 : 0,
       logoManiac: eggFlags.logoManiac,
       pathfinder: eggFlags.pathfinder,
+      canBursts: canFlags.canBursts,
+      canFastSpin: canFlags.canFastSpin,
+      canCascade: canFlags.canCascade,
     })
-  }, [reviews, favIds.length, mySubs.length, approvedCount, user, eggFlags])
+  }, [reviews, favIds.length, mySubs.length, approvedCount, user, eggFlags, canFlags])
   const unlockedCount = achievements.filter((a) => a.unlocked).length
 
   // Тост на новые анлоки (diff vs ach_seen; первый визит — silent seed).

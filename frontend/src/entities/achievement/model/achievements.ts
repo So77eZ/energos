@@ -20,6 +20,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'top10',           name: 'Топ-10%',           desc: 'Верхние 10% по числу отзывов.',      tier: 'elite',  source: 'backend', metric: 'isTop10',                  target: 1 },
   { id: 'logo-maniac',     name: 'Логотипоман',       desc: '100 кликов по логотипу.',            tier: 'gold',   source: 'secret',  metric: 'logoManiac',               target: 1 },
   { id: 'pathfinder',      name: 'Энергетик-следопыт',desc: 'Собери все 10 спрятанных молний.',   tier: 'elite',  source: 'secret',  metric: 'pathfinder',               target: 1 },
+  { id: 'can-demolitionist', name: 'Подрывник',        desc: 'Взорви 10 банок раскруткой.',          tier: 'gold',   source: 'secret',  metric: 'canBursts',                target: 10 },
+  { id: 'can-turbine',       name: 'Турбина',          desc: 'Раскрути банку до взрыва за 2 секунды.', tier: 'gold',  source: 'secret',  metric: 'canFastSpin',              target: 1 },
+  { id: 'can-chain',         name: 'Цепная реакция',   desc: '5 взрывов подряд без передышки.',       tier: 'elite',  source: 'secret',  metric: 'canCascade',               target: 1 },
 ]
 
 export const ACHIEVEMENT_BY_ID: Record<string, Achievement> =

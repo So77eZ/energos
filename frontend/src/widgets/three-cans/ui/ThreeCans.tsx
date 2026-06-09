@@ -2,20 +2,23 @@
 
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { stepSpin, SPIN, useCanGame, type SpinState } from '@shared/lib/can-game'
 import { ACCENT_MAP, useTheme } from '@shared/lib/theme'
 
 /**
  * Two large low-poly cans floating beside the catalog grid.
- * Hover accelerates spin → maxed → burst → cans + ice cubes vanish → reappear.
+ * Click adds angular acceleration (stepSpin integrator) → omega ramps → burst →
+ * cans + ice cubes vanish → reappear. Без кликов accel затухает демпфером, банка
+ * коастит обратно в idle. Серия кликов компаундит → разгон к взрыву.
  *
- * Ported from `frontendNew/three-cans.jsx`. The state machine + tuning constants
- * (MAX_MUL, DUR, sextic ease-out on spin-down, ice cube centrifugal mul) are
- * preserved verbatim — they were hand-tuned to feel right.
+ * Ported from `frontendNew/three-cans.jsx`; the burst/hidden/fadeIn visuals + ice
+ * cube centrifugal model are preserved verbatim. Спека: docs/superpowers/specs/
+ * 2026-06-09-cans-click-burst-design.md.
  */
 
 type Side = 'left' | 'right'
 type Shade = 'dark' | 'light'
-type State = 'idle' | 'spinUp' | 'maxed' | 'spinDown' | 'burst' | 'hidden' | 'fadeIn'
+type State = 'active' | 'burst' | 'hidden' | 'fadeIn'
 
 interface CanPalette {
   body: number
@@ -28,7 +31,7 @@ const PALETTES: Record<Shade, CanPalette> = {
   light: { body: 0xe6ecf3, capTop: 0xc8d0dc, capBot: 0xa8b2c0 },
 }
 
-function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string, shade: Shade, animate: boolean): () => void {
+function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string, shade: Shade, animate: boolean, onBurst?: (m: { spinUpMs: number }) => void): () => void {
   const isLeft = side === 'left'
   const palette = PALETTES[shade]
 
@@ -170,12 +173,11 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     particles.push({ mesh, data })
   }
 
-  // State machine
-  let state: State = 'idle'
+  // State machine — клик-разгон: accel-интегратор → omega → burst.
+  let state: State = 'active'
   let stateAt = 0
-  let speedMul = 1
-  let hovering = false
-  let spinDownFrom = 1
+  let spin: SpinState = { omega: 1, accel: 0 }   // omega = бывший speedMul
+  let spinStartAt: number | null = null          // таймстамп первого клика из idle (ms)
 
   function setCanOpacity(o: number) {
     canMats.forEach((m) => { m.opacity = o })
@@ -202,10 +204,26 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
       data.mat.opacity = 1
       mesh.scale.setScalar(1)
     })
+    const spinUpMs = spinStartAt != null ? performance.now() - spinStartAt : 0
+    spinStartAt = null
+    onBurst?.({ spinUpMs })
   }
 
-  function onEnter() { hovering = true }
-  function onLeave() { hovering = false }
+  function onCanvasClick() {
+    if (state !== 'active') return                 // клики во время взрыва игнор
+    if (spinStartAt == null) spinStartAt = performance.now()
+    spin = { ...spin, accel: spin.accel + SPIN.CLICK_KICK }
+    // juice: микро-сквош, чтобы клик ощущался (банки немые)
+    canGroup.scale.setScalar(0.97)
+  }
+
+  // Приманка: один импульс при ВХОДЕ в ховер (mouseenter не повторяется при
+  // удержании — кикает один раз за вход, снова только при повторном входе).
+  // НЕ ставит spinStartAt — таймер «<2с» стартует только с реального клика.
+  function onCanvasEnter() {
+    if (state !== 'active') return
+    spin = { ...spin, accel: spin.accel + SPIN.HOVER_KICK }
+  }
 
   function disposeAll() {
     scene.traverse((o) => {
@@ -247,8 +265,8 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     }
   }
 
-  canvas.addEventListener('mouseenter', onEnter)
-  canvas.addEventListener('mouseleave', onLeave)
+  canvas.addEventListener('click', onCanvasClick)
+  canvas.addEventListener('mouseenter', onCanvasEnter)
 
   let raf = 0
   let last = performance.now()
@@ -257,46 +275,20 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     last = now
     const t = now / 1000
 
-    if (state === 'idle') {
-      if (hovering) { state = 'spinUp'; stateAt = t }
-    } else if (state === 'spinUp') {
-      const e = t - stateAt
-      const MAX_MUL = 120, DUR = 3.2
-      speedMul = Math.pow(MAX_MUL, Math.min(e / DUR, 1))
-      if (!hovering) {
-        state = 'spinDown'; stateAt = t; spinDownFrom = speedMul
-      } else if (speedMul >= MAX_MUL * 0.98) {
-        state = 'maxed'; stateAt = t
-      }
-    } else if (state === 'maxed') {
-      const e = t - stateAt
-      speedMul = 120
-      if (!hovering) {
-        state = 'spinDown'; stateAt = t; spinDownFrom = speedMul
-      } else if (e >= 2.5) {
-        triggerBurst()
-      }
-    } else if (state === 'spinDown') {
-      const e = t - stateAt
-      const MAX_MUL = 120, DUR = 3.2
-      // Friction-style coast: sextic ease-out, length scaled by initial speed.
-      const dur = 4.5 + (Math.log(Math.max(1, spinDownFrom)) / Math.log(MAX_MUL)) * 5.5
-      const k = Math.min(e / dur, 1)
-      const curve = Math.pow(1 - k, 6)
-      speedMul = 1 + (spinDownFrom - 1) * curve
-      if (hovering) {
-        // Re-enter spinUp at the equivalent progress to avoid a velocity jump.
-        const eq = (Math.log(Math.max(1, speedMul)) / Math.log(MAX_MUL)) * DUR
-        state = 'spinUp'; stateAt = t - eq
-      } else if (k >= 1 || speedMul <= 1.1) {
-        state = 'idle'; speedMul = 1
+    if (state === 'active') {
+      // плавный возврат scale после juice-сквоша
+      canGroup.scale.setScalar(canGroup.scale.x + (1 - canGroup.scale.x) * Math.min(1, dt * 12))
+      spin = stepSpin(spin, dt)
+      if (spin.omega <= 1.02) spinStartAt = null   // вернулись в idle — сброс таймера
+      if (spin.omega >= SPIN.BURST_AT) {
+        triggerBurst()                             // выставит state='burst' + дёрнет onBurst
       }
     } else if (state === 'burst') {
       const e = t - stateAt
       const fade = Math.max(0, 1 - e / 0.35)
       setCanOpacity(fade)
       setCanScale(1 + e * 0.6)
-      speedMul = 120 + e * 180
+      spin.omega = 120 + e * 180
       if (e >= 0.4) {
         state = 'hidden'
         stateAt = t
@@ -322,7 +314,7 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
       if (e >= wait) {
         state = 'fadeIn'
         stateAt = t
-        speedMul = 1
+        spin.omega = 1
         setCanScale(0.2)
       }
     } else if (state === 'fadeIn') {
@@ -332,21 +324,22 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
       setCanOpacity(ease)
       setCanScale(0.2 + ease * 0.8)
       if (k >= 1) {
-        state = 'idle'
+        state = 'active'
         setCanOpacity(1)
         setCanScale(1)
-        speedMul = 1
+        spin = { omega: 1, accel: 0 }
+        spinStartAt = null
       }
     }
 
     // Can rotation + idle wobble
-    canGroup.rotation.y += (isLeft ? 0.15 : -0.12) * speedMul * dt
+    canGroup.rotation.y += (isLeft ? 0.15 : -0.12) * spin.omega * dt
     canGroup.position.y = Math.sin(t * 0.5 + (isLeft ? 0 : 1.5)) * 0.18
     canGroup.position.x = Math.sin(t * 0.3 + (isLeft ? 0.5 : 2.1)) * 0.10
 
     // Ice cubes — lighter than the can, so they accelerate harder and drift outward.
-    const iceMul = Math.pow(speedMul, 1.28)
-    const radiusMul = 1 + Math.min(speedMul / 120, 1) * 0.45
+    const iceMul = Math.pow(spin.omega, 1.28)
+    const radiusMul = 1 + Math.min(spin.omega / 120, 1) * 0.45
     cubes.forEach(({ mesh, data }) => {
       data.orbitA += data.orbitSpeed * iceMul * dt
       const r = data.orbitR * radiusMul
@@ -372,8 +365,8 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
   return () => {
     cancelAnimationFrame(raf)
     window.removeEventListener('resize', onResize)
-    canvas.removeEventListener('mouseenter', onEnter)
-    canvas.removeEventListener('mouseleave', onLeave)
+    canvas.removeEventListener('click', onCanvasClick)
+    canvas.removeEventListener('mouseenter', onCanvasEnter)
     disposeAll()
   }
 }
@@ -382,6 +375,9 @@ const ACCENT_CYCLE: Array<keyof typeof ACCENT_MAP> = ['cyan', 'pink', 'lime', 'a
 
 export function ThreeCans() {
   const { accent, motion } = useTheme()
+  const { onBurst } = useCanGame()
+  const onBurstRef = useRef(onBurst)
+  useEffect(() => { onBurstRef.current = onBurst }, [onBurst])
   // Left can uses the active accent; right can uses the next one in the cycle
   // so the pair always reads as two distinct hues no matter the theme choice.
   const leftAccent = ACCENT_MAP[accent].rgb
@@ -409,8 +405,9 @@ export function ThreeCans() {
 
   useEffect(() => {
     const cleanups: Array<() => void> = []
-    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent, 'dark', !reduced))
-    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent, 'light', !reduced))
+    const fireBurst = (m: { spinUpMs: number }) => onBurstRef.current(m)
+    if (leftRef.current) cleanups.push(mountCanScene(leftRef.current, 'left', leftAccent, 'dark', !reduced, fireBurst))
+    if (rightRef.current) cleanups.push(mountCanScene(rightRef.current, 'right', rightAccent, 'light', !reduced, fireBurst))
     return () => cleanups.forEach((c) => c())
   }, [leftAccent, rightAccent, reduced])
 

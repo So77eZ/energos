@@ -8,6 +8,7 @@ import { ScrollToTop } from '@widgets/scroll-to-top/ui/ScrollToTop'
 import { CatalogSearchProvider } from '@shared/lib/catalog-search'
 import { GachaponProvider } from '@shared/lib/gachapon'
 import { EasterEggsProvider } from '@shared/lib/easter-eggs'
+import { CanGameProvider } from '@shared/lib/can-game'
 import { ConfirmProvider } from '@shared/lib/confirm'
 import { FavoritesProvider } from '@shared/lib/favorites'
 import { getToken } from '@shared/lib/session'
@@ -85,6 +86,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ThemeProvider>
           <ToastProvider>
             <EasterEggsProvider>
+            <CanGameProvider>
             <ConfirmProvider>
               <UserProvider user={user}>
                 <SubmissionsProvider>
@@ -103,6 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </SubmissionsProvider>
               </UserProvider>
             </ConfirmProvider>
+            </CanGameProvider>
             </EasterEggsProvider>
           </ToastProvider>
         </ThemeProvider>
