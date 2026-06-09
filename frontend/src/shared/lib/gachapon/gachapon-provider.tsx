@@ -25,12 +25,15 @@ export function GachaponProvider({ children }: { children: ReactNode }) {
   const [reel, setReel] = useState<EnrichedDrink[]>([])
   const [winIndex, setWinIndex] = useState(0)
   const [winner, setWinner] = useState<EnrichedDrink | null>(null)
+  const [landFrac, setLandFrac] = useState(0)
   const cacheRef = useRef<EnrichedDrink[] | null>(null)
   const openRef = useRef(false)
 
   const reducedMotion = usePrefersReducedMotion()
-  // Длительность спина: уважает «Анимации: всегда вкл.» (motion === 'always').
-  const dur = reducedMotion && motion !== 'always' ? 0.35 : 7
+  // reduced бьёт системную настройку, кроме «Анимации: всегда вкл.» (motion === 'always').
+  const reduced = reducedMotion && motion !== 'always'
+  // Длительность спина: momentum-кривая держит динамику, 6с достаточно (был 7 под мёртвый хвост).
+  const dur = reduced ? 0.35 : 6
 
   const startSpin = useCallback((drinks: EnrichedDrink[]) => {
     const spin = buildSpin(drinks)
@@ -41,6 +44,7 @@ export function GachaponProvider({ children }: { children: ReactNode }) {
     setWinner(null)
     setReel(spin.strip)
     setWinIndex(spin.winIndex)
+    setLandFrac(spin.landFrac)
     setPhase('spinning')
   }, [])
 
@@ -109,6 +113,8 @@ export function GachaponProvider({ children }: { children: ReactNode }) {
           winIndex={winIndex}
           winner={winner}
           dur={dur}
+          landFrac={landFrac}
+          reduced={reduced}
           onLand={land}
           onRespin={respin}
           onGo={go}
