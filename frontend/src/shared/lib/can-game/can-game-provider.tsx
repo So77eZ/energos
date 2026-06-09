@@ -36,6 +36,9 @@ export function CanGameProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const onBurst = useCallback(({ spinUpMs }: { spinUpMs: number }) => {
+    // Гард: если взрыв опередил init-эффект (не гидратированы) — подтянуть
+    // сохранёнку, иначе мутируем дефолт (bursts:0) и writeCanGame затрёт прогресс.
+    if (!hydrated) stateRef.current = readCanGame()
     const before = evaluateCanBadges(stateRef.current)
     const res = registerBurst(stateRef.current, runtimeRef.current, { spinUpMs, now: Date.now() })
     stateRef.current = res.state
@@ -52,7 +55,7 @@ export function CanGameProvider({ children }: { children: ReactNode }) {
         markSeen(id)
       }
     })
-  }, [toast, router])
+  }, [toast, router, hydrated])
 
   return <Ctx.Provider value={{ onBurst, hydrated }}>{children}</Ctx.Provider>
 }
