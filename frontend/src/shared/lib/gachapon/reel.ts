@@ -1,7 +1,7 @@
 import type { EnrichedDrink } from '@entities/drink'
 
 const LOOPS = 7
-const TAIL = 3 // хвост после выигрыша для «перелёта»
+const TAIL = 5 // хвост после выигрыша: покрывает правый край при проскоке (overshoot ½ ячейки) и лево-смещённом лендинге (до −0.4 ячейки)
 // Потолок длины ленты. Каждая ячейка — DOM-нода с EnergyCan, а видно ~5 разом,
 // поэтому при большом каталоге LOOPS×пул раздувает DOM без пользы (83 напитка →
 // 581 нода). Кап ограничивает реальную длину, визуально спина хватает с запасом.
@@ -12,6 +12,7 @@ export interface SpinResult {
   strip: EnrichedDrink[]
   winIndex: number
   winner: EnrichedDrink
+  landFrac: number // смещение метки внутри ячейки выигрыша, ∈ [-0.4, 0.4]
 }
 
 function shuffle(arr: EnrichedDrink[], rng: () => number): EnrichedDrink[] {
@@ -27,6 +28,7 @@ function shuffle(arr: EnrichedDrink[], rng: () => number): EnrichedDrink[] {
 export function buildSpin(drinks: EnrichedDrink[], rng: () => number = Math.random): SpinResult | null {
   if (drinks.length === 0) return null
   const winner = drinks[Math.floor(rng() * drinks.length)]
+  const landFrac = (rng() - 0.5) * 0.8 // ∈ [-0.4, 0.4]: выигрыш не строго по центру метки (CS2-саспенс)
   const targetLen = Math.min(LOOPS * drinks.length, STRIP_CAP)
   const strip: EnrichedDrink[] = []
   while (strip.length < targetLen) {
@@ -38,5 +40,5 @@ export function buildSpin(drinks: EnrichedDrink[], rng: () => number = Math.rand
   }
   const winIndex = targetLen - TAIL
   strip[winIndex] = winner
-  return { strip, winIndex, winner }
+  return { strip, winIndex, winner, landFrac }
 }
