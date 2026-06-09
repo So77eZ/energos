@@ -3094,11 +3094,12 @@ body::before {
    TOASTS — non-blocking transient notifications (bottom-right stack)
    ═══════════════════════════════════════════════════════════════════ */
 .toast-host {
-  /* right:72 уводит тосты левее FAB-рейла (.twk-fab/.up-fab сидят right:16,
-     ширина 44 → правый край 60px); иначе тост z:950 накрывает кнопку-FAB. */
-  position: fixed; right: 72px; bottom: 16px; z-index: 950;
+  /* Тосты стоят НАД FAB-рейлом, right-aligned в ту же колонку. .twk-fab сидит
+     bottom:16, .up-fab bottom:72 (оба 44px) → верх стопки ~116px; bottom:124
+     даёт 8px зазор. Иначе тост z:950 наезжал на кнопки-FAB. */
+  position: fixed; right: 16px; bottom: 124px; z-index: 950;
   display: flex; flex-direction: column-reverse; gap: 8px;
-  max-width: calc(100vw - 88px);
+  max-width: calc(100vw - 32px);
   pointer-events: none;
 }
 .toast {
