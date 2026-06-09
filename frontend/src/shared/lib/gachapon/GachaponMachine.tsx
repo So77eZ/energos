@@ -21,6 +21,10 @@ interface GachaponMachineProps {
   winner: EnrichedDrink | null
   /** Длительность спина в секундах (провайдер учитывает reduced-motion). */
   dur: number
+  /** Смещение метки внутри ячейки выигрыша (CS2-саспенс), ∈ [-0.4, 0.4]. */
+  landFrac: number
+  /** Reduced-motion: одна фаза, строго центр, без overshoot/рандома. */
+  reduced: boolean
   onLand: (w: EnrichedDrink) => void
   onRespin: () => void
   onGo: (w: EnrichedDrink) => void
@@ -28,7 +32,7 @@ interface GachaponMachineProps {
 }
 
 export function GachaponMachine({
-  phase, reel, winIndex, winner, dur, onLand, onRespin, onGo, onClose,
+  phase, reel, winIndex, winner, dur, landFrac, reduced, onLand, onRespin, onGo, onClose,
 }: GachaponMachineProps) {
   const windowRef = useRef<HTMLDivElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
@@ -37,7 +41,10 @@ export function GachaponMachine({
   useEffect(() => setMounted(true), [])
   useScrollLock(true)
 
-  // Императивная прокрутка ленты: сброс → reflow → разгон до выигрыша.
+  // Императивная прокрутка ленты через WAAPI. Полный режим: momentum-разгон →
+  // проскок мимо точки покоя на ½ ячейки → мягкая доводка назад (CS2 «тик-бэк»).
+  // Reduced: одна фаза, строго центр. Лендинг по anim.finished (промис снимается
+  // .cancel()'ом в cleanup). done-гард от гонки finish/cancel.
   useLayoutEffect(() => {
     if (phase !== 'spinning') return
     const win = windowRef.current
@@ -47,24 +54,38 @@ export function GachaponMachine({
     if (!target) return
     const cellW = (strip.children[0] as HTMLElement).offsetWidth
     const winW = win.clientWidth
-    const final = winW / 2 - (winIndex * cellW + cellW / 2)
-    strip.style.transition = 'none'
-    strip.style.transform = 'translateX(0px)'
-    void strip.offsetWidth
-    strip.style.transition = `transform ${dur}s cubic-bezier(0.19, 1, 0.22, 1)`
-    strip.style.transform = `translateX(${final}px)`
-    // Приземление по transitionend (детерминированно); setTimeout — фолбэк, если
-    // событие не придёт (прерванный transition). done-гард от двойного вызова.
+    const center = winW / 2 - (winIndex * cellW + cellW / 2)
+    const settleX = reduced ? center : center + landFrac * cellW
+
     let done = false
-    const land = () => { if (done) return; done = true; onLand(target) }
-    const onEnd = (e: TransitionEvent) => { if (e.propertyName === 'transform') land() }
-    strip.addEventListener('transitionend', onEnd)
-    const t = setTimeout(land, dur * 1000 + 250)
-    return () => {
-      clearTimeout(t)
-      strip.removeEventListener('transitionend', onEnd)
+    const land = () => {
+      if (done) return
+      done = true
+      // Зафиксировать точку покоя как inline-стиль: переживёт .cancel() в cleanup
+      // (иначе fill:forwards снимается и лента прыгает обратно в 0 при phase→landed).
+      strip.style.transform = `translateX(${settleX}px)`
+      onLand(target)
     }
-  }, [phase, reel, winIndex, dur, onLand])
+
+    strip.style.transform = 'translateX(0px)'
+    const keyframes: Keyframe[] = reduced
+      ? [
+          { transform: 'translateX(0px)' },
+          { transform: `translateX(${settleX}px)`, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+        ]
+      : [
+          { transform: 'translateX(0px)', offset: 0 },
+          // проскок: на ½ ячейки дальше по ходу (лента едет влево → translateX отрицательнее)
+          { transform: `translateX(${settleX - cellW * 0.5}px)`, offset: 0.82, easing: 'cubic-bezier(0.16, 1, 0.30, 1)' },
+          { transform: `translateX(${settleX}px)`, offset: 1, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' },
+        ]
+    const anim = strip.animate(keyframes, { duration: dur * 1000, fill: 'forwards' })
+    anim.finished.then(land).catch(() => {}) // catch: AbortError при .cancel()
+
+    return () => {
+      anim.cancel()
+    }
+  }, [phase, reel, winIndex, dur, reduced, landFrac, onLand])
 
   if (!mounted) return null
 
