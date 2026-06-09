@@ -17,9 +17,9 @@ describe('buildSpin', () => {
     const r = buildSpin(DRINKS, rng0)!
     expect(r.strip).toHaveLength(7 * DRINKS.length)
   })
-  it('winIndex = strip.length - 3 и там лежит winner', () => {
+  it('winIndex = strip.length - 5 и там лежит winner', () => {
     const r = buildSpin(DRINKS, rng0)!
-    expect(r.winIndex).toBe(r.strip.length - 3)
+    expect(r.winIndex).toBe(r.strip.length - 5)
     expect(r.strip[r.winIndex]).toBe(r.winner)
   })
   it('winner из пула', () => {
@@ -34,8 +34,22 @@ describe('buildSpin', () => {
     const big = Array.from({ length: 20 }, (_, i) => drink(i + 1)) // 7*20=140 > cap
     const r = buildSpin(big, rng0)!
     expect(r.strip).toHaveLength(STRIP_CAP)
-    expect(r.winIndex).toBe(STRIP_CAP - 3)
+    expect(r.winIndex).toBe(STRIP_CAP - 5)
     expect(r.strip[r.winIndex]).toBe(r.winner)
     for (const d of r.strip) expect(big).toContain(d)
+  })
+  it('landFrac в диапазоне [-0.4, 0.4]', () => {
+    const r = buildSpin(DRINKS, () => 0.5)!
+    expect(r.landFrac).toBeGreaterThanOrEqual(-0.4)
+    expect(r.landFrac).toBeLessThanOrEqual(0.4)
+  })
+  it('landFrac: rng=0 → -0.4 (левый край)', () => {
+    const r = buildSpin(DRINKS, rng0)!
+    expect(r.landFrac).toBeCloseTo(-0.4, 5)
+  })
+  it('landFrac: rng→1 → ~+0.4 (правый край)', () => {
+    const r = buildSpin(DRINKS, () => 0.9999)!
+    expect(r.landFrac).toBeGreaterThan(0.39)
+    expect(r.landFrac).toBeLessThanOrEqual(0.4)
   })
 })
