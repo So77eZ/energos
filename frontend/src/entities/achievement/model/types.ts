@@ -15,6 +15,9 @@ export interface AchievementStats {
   isTop10: number            // backend, 0|1
   logoManiac: number         // secret, 0|1 (100 кликов лого)
   pathfinder: number         // secret, 0|1 (10 молний)
+  canBursts: number          // secret, счётчик взрывов банок (клик-разгон)
+  canFastSpin: number        // secret, 0|1 — взрыв за < 2с
+  canCascade: number         // secret, 0|1 — 5 взрывов подряд
 }
 
 export interface Achievement {

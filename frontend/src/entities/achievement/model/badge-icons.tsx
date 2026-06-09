@@ -27,5 +27,8 @@ export const BADGE_ICONS: Record<string, Glyph> = {
   'top10': () => (<svg {...S}><path d="M3 7.5 7 11l5-6.5L17 11l4-3.5L19 19H5z" /><path d="M5 19h14" /></svg>),
   'logo-maniac': () => (<svg {...S}><path d="M13 2 4 14h6l-1 8 9-12h-6z" /><circle cx="12" cy="12" r="10" /></svg>),
   'pathfinder': () => (<svg {...S}><path d="m12 2 2.4 6.3L21 9l-5 4.2L17.6 20 12 16.4 6.4 20 8 13.2 3 9l6.6-.7z" /></svg>),
+  'can-demolitionist': () => (<svg {...S}><circle cx="12" cy="13" r="7" /><path d="M12 6V2M12 2l-2 2M12 2l2 2" /><path d="m9.5 12 1.5 2 3.5-4" /></svg>),
+  'can-turbine': () => (<svg {...S}><circle cx="12" cy="12" r="3" /><path d="M12 9c1-3 0-5-1.5-6 3 .5 4.5 2.5 4.5 6M15 12c3-1 5 0 6 1.5-.5-3-2.5-4.5-6-4.5M12 15c-1 3 0 5 1.5 6-3-.5-4.5-2.5-4.5-6M9 12c-3 1-5 0-6-1.5.5 3 2.5 4.5 6 4.5" /></svg>),
+  'can-chain': () => (<svg {...S}><path d="M8.5 11 7 12.5a3 3 0 1 0 4.2 4.2L12.7 15M15.5 13 17 11.5a3 3 0 1 0-4.2-4.2L11.3 9" /><path d="M10 14l4-4" /></svg>),
   _default: () => (<svg {...S}><circle cx="12" cy="12" r="7" /></svg>),
 }
