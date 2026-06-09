@@ -26,12 +26,13 @@ describe('stepSpin', () => {
 
   it('accel затухает демпфером к 0 без новых кликов', () => {
     const after = stepSpin({ omega: 1, accel: 100 }, 1) // 1 секунда
-    expect(after.accel).toBeLessThan(100 * Math.exp(-SPIN.DAMP) + 0.001)
+    expect(after.accel).toBeLessThan(12)   // 100·e^−2.2 ≈ 11.08
     expect(after.accel).toBeGreaterThan(0)
   })
 
-  it('omega не опускается ниже 1 (idle-пол)', () => {
+  it('omega не опускается ниже 1 (idle-пол, clamp на sub-idle вход)', () => {
     expect(stepSpin({ omega: 1, accel: 0 }, 1 / 60).omega).toBe(1)
+    expect(stepSpin({ omega: 0.1, accel: 0 }, 1).omega).toBe(1) // друг кламп
   })
 })
 
@@ -48,7 +49,7 @@ describe('registerBurst', () => {
     expect(r.runtime.prevBurstAt).toBe(1000)
   })
 
-  it('взрыв в окне CASCADE_GAP инкрементит каскад; bestSpinUpMs берёт минимум', () => {
+  it('взрыв на границе окна (== CASCADE_GAP) инкрементит каскад; bestSpinUpMs берёт минимум', () => {
     const r1 = registerBurst(S0, RT0, { spinUpMs: 1500, now: 1000 })
     const r2 = registerBurst(r1.state, r1.runtime, { spinUpMs: 3000, now: 1000 + CASCADE_GAP })
     expect(r2.runtime.currentCascade).toBe(2)
@@ -63,6 +64,9 @@ describe('registerBurst', () => {
     expect(r3.runtime.currentCascade).toBe(1)
     expect(r3.state.maxCascade).toBe(2)
     expect(r3.state.bestSpinUpMs).toBe(900)
+    // граница: на 1мс позже окна — каскад сбрасывается
+    const rOut = registerBurst(r1.state, r1.runtime, { spinUpMs: 950, now: 1000 + CASCADE_GAP + 1 })
+    expect(rOut.runtime.currentCascade).toBe(1)
   })
 })
 
