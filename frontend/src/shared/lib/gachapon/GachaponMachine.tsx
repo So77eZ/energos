@@ -41,10 +41,11 @@ export function GachaponMachine({
   useEffect(() => setMounted(true), [])
   useScrollLock(true)
 
-  // Императивная прокрутка ленты через WAAPI. Полный режим: momentum-разгон →
-  // проскок мимо точки покоя на ½ ячейки → мягкая доводка назад (CS2 «тик-бэк»).
-  // Reduced: одна фаза, строго центр. Лендинг по anim.finished (промис снимается
-  // .cancel()'ом в cleanup). done-гард от гонки finish/cancel.
+  // Императивная прокрутка ленты через WAAPI. Полный режим (CS2): momentum-разгон
+  // → проскок мимо саспенс-точки → мягкий стоп off-center (выигрыш не по центру)
+  // → краткая пауза → подтяжка к дед-центру изображения энергетика. Reduced: одна
+  // фаза, сразу центр. Лендинг по anim.finished (промис снимается .cancel()'ом в
+  // cleanup). done-гард от гонки finish/cancel.
   useLayoutEffect(() => {
     if (phase !== 'spinning') return
     const win = windowRef.current
@@ -54,30 +55,37 @@ export function GachaponMachine({
     if (!target) return
     const cellW = (strip.children[0] as HTMLElement).offsetWidth
     const winW = win.clientWidth
-    const center = winW / 2 - (winIndex * cellW + cellW / 2)
-    const settleX = reduced ? center : center + landFrac * cellW
+    const center = winW / 2 - (winIndex * cellW + cellW / 2)   // дед-центр выигрыша = финал
+    const off = reduced ? center : center + landFrac * cellW   // саспенс-стоп (off-center)
 
     let done = false
     const land = () => {
       if (done) return
       done = true
-      // Зафиксировать точку покоя как inline-стиль: переживёт .cancel() в cleanup
+      // Зафиксировать ФИНАЛ (центр) как inline-стиль: переживёт .cancel() в cleanup
       // (иначе fill:forwards снимается и лента прыгает обратно в 0 при phase→landed).
-      strip.style.transform = `translateX(${settleX}px)`
+      strip.style.transform = `translateX(${center}px)`
       onLand(target)
     }
 
+    // ВАЖНО: easing на кейфрейме применяется к интервалу, НАЧИНАЮЩЕМУСЯ с него.
     strip.style.transform = 'translateX(0px)'
     const keyframes: Keyframe[] = reduced
       ? [
-          { transform: 'translateX(0px)' },
-          { transform: `translateX(${settleX}px)`, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { transform: 'translateX(0px)', easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          { transform: `translateX(${center}px)` },
         ]
       : [
-          { transform: 'translateX(0px)', offset: 0 },
-          // проскок: на ½ ячейки дальше по ходу (лента едет влево → translateX отрицательнее)
-          { transform: `translateX(${settleX - cellW * 0.5}px)`, offset: 0.82, easing: 'cubic-bezier(0.16, 1, 0.30, 1)' },
-          { transform: `translateX(${settleX}px)`, offset: 1, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' },
+          // 0→0.60: momentum-разгон/торможение до проскока. easeOutQuint тормозит к апексу ~в ноль.
+          { transform: 'translateX(0px)', offset: 0, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+          // 0.60→0.74: проскок (0.4 ячейки дальше по ходу) → мягкий подхват в off-center,
+          // ease-in-старт (наклон ~0) подхватывает апекс без рывка.
+          { transform: `translateX(${off - cellW * 0.4}px)`, offset: 0.60, easing: 'cubic-bezier(0.40, 0, 0.50, 1)' },
+          // 0.74→0.82: пауза в off-center — «остановка» читается перед подтяжкой.
+          { transform: `translateX(${off}px)`, offset: 0.74, easing: 'linear' },
+          // 0.82→1: подтяжка к центру изображения энергетика, плавно (ease-in-out, наклон ~0 с концов).
+          { transform: `translateX(${off}px)`, offset: 0.82, easing: 'cubic-bezier(0.40, 0, 0.40, 1)' },
+          { transform: `translateX(${center}px)`, offset: 1 },
         ]
     const anim = strip.animate(keyframes, { duration: dur * 1000, fill: 'forwards' })
     anim.finished.then(land).catch(() => {}) // catch: AbortError при .cancel()
