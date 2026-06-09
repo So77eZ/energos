@@ -214,7 +214,15 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     if (spinStartAt == null) spinStartAt = performance.now()
     spin = { ...spin, accel: spin.accel + SPIN.CLICK_KICK }
     // juice: микро-сквош, чтобы клик ощущался (банки немые)
-    canGroup.scale.setScalar(0.94)
+    canGroup.scale.setScalar(0.97)
+  }
+
+  // Приманка: один импульс при ВХОДЕ в ховер (mouseenter не повторяется при
+  // удержании — кикает один раз за вход, снова только при повторном входе).
+  // НЕ ставит spinStartAt — таймер «<2с» стартует только с реального клика.
+  function onCanvasEnter() {
+    if (state !== 'active') return
+    spin = { ...spin, accel: spin.accel + SPIN.HOVER_KICK }
   }
 
   function disposeAll() {
@@ -258,6 +266,7 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
   }
 
   canvas.addEventListener('click', onCanvasClick)
+  canvas.addEventListener('mouseenter', onCanvasEnter)
 
   let raf = 0
   let last = performance.now()
@@ -357,6 +366,7 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     cancelAnimationFrame(raf)
     window.removeEventListener('resize', onResize)
     canvas.removeEventListener('click', onCanvasClick)
+    canvas.removeEventListener('mouseenter', onCanvasEnter)
     disposeAll()
   }
 }

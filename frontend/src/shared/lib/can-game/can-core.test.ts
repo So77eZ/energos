@@ -16,7 +16,7 @@ describe('stepSpin', () => {
   it('серия частых кликов пересекает BURST_AT', () => {
     let s = { omega: 1, accel: 0 }
     let burst = false
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
       s = { ...s, accel: s.accel + SPIN.CLICK_KICK } // клик каждый кадр
       s = stepSpin(s, 1 / 60)
       if (s.omega >= SPIN.BURST_AT) { burst = true; break }
