@@ -2,17 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { stepSpin, SPIN, type SpinState } from '@shared/lib/can-game'
-import { useCanGame } from '@shared/lib/can-game'
+import { stepSpin, SPIN, useCanGame, type SpinState } from '@shared/lib/can-game'
 import { ACCENT_MAP, useTheme } from '@shared/lib/theme'
 
 /**
  * Two large low-poly cans floating beside the catalog grid.
- * Hover accelerates spin → maxed → burst → cans + ice cubes vanish → reappear.
+ * Click adds angular acceleration (stepSpin integrator) → omega ramps → burst →
+ * cans + ice cubes vanish → reappear. Без кликов accel затухает демпфером, банка
+ * коастит обратно в idle. Серия кликов компаундит → разгон к взрыву.
  *
- * Ported from `frontendNew/three-cans.jsx`. The state machine + tuning constants
- * (MAX_MUL, DUR, sextic ease-out on spin-down, ice cube centrifugal mul) are
- * preserved verbatim — they were hand-tuned to feel right.
+ * Ported from `frontendNew/three-cans.jsx`; the burst/hidden/fadeIn visuals + ice
+ * cube centrifugal model are preserved verbatim. Спека: docs/superpowers/specs/
+ * 2026-06-09-cans-click-burst-design.md.
  */
 
 type Side = 'left' | 'right'
