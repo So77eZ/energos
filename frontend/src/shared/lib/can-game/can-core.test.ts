@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { stepSpin, registerBurst, evaluateCanBadges, SPIN, FAST_SPIN_MS, CASCADE_TARGET, CASCADE_GAP } from './can-core'
+import { stepSpin, registerBurst, evaluateCanBadges, SPIN, FAST_SPIN_MS, CASCADE_TARGET, CASCADE_GAP, type SpinState } from './can-core'
 
 describe('stepSpin', () => {
   it('один клик: omega бампает, но не достигает BURST_AT и стрётся назад к idle', () => {
-    let s = { omega: 1, accel: SPIN.CLICK_KICK } // эффект одного клика
+    let s: SpinState = { omega: 1, accel: SPIN.CLICK_KICK } // эффект одного клика
     let peak = 1
     for (let i = 0; i < 600; i++) {        // ~10с по 1/60
       s = stepSpin(s, 1 / 60)
