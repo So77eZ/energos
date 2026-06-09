@@ -81,4 +81,10 @@ describe('evaluateCanBadges', () => {
   it('bestSpinUpMs=null → canFastSpin 0', () => {
     expect(evaluateCanBadges({ bursts: 0, bestSpinUpMs: null, maxCascade: 0 }).canFastSpin).toBe(0)
   })
+
+  it('взрыв без клик-таймера (spinUpMs=Infinity) не даёт «Турбину»', () => {
+    const r = registerBurst({ bursts: 0, bestSpinUpMs: null, maxCascade: 0 }, { prevBurstAt: null, currentCascade: 0 }, { spinUpMs: Infinity, now: 1000 })
+    expect(r.state.bestSpinUpMs).toBe(Infinity)
+    expect(evaluateCanBadges(r.state).canFastSpin).toBe(0)
+  })
 })

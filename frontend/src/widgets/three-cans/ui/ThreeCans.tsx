@@ -204,7 +204,9 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
       data.mat.opacity = 1
       mesh.scale.setScalar(1)
     })
-    const spinUpMs = spinStartAt != null ? performance.now() - spinStartAt : 0
+    // spinStartAt==null → взрыв без клик-таймера (накручен ховером): отдаём
+    // Infinity, чтобы не зачитался в «Турбину» (<2с). 0 бы дал её даром.
+    const spinUpMs = spinStartAt != null ? performance.now() - spinStartAt : Infinity
     spinStartAt = null
     onBurst?.({ spinUpMs })
   }
