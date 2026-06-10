@@ -12,7 +12,7 @@ import { useMobileNav } from '../model/useMobileNav'
 import { HeaderSearchBar } from './HeaderSearchBar'
 import { NavMenuLink } from './NavMenuLink'
 import { useTheme } from '@shared/lib/theme'
-import { useGachapon } from '@shared/lib/gachapon'
+import { useGachapon } from '@features/gachapon'
 
 interface MobileNavProps {
   isAdmin: boolean

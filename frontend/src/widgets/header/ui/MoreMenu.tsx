@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Icons } from '@shared/ui/icons'
 import { isActive, type NavItem } from '../model/nav-items'
 import { useTheme } from '@shared/lib/theme'
-import { useGachapon } from '@shared/lib/gachapon'
+import { useGachapon } from '@features/gachapon'
 import { usePopover } from '@shared/lib/usePopover'
 import { NavMenuLink } from './NavMenuLink'
 
