@@ -1,5 +1,6 @@
-import type { Achievement, EvaluatedAchievement } from '@entities/achievement'
-import { ACHIEVEMENT_BY_ID, Medal } from '@entities/achievement'
+import type { Achievement, EvaluatedAchievement } from '../model/types'
+import { ACHIEVEMENT_BY_ID } from '../model/achievements'
+import { Medal } from '../ui/Medal'
 import { ROUTES } from '@shared/config/routes'
 import type { ToastInput } from '@shared/lib/toast'
 import { planUnlockToasts } from './plan'

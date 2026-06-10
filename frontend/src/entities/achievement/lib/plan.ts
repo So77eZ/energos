@@ -1,4 +1,4 @@
-import type { EvaluatedAchievement } from '@entities/achievement'
+import type { EvaluatedAchievement } from '../model/types'
 
 export interface UnlockPlan {
   toToast: string[]
