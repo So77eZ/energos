@@ -17,7 +17,7 @@ import { FONT_COOKIE, OPTIONAL_FONT_HREFS, fontLinkId, isFontId } from '@shared/
 import { SubmissionsProvider } from '@shared/lib/submissions'
 import { ThemeProvider, THEME_INIT_SCRIPT } from '@shared/lib/theme'
 import { ToastProvider } from '@shared/lib/toast'
-import { UserProvider } from '@shared/lib/user'
+import { UserProvider } from '@entities/user'
 import { AppShell } from '@shared/ui/app-shell/AppShell'
 
 export const metadata: Metadata = {
