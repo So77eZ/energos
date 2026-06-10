@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { Icons } from '@shared/ui/icons'
+import { IconDots, IconChevron, IconDice } from '@shared/ui/icons'
 import { isActive, type NavItem } from '../model/nav-items'
 import { useTheme } from '@shared/lib/theme'
 import { useGachapon } from '@shared/lib/gachapon'
@@ -19,9 +19,9 @@ interface MoreMenuProps {
 export function MoreButtonInner() {
   return (
     <>
-      <Icons.dots w={16} />
+      <IconDots w={16} />
       <span className="nav-link-lbl">Ещё</span>
-      <Icons.chevron w={12} />
+      <IconChevron w={12} />
     </>
   )
 }
@@ -57,7 +57,7 @@ export function MoreMenu({ overflow }: MoreMenuProps) {
               className="hdr-more-item"
               onClick={() => { setOpen(false); openGachapon() }}
             >
-              <Icons.dice w={15} />
+              <IconDice w={15} />
               <span>Рулетка</span>
               <span className="hdr-more-tag">случайный</span>
             </button>

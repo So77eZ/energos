@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Icons } from '@shared/ui/icons'
 import { isActive, type NavItem } from '../model/nav-items'
 
 interface NavLinkProps {
@@ -13,7 +12,7 @@ interface NavLinkProps {
 
 export function NavLink({ item, measure }: NavLinkProps) {
   const pathname = usePathname()
-  const Icon = Icons[item.icon]
+  const Icon = item.icon
   const active = !measure && isActive(pathname, item.href)
 
   return (

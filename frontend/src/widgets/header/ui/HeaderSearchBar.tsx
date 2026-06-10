@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Icons } from '@shared/ui/icons'
+import { IconSearch, IconBolt, IconSliders } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
 import { FilterPanel } from '@features/filter-drinks/ui/FilterPanel'
@@ -54,7 +54,7 @@ export function HeaderSearchBar(
     return (
       <div className="hdr-search">
         <Link href={ROUTES.home} className="search search-link" title="Поиск напитков в каталоге">
-          <Icons.search w={14} />
+          <IconSearch w={14} />
           <span className="search-placeholder">Поиск напитков</span>
           <kbd>⌘K</kbd>
         </Link>
@@ -69,7 +69,7 @@ export function HeaderSearchBar(
   return (
     <div className="hdr-search" ref={containerRef}>
       <div className="search">
-        <Icons.search w={14} />
+        <IconSearch w={14} />
         <input
           type="search"
           id="header-search"
@@ -108,7 +108,7 @@ export function HeaderSearchBar(
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={d.image_url} alt={d.name} />
                     ) : (
-                      <Icons.bolt w={12} />
+                      <IconBolt w={12} />
                     )}
                   </span>
                   <span className="search-dropdown-name">{d.name}</span>
@@ -133,7 +133,7 @@ export function HeaderSearchBar(
             aria-expanded={filterOpen && filterAnchor === 'header'}
             aria-haspopup="dialog"
           >
-            <Icons.sliders w={16} />
+            <IconSliders w={16} />
             {hasActiveFilters && <span className="hdr-filter-dot" />}
           </button>
           <FilterPanel anchor="header" anchorRef={hdrFilterBtnRef} />
