@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 import type { User } from '@entities/user'
 import type { Submission } from '@entities/submission'
 import { Icons } from '@shared/ui/icons'

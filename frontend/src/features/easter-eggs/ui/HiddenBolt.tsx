@@ -1,6 +1,6 @@
 'use client'
 
-import { useEasterEggs } from '@shared/lib/easter-eggs'
+import { useEasterEggs } from '../easter-eggs-provider'
 import { Icons } from '@shared/ui/icons'
 
 /** Спрятанная коллекционная молния. Не рендерится, если уже собрана. */
