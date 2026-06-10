@@ -13,21 +13,23 @@ import { Icons } from '@shared/ui/icons'
 import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
 import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
+import { useMinWidth } from '@shared/lib/useMinWidth'
 import { useInfiniteReveal } from '../model/useInfiniteReveal'
 import { StatsStrip } from '@widgets/stats-strip/ui/StatsStrip'
 import { HomeHero } from '@widgets/home-hero/ui/HomeHero'
 import { HomeSideRail } from '@widgets/home-side-rail/ui/HomeSideRail'
 import { HeatmapView } from './HeatmapView'
 
-// Three.js is ~150 KB gzipped — load only on the client and only when the
-// catalog actually mounts. The component renders nothing below 1440px (CSS
-// `.three-bg` is `display: none`), so the bundle is wasted on small screens.
-// If that bothers us later, gate the dynamic import on a `window.matchMedia`
-// check; for now the JS cost is the only penalty.
+// Three.js is ~150 KB gzipped — load only on the client. Below 1440px CSS hides
+// the cans (`display: none`), так что чанк там бесполезен. Гейтим рендер через
+// useMinWidth(1440) — dynamic-import (а с ним и three.js) качается ТОЛЬКО когда
+// вьюпорт реально дорос до брейкпоинта (см. рендер `{wideEnough && <ThreeCans/>}`).
 const ThreeCans = dynamic(() => import('@widgets/three-cans/ui/ThreeCans').then((m) => m.ThreeCans), {
   ssr: false,
   loading: () => null,
 })
+
+const THREE_CANS_MIN_WIDTH = 1440
 
 const PAGE_SIZE = 12
 
@@ -149,6 +151,8 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   // Скролл к каталогу при вводе поиска (раз на переход пусто↔непусто).
   const sortRef = useRef<HTMLDivElement | null>(null)
   const reducedMotion = usePrefersReducedMotion()
+  // Гейт на three.js: чанк качается только на ≥1440px (где банки видны).
+  const wideEnough = useMinWidth(THREE_CANS_MIN_WIDTH)
   const prevHad = useRef<boolean | null>(null)
   useEffect(() => {
     const has = search.trim().length > 0
@@ -172,7 +176,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   return (
     <div className="page page-home">
       <HiddenBolt id="catalog" />
-      <ThreeCans />
+      {wideEnough && <ThreeCans />}
       <StatsStrip drinks={enriched} />
       {hero && <HomeHero drink={hero} rank={1} />}
 
