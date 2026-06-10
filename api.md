@@ -4,6 +4,8 @@
 
 Проект Energos предоставляет API для управления энергетиками, отзывами и аутентификацией пользователей. API построено на FastAPI и использует JWT для аутентификации.
 
+> **Префикс пути.** Бэкенд монтирует роутеры от корня (`/auth/…`, `/energy-drinks/…` и т.д.). Снаружи фронт ходит через Caddy с префиксом `/api` (`/api/auth/login/`), который реверс-прокси срезает. Пути ниже даны без `/api`.
+
 ## Эндпоинты аутентификации (`/auth/`)
 
 - **POST /auth/register/**  
@@ -22,6 +24,21 @@
   Получение информации о текущем пользователе.  
   Вход: JWT токен в заголовке Authorization  
   Выход: `UserResponse`
+
+- **GET /auth/me/favorites/**  
+  ID избранных напитков текущего пользователя.  
+  Вход: JWT токен  
+  Выход: `list[int]`
+
+- **PUT /auth/me/favorites/{energy_drink_id}/**  
+  Добавить напиток в избранное (идемпотентно — повтор не дублирует).  
+  Вход: energy_drink_id (int), JWT токен  
+  Выход: **204 No Content** (404 если напитка нет)
+
+- **DELETE /auth/me/favorites/{energy_drink_id}/**  
+  Убрать напиток из избранного (идемпотентно).  
+  Вход: energy_drink_id (int), JWT токен  
+  Выход: **204 No Content**
 
 ## Эндпоинты энергетиков (`/energy-drinks/`)
 
@@ -93,6 +110,45 @@
   Вход: id (int >= 1), JWT токен  
   Выход: `EnergyDrinkReviewSchema`
 
+## Эмодзи-реакции на отзывы (`/reviews/{review_id}/emojis/`)
+
+- **GET /reviews/{review_id}/emojis/**  
+  Все реакции на отзыв.  
+  Вход: review_id (int >= 1)  
+  Выход: List[`ReviewEmojiSchema`] (404 если отзыва нет)
+
+- **POST /reviews/{review_id}/emojis/**  
+  Поставить реакцию от текущего пользователя.  
+  Вход: review_id (int >= 1), query-параметр `emoji` (str), JWT токен  
+  Выход: `ReviewEmojiSchema` (201). 400 если такая реакция от пользователя уже есть, 404 если отзыва нет.
+
+- **DELETE /reviews/{review_id}/emojis/**  
+  Снять свою реакцию.  
+  Вход: review_id (int >= 1), query-параметр `emoji` (str), JWT токен  
+  Выход: **204 No Content** (404 если реакции нет)
+
+## Заявки на добавление напитка (`/add-requests/`)
+
+- **POST /add-requests/**  
+  Создать заявку на добавление напитка.  
+  Вход: `multipart/form-data` — `name` (str), `price` (float, опц.), `no_sugar` (bool), `comment` (str, опц.), `image` (файл, опц.); JWT токен  
+  Выход: `EnergyDrinkAddRequestRead`
+
+- **GET /add-requests/**  
+  Список заявок. Admin видит все, обычный пользователь — только свои.  
+  Вход: JWT токен  
+  Выход: List[`EnergyDrinkAddRequestRead`]
+
+- **GET /add-requests/{id}/image**  
+  Изображение заявки (бинарно, с реальным MIME по magic-bytes).  
+  Вход: id (int)  
+  Выход: тело изображения (404 если нет)
+
+- **PATCH /add-requests/{id}/status**  
+  Модерация заявки (одобрить/отклонить). **Только admin (403 иначе).**  
+  Вход: `EnergyDrinkAddRequestUpdateStatus` (status: str, admin_comment: str опц.), id (int), JWT токен  
+  Выход: `EnergyDrinkAddRequestRead`
+
 ## Модели данных
 
 - `UserCreate`: username (str), password (str)
@@ -100,6 +156,9 @@
 - `Token`: access_token (str), token_type (str)
 - `EnergyDrinkSchema`: (поля энергетика, включая name, description, etc.)
 - `EnergyDrinkReviewSchema`: (поля отзыва, включая rating, comment, etc.)
+- `ReviewEmojiSchema`: id (int), emoji_unicode (str), review_id (int), user_id (int), created_at, updated_at
+- `EnergyDrinkAddRequestRead`: id (int), name (str), price (float?), no_sugar (bool), comment (str?), admin_comment (str?), status (str), user_id (int), user_name (str?)
+- `EnergyDrinkAddRequestUpdateStatus`: status (str), admin_comment (str?)
 
 Для детального описания моделей обратитесь к файлам в `backend/src/schemas/`.
 
