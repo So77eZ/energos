@@ -2358,6 +2358,21 @@ body::before {
   border-color: rgba(var(--accent-rgb), 0.6);
 }
 
+/* Notch-safe боковые инсеты (viewport-fit:cover в layout.tsx). env()=0 без выреза → no-op. */
+.app { padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); }
+
+/* Мобильный FAB-рейл над bottom-tab-баром (.mob-tabs = 64px + safe-area, z-800).
+   Без этого twk-fab(16)/up-fab(72) ложатся на бар (z-900 поверх). twk/up/toast
+   двигаются единым блоком на одну env(safe-area-inset-bottom) → стопка не разъезжается.
+   Десктоп-геометрия: twk top@60, up top@116, toast 8px над up — те же зазоры над баром.
+   right-инсет — под landscape-вырез справа (фикс-элементы вне .app-padding). */
+@media (max-width: 640px) {
+  .twk-fab    { bottom: calc(80px  + env(safe-area-inset-bottom, 0)); right: calc(16px + env(safe-area-inset-right, 0)); } /* 64 бар + 16 зазор */
+  .up-fab     { bottom: calc(136px + env(safe-area-inset-bottom, 0)); right: calc(16px + env(safe-area-inset-right, 0)); } /* +56: 44 высота + 12 */
+  .toast-host { bottom: calc(188px + env(safe-area-inset-bottom, 0)); right: calc(16px + env(safe-area-inset-right, 0)); } /* +52: 44 + 8 зазор */
+  .mob-tabs   { padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); }
+}
+
 .twk-panel {
   position: fixed; right: 16px; bottom: 72px; z-index: 900;
   width: 300px; max-height: calc(100vh - 96px);

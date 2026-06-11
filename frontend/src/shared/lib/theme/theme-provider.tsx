@@ -26,6 +26,18 @@ function applyToDOM(prefs: ThemePrefs) {
   html.style.setProperty('--accent-rgb', accent.rgb)
   // 'always' → атрибут, на который скоупится reduced-motion CSS (отключает заморозку).
   html.toggleAttribute('data-force-motion', prefs.motion === 'always')
+  // Address-bar (mobile) под цвет фона текущей темы. Читаем реальный --bg-base
+  // (data-theme уже выставлен выше) — честно при toggle, без хардкода палитры.
+  const bg = getComputedStyle(html).getPropertyValue('--bg-base').trim()
+  if (bg) {
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.name = 'theme-color'
+      document.head.appendChild(meta)
+    }
+    meta.content = bg
+  }
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

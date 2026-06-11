@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
 import './globals.css'
 import { authApi, favoritesApi } from '@entities/user'
@@ -24,6 +24,17 @@ export const metadata: Metadata = {
   title: 'Energos — рейтинг энергетиков',
   description: 'Каталог, сравнение и оценки энергетических напитков',
   verification: { yandex: '8e9eed80219a0095' },
+  // statusBarStyle действует только в standalone-PWA (нет manifest → no-op), но безвреден.
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent' },
+}
+
+// viewport-fit: cover → контент под вырез/скругления; safe-area-inset-* в CSS
+// (см. globals.css .app + .mob-tabs/FAB) держат его в безопасной зоне.
+// theme-color НЕ здесь — он динамический (dark/light), ставится в ThemeProvider.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
