@@ -8,7 +8,7 @@ import {
   type Tier,
 } from '@entities/drink'
 import { Icons } from '@shared/ui/icons'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 import { ROUTES } from '@shared/config/routes'
 
 interface TierPageProps {

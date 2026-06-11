@@ -1,13 +1,15 @@
 // Expert/admin review card — purple-bordered with rev-badge.
 // Mirrors frontendNew/page-drink.jsx → AdminReviewCard.
 
-import { EmojiBar } from '@features/emoji-reactions'
+import type { ReactNode } from 'react'
 import { Icons } from '@shared/ui/icons'
 import { calcRating, METRIC_KEYS, type Review } from '../model/types'
 import { MetricDotRow } from './MetricDotRow'
 
 interface AdminReviewCardProps {
   review: Review
+  /** emoji-реакции инжектит рендерер-виджет (features/emoji-reactions). */
+  reactions?: ReactNode
 }
 
 function formatDate(iso: string | null): string {
@@ -15,7 +17,7 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString('ru-RU')
 }
 
-export function AdminReviewCard({ review }: AdminReviewCardProps) {
+export function AdminReviewCard({ review, reactions }: AdminReviewCardProps) {
   return (
     <article className="rev-card rev-admin">
       <header className="rev-head">
@@ -36,7 +38,7 @@ export function AdminReviewCard({ review }: AdminReviewCardProps) {
           ))}
         </div>
         {review.comment && <p className="rev-comment">«{review.comment}»</p>}
-        <EmojiBar reviewId={review.id} />
+        {reactions}
       </div>
       <footer className="rev-foot">
         <span className="rev-date">{formatDate(review.updated_at ?? review.created_at)}</span>

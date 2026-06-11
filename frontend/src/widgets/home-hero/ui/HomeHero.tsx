@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
 import { cleanDrinkName, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'

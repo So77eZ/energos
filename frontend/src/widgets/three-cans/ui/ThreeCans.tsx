@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { stepSpin, SPIN, useCanGame, type SpinState } from '@shared/lib/can-game'
+import { stepSpin, SPIN, useCanGame, type SpinState } from '@features/can-game'
 import { ACCENT_MAP, useTheme } from '@shared/lib/theme'
 
 /**

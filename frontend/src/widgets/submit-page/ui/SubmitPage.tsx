@@ -6,7 +6,7 @@ import type { User } from '@entities/user'
 import type { Submission } from '@entities/submission'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
-import { useMySubmissions } from '@shared/lib/submissions'
+import { useMySubmissions } from '@features/submissions'
 import { SubmitForm } from './SubmitForm'
 
 interface SubmitPageProps {

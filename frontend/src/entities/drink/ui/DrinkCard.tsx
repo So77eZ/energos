@@ -4,9 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CSSProperties, MouseEvent } from 'react'
 import { ROUTES } from '@shared/config/routes'
-import { useFavorites } from '@shared/lib/favorites'
 import { Icons } from '@shared/ui/icons'
-import { MiniMetrics } from '@entities/review'
+import { MiniMetrics } from '@entities/review/@x/drink'
 import { EnergyCan } from './EnergyCan'
 import { TierBadge } from './TierBadge'
 import { cleanDrinkName, splitDrinkBrand } from '../lib/format'
@@ -17,9 +16,13 @@ interface DrinkCardProps {
   rank?: number | null
   /** Brand displayed before the variant name. Overrides the heuristic split. */
   brand?: string
+  /** Избранное — состояние и тоггл прокидывает рендерер-виджет (FSD: entity
+   *  презентационна, не знает про features/favorites). */
+  isFav?: boolean
+  onToggleFav?: () => void
 }
 
-export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
+export function DrinkCard({ drink, rank = null, brand, isFav = false, onToggleFav }: DrinkCardProps) {
   const cleaned = cleanDrinkName(drink.name)
   const split = brand
     ? { brand: brand.toUpperCase(), variant: cleaned }
@@ -27,16 +30,12 @@ export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
   const blend = drink.blend
   const style: CSSProperties & { '--blend'?: string } = { '--blend': blend }
 
-  // Состояние избранного теперь полностью в провайдере (знает userId и держит API-state).
-  // Для гостей toggle сам выдаст info-toast — нам тут ничего проверять не надо.
-  const { toggle, isFavorite } = useFavorites()
-  const isFav = isFavorite(drink.id)
   const router = useRouter()
 
   function onFavClick(e: MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    void toggle(drink.id, drink.name)
+    onToggleFav?.()
   }
 
   // Карточка — <Link> на напиток; кнопка сравнения уводит на /compare, поэтому

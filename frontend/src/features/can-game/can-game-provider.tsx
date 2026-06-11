@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useRouter } from 'next/navigation'
 import { useToast } from '@shared/lib/toast'
 import { ACHIEVEMENT_BY_ID } from '@entities/achievement'
-import { toastAchievement, markSeen } from '@shared/lib/achievement-toasts'
+import { toastAchievement, markSeen } from '@entities/achievement'
 import { readCanGame, writeCanGame, type CanGameState } from './can-storage'
 import { registerBurst, evaluateCanBadges, type CanRuntime } from './can-core'
 

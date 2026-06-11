@@ -7,7 +7,7 @@ import { Icons } from '@shared/ui/icons'
 import { cleanDrinkName, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
 import type { EnrichedDrink } from '@entities/drink'
 import { HexRadar } from '@entities/review'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 
 interface DrinkHeroProps {
   drink: EnrichedDrink

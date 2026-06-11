@@ -5,7 +5,7 @@
 // (например EmojiBar — чтобы подсветить свои реакции).
 
 import { createContext, useContext, type ReactNode } from 'react'
-import type { User } from '@entities/user'
+import type { User } from './types'
 
 interface UserContextValue {
   user: User | null

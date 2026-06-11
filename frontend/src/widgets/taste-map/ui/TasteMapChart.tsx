@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 import { blendMetricRGB, cleanDrinkName, splitDrinkBrand, type EnrichedDrink } from '@entities/drink'
 import {
   METRIC_KEYS,

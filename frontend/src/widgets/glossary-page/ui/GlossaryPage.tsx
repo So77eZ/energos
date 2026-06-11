@@ -1,6 +1,6 @@
 import type { EnrichedDrink } from '@entities/drink'
 import { cleanDrinkName, splitDrinkBrand } from '@entities/drink'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 import {
   METRIC_KEYS,
   METRIC_LABELS,

@@ -1,9 +1,10 @@
-import { calcRating, METRIC_KEYS } from '@entities/review'
-import type { Review, ReviewMetrics } from '@entities/review'
+import { calcRating, METRIC_KEYS } from '@entities/review/@x/drink'
+import type { Review, ReviewMetrics } from '@entities/review/@x/drink'
+import type { Tier } from '@shared/model/tier'
 import type { Drink } from '../model/types'
 import type { CanSpec } from '../ui/EnergyCan'
 
-export type Tier = 'S' | 'A' | 'B' | 'C' | 'D'
+export type { Tier }
 
 export interface EnrichedDrink extends Drink {
   rating: number | null
