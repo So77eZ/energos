@@ -15,6 +15,8 @@ import {
   type ReviewMetrics,
 } from '@entities/review'
 import type { User } from '@entities/user'
+import { BadgeCluster } from '@entities/achievement'
+import { EmojiBar } from '@features/emoji-reactions'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
 import { useToast } from '@shared/lib/toast'
@@ -192,7 +194,12 @@ export function DrinkPage({
       {(adminReview || avgMetrics) && (
         <section className="reviews-section">
           <div className="rev-grid">
-            {adminReview && <AdminReviewCard review={adminReview} />}
+            {adminReview && (
+              <AdminReviewCard
+                review={adminReview}
+                reactions={<EmojiBar reviewId={adminReview.id} />}
+              />
+            )}
             {avgMetrics && (
               <AvgReviewCard
                 metrics={avgMetrics}
@@ -220,6 +227,7 @@ export function DrinkPage({
               review={myReview}
               onEdit={() => setFormOpen(true)}
               onDelete={handleDelete}
+              reactions={<EmojiBar reviewId={myReview.id} />}
             />
           </section>
         ) : null
@@ -270,7 +278,12 @@ export function DrinkPage({
           {visibleOthers.length > 0 ? (
             <div className="other-rev-grid">
               {visibleOthers.map((r) => (
-                <UserReviewCard key={r.id} review={r} />
+                <UserReviewCard
+                  key={r.id}
+                  review={r}
+                  badges={<BadgeCluster ownedIds={r.authorBadges ?? []} clusterBg="var(--bg-card)" />}
+                  reactions={<EmojiBar reviewId={r.id} />}
+                />
               ))}
             </div>
           ) : (

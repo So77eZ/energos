@@ -1,14 +1,17 @@
 // Compact user review card — avatar, name, date, rating, mini-metrics, comment.
 // Mirrors frontendNew/page-drink.jsx → UserReviewCard.
 
-import { BadgeCluster } from '@entities/achievement'
-import { EmojiBar } from '@features/emoji-reactions'
+import type { ReactNode } from 'react'
 import { Icons } from '@shared/ui/icons'
 import { calcRating, type Review } from '../model/types'
 import { MiniMetrics } from './MiniMetrics'
 
 interface UserReviewCardProps {
   review: Review
+  /** Слоты: рендерер-виджет инжектит бейджи (entities/achievement) и emoji-реакции
+   *  (features/emoji-reactions) — карточка-entity не импортит вверх. */
+  badges?: ReactNode
+  reactions?: ReactNode
 }
 
 const AVATAR_COLORS = ['var(--c-cyan)', 'var(--c-pink)', 'var(--c-green)', 'var(--c-amber)', 'var(--c-purple)']
@@ -25,7 +28,7 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString('ru-RU')
 }
 
-export function UserReviewCard({ review }: UserReviewCardProps) {
+export function UserReviewCard({ review, badges, reactions }: UserReviewCardProps) {
   const letter = (review.username ?? '?').charAt(0).toUpperCase()
   const color = pickAvatarColor(review.user_id ?? review.username)
   const date = formatDate(review.updated_at ?? review.created_at)
@@ -38,7 +41,7 @@ export function UserReviewCard({ review }: UserReviewCardProps) {
           <div>
             <div className="rev-name-row">
               <span className="rev-username">{review.username ?? 'аноним'}</span>
-              <BadgeCluster ownedIds={review.authorBadges ?? []} clusterBg="var(--bg-card)" />
+              {badges}
             </div>
             <div className="rev-date">{date}</div>
           </div>
@@ -49,7 +52,7 @@ export function UserReviewCard({ review }: UserReviewCardProps) {
       </header>
       <MiniMetrics metrics={review} />
       {review.comment && <p className="rev-comment">«{review.comment}»</p>}
-      <EmojiBar reviewId={review.id} />
+      {reactions}
     </article>
   )
 }
