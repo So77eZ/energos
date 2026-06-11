@@ -82,6 +82,8 @@ export function DrinkCard({ drink, rank = null, brand }: DrinkCardProps) {
           <img
             src={drink.image_url}
             alt={drink.name}
+            loading="lazy"
+            decoding="async"
             className="max-h-[180px] w-auto object-contain"
           />
         ) : (

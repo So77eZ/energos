@@ -103,7 +103,7 @@ function DrinkRow({ drink }: { drink: EnrichedDrink }) {
       <div className="adm-row-can">
         {drink.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={drink.image_url} alt={drink.name} style={{ maxHeight: 60, width: 'auto', objectFit: 'contain' }} />
+          <img src={drink.image_url} alt={drink.name} loading="lazy" decoding="async" style={{ maxHeight: 60, width: 'auto', objectFit: 'contain' }} />
         ) : (
           <EnergyCan can={drink.can} w={36} h={78} />
         )}

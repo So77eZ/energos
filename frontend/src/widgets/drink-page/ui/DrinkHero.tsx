@@ -36,7 +36,7 @@ export function DrinkHero({ drink, loggedIn, hasMyReview, onWriteReview }: Drink
       <div className="drink-hero-vis">
         {drink.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={drink.image_url} alt={drink.name} style={{ maxHeight: 480, width: 'auto' }} />
+          <img src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 480, width: 'auto' }} />
         ) : (
           <EnergyCan can={drink.can} w={220} h={500} />
         )}
