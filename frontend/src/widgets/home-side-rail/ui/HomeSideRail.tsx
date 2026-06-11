@@ -39,7 +39,7 @@ export function HomeSideRail({ drinks }: HomeSideRailProps) {
                 <div className="rail-can">
                   {d.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={d.image_url} alt={d.name} style={{ width: 32, height: 68, objectFit: 'contain' }} />
+                    <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" style={{ width: 32, height: 68, objectFit: 'contain' }} />
                   ) : (
                     <EnergyCan can={d.can} w={32} h={68} />
                   )}

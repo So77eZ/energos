@@ -39,6 +39,8 @@ export function SimilarRail({ matches }: SimilarRailProps) {
                   <img
                     src={drink.image_url}
                     alt={drink.name}
+                    loading="lazy"
+                    decoding="async"
                     style={{ maxHeight: 110, width: 'auto', objectFit: 'contain' }}
                   />
                 ) : (
