@@ -227,7 +227,7 @@ Side-by-side сравнение напитков по метрикам: бары
 | --- | --- |
 | Frontend | Next.js 15 (App Router), React 19, TypeScript |
 | Стили | Tailwind CSS v3, Framer Motion, шрифты: JetBrains Mono / Orbitron / Rajdhani / Share Tech Mono / Monocraft (self-hosted woff2) |
-| Архитектура | Feature-Sliced Design (FSD) |
+| Архитектура | Feature-Sliced Design (FSD): слои `app → widgets → features → entities → shared`, импорт только вниз; направление проверяется тестом `fsd-boundaries` |
 | 3D | Three.js (3D-банки каталога) |
 | Backend | FastAPI (Python), slowapi (rate limiting) |
 | База данных | PostgreSQL + SQLAlchemy async, миграции Alembic |
