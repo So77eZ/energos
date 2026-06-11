@@ -211,6 +211,55 @@ class EmojiSummaryItem(BaseModel):
 
 ---
 
+## #7 — JWT / безопасность auth
+
+**Приоритет: 🔴 высокий (`SECRET_KEY`), 🟠 средний (refresh/revocation).**
+
+Чисто бэкенд. Текущая реализация — `backend/src/auth.py` + `backend/config.py`.
+Фронт хранит токен в httpOnly + `SameSite=Lax` cookie (`frontend/src/shared/lib/session.ts`),
+менять там по этим пунктам нечего (cookie-флаги уже подтянуты на фронте отдельно).
+
+### 🔴 `SECRET_KEY` дефолтит в пустую строку
+
+[`backend/config.py:12`](../backend/config.py#L12) — `SECRET_KEY: str = os.getenv("SECRET_KEY", "")`.
+Если переменная не задана в проде → JWT подписывается **пустым ключом** → кто угодно
+кует валидный токен (в т.ч. с `sub` админа). Pydantic не валидирует обязательность.
+
+**Фикс:** `SECRET_KEY: str` без дефолта + `@field_validator` с `len(v) >= 32`, падать
+на старте если не задан/короткий. Аналогично прогнать по `DB_URL`/`SUPABASE_*`.
+
+### 🟠 Нет refresh-токена + нет revocation
+
+[`backend/src/auth.py:11`](../backend/src/auth.py#L11) — `ACCESS_TOKEN_EXPIRE_MINUTES = 30`,
+HS256, единственный access-токен. Refresh нет, blacklist нет.
+- Украденный токен валиден все 30 мин.
+- Logout на фронте чистит cookie, но серверно токен живёт до `exp` (нет отзыва).
+
+**Фикс:** короткий access (~15 мин) + refresh-токен с записью в БД (отзываемый);
+`POST /api/auth/refresh` обновляет access; logout удаляет refresh из БД.
+Опц. — `jti` + Redis-blacklist для мгновенного отзыва access.
+
+**Коннектор на фронте после refresh:** `session.ts` сейчас держит cookie ровно 30 мин
+(= текущий `exp`, чтобы не было «зомби»-сессии). Когда появится refresh — фронт добавит
+тихий refresh-вызов и продлит cookie/сессию; до тех пор юзер перелогинивается раз в 30 мин.
+
+### 🟡 Нет `iss` / `aud` claims
+
+[`backend/src/auth.py:35`](../backend/src/auth.py#L35) — `verify_token` проверяет только
+подпись + `exp` + наличие `sub`. Токен из dev пройдёт в прод при совпадении `SECRET_KEY`.
+
+**Фикс:** добавить `iss="energos"`, `aud=<DEPLOY_ENV>` в `create_access_token`,
+проверять оба в `jwt.decode(..., audience=, issuer=)`.
+
+### ✅ Что на фронте уже сделано (этот PR)
+
+- `secure`-флаг cookie: было условие на `NEXT_PUBLIC_ORIGIN` (хрупко) → теперь
+  `process.env.NODE_ENV === 'production'`.
+- `maxAge` cookie: было 7 дней при `exp=30мин` (рассинхрон, «зомби»-сессия) →
+  теперь 30 мин = `exp`.
+
+---
+
 ## Сводка приоритетов
 
 | # | Что | Приоритет | Блокирует на фронте |
@@ -218,3 +267,4 @@ class EmojiSummaryItem(BaseModel):
 | #3 | Агрегаты рейтинга в `EnergyDrinkSchema` | 🔴 | убрать фетч всех отзывов в каталоге |
 | #5 | Прокси картинок на свой origin | 🔴 (РФ-мобайл) | загрузку фото на мобиле + `next/image` |
 | #4 | `emoji_summary` в `EnergyDrinkReviewSchema` | 🟡 | N+1 фетч реакций |
+| #7 | JWT: `SECRET_KEY` без дефолта, refresh-токен, `iss`/`aud` | 🔴/🟠 | — (бэк-only; фронт cookie уже укреплён) |
