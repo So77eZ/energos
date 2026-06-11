@@ -1,4 +1,4 @@
-import { METRIC_KEYS, type ReviewMetrics } from '@entities/review'
+import { METRIC_KEYS, type ReviewMetrics } from '@entities/review/@x/drink'
 import type { EnrichedDrink } from './enrich'
 
 export interface SimilarMatch {

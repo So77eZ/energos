@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { planUnlockToasts } from './plan'
-import type { EvaluatedAchievement } from '@entities/achievement'
+import type { EvaluatedAchievement } from '../model/types'
 
 const ach = (id: string, unlocked: boolean) => ({ id, unlocked }) as unknown as EvaluatedAchievement
 const EV = [ach('a', true), ach('b', false), ach('c', true)]

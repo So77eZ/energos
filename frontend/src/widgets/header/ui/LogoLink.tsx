@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { ROUTES } from '@shared/config/routes'
 import { IconBolt } from '@shared/ui/icons'
-import { useEasterEggs } from '@shared/lib/easter-eggs'
+import { useEasterEggs } from '@features/easter-eggs'
 
 export function LogoLink() {
   const { registerLogoClick } = useEasterEggs()

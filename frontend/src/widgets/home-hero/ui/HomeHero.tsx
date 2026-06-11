@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
 import { cleanDrinkName, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
@@ -41,7 +41,7 @@ export function HomeHero({ drink, rank }: HomeHeroProps) {
             />
             {drink.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={drink.image_url} alt={drink.name} style={{ maxHeight: 400, width: 'auto', position: 'relative', zIndex: 1 }} />
+              <img src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 400, width: 'auto', position: 'relative', zIndex: 1 }} />
             ) : (
               <EnergyCan can={drink.can} w={180} h={400} />
             )}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Submission, SubmissionStatus } from '@entities/submission'
 import { useConfirm } from '@shared/lib/confirm'
-import { useSubmissions } from '@shared/lib/submissions'
+import { useSubmissions } from '@features/submissions'
 import { Icons } from '@shared/ui/icons'
 import type { IconName } from '@shared/ui/icons'
 
@@ -219,9 +219,11 @@ function AdminSubmissionCard({ sub, onApprove, onReject }: CardProps) {
         <div className="sub-card-photo">
           {sub.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img 
-              src={sub.photo} 
-              alt={sub.drink_name} 
+            <img
+              src={sub.photo}
+              alt={sub.drink_name}
+              loading="lazy"
+              decoding="async"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 if (e.currentTarget.nextElementSibling) {

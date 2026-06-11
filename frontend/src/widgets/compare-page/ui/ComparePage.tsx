@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 import {
   cleanDrinkName,
   EnergyCan,
@@ -144,7 +144,7 @@ export function ComparePage({ drinks }: ComparePageProps) {
                 />
                 {d.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={d.image_url} alt={d.name} />
+                  <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" />
                 ) : (
                   <EnergyCan can={d.can} w={120} h={260} />
                 )}
@@ -284,7 +284,7 @@ export function ComparePage({ drinks }: ComparePageProps) {
                   <div className="cmp-pick-can">
                     {d.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.image_url} alt={d.name} />
+                      <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" />
                     ) : (
                       <EnergyCan can={d.can} w={32} h={68} />
                     )}

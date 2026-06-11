@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { aggregateEmojis, reviewEmojiApi, type EmojiAggregate, type ReviewEmoji } from '@entities/review'
 import { useToast } from '@shared/lib/toast'
-import { useCurrentUser } from '@shared/lib/user'
+import { useCurrentUser } from '@entities/user'
 import { Icons } from '@shared/ui/icons'
 import { toggleEmojiReactionAction } from '../actions'
 

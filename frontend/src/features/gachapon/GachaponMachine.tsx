@@ -140,7 +140,7 @@ export function GachaponMachine({
                     />
                     {d.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.image_url} alt={d.name} className="gacha-cell-img" />
+                      <img src={d.image_url} alt={d.name} decoding="async" className="gacha-cell-img" />
                     ) : (
                       <EnergyCan can={d.can} name={d.name} w={64} h={140} />
                     )}

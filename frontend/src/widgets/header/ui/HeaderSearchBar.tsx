@@ -106,7 +106,7 @@ export function HeaderSearchBar(
                   <span className="search-dropdown-thumb">
                     {d.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.image_url} alt={d.name} />
+                      <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" />
                     ) : (
                       <IconBolt w={12} />
                     )}

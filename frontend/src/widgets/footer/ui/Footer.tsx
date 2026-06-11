@@ -1,5 +1,5 @@
 import { Icons } from '@shared/ui/icons'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 
 const TEAM = [
   { role: 'Фронт', name: 'So77eZ',                 url: 'https://github.com/So77eZ' },

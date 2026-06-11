@@ -8,7 +8,7 @@ import {
   type Tier,
 } from '@entities/drink'
 import { Icons } from '@shared/ui/icons'
-import { HiddenBolt } from '@shared/ui/HiddenBolt'
+import { HiddenBolt } from '@features/easter-eggs'
 import { ROUTES } from '@shared/config/routes'
 
 interface TierPageProps {
@@ -106,7 +106,7 @@ export function TierPage({ drinks }: TierPageProps) {
                         >
                           {d.image_url ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={d.image_url} alt={d.name} />
+                            <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" />
                           ) : (
                             <EnergyCan can={d.can} w={56} h={120} />
                           )}
