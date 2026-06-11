@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
