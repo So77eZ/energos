@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Icons } from '@shared/ui/icons'
-import { TweaksBody } from './TweaksBody'
+import { TweaksBody } from '@shared/ui/tweaks-body'
 
 /**
  * Floating settings panel — пользовательский UI вокруг ThemeProvider.

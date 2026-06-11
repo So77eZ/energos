@@ -1,4 +1,4 @@
-import { TweaksBody } from '@widgets/tweaks-panel/ui/TweaksBody'
+import { TweaksBody } from '@shared/ui/tweaks-body'
 
 // Дублирует контент floating-панели TweaksPanel внутри вкладки профиля.
 // Сетка 2 колонки на широких экранах — настройки слева, info-блок справа.
