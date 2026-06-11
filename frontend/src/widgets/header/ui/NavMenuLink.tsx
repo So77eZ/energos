@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Icons } from '@shared/ui/icons'
+import { IconArrow } from '@shared/ui/icons'
 import { isActive, type NavItem } from '../model/nav-items'
 
 interface NavMenuLinkProps {
@@ -19,7 +19,7 @@ interface NavMenuLinkProps {
  *  раньше дублировался; различаются лишь класс/размер иконки/role. */
 export function NavMenuLink({ item, className, iconSize, role, onNavigate }: NavMenuLinkProps) {
   const pathname = usePathname()
-  const Icon = Icons[item.icon]
+  const Icon = item.icon
   const active = isActive(pathname, item.href)
   return (
     <Link
@@ -30,7 +30,7 @@ export function NavMenuLink({ item, className, iconSize, role, onNavigate }: Nav
     >
       <Icon w={iconSize} />
       <span>{item.label}</span>
-      <Icons.arrow w={12} />
+      <IconArrow w={12} />
     </Link>
   )
 }

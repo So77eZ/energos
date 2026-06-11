@@ -2338,6 +2338,16 @@ body::before {
 .twk-fab { bottom: 16px; }
 /* Стрелка "наверх" сидит над TweaksPanel-fab'ом (44 + 16 + 12 gap = 72px). */
 .up-fab { bottom: 72px; }
+/* Скрыта по умолчанию; .is-visible проявляет fade+scale (заменяет framer-motion).
+   visibility с задержкой держит элемент кликабельным до конца fade-out. */
+.up-fab {
+  opacity: 0; transform: scale(0.8); pointer-events: none; visibility: hidden;
+  transition: opacity .18s, transform .18s, box-shadow .15s, border-color .15s, visibility 0s linear .18s;
+}
+.up-fab.is-visible {
+  opacity: 1; transform: scale(1); pointer-events: auto; visibility: visible;
+  transition: opacity .18s, transform .18s, box-shadow .15s, border-color .15s;
+}
 .twk-fab:hover,
 .up-fab:hover {
   transform: translateY(-2px);

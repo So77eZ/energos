@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ROUTES } from '@shared/config/routes'
-import { Icons } from '@shared/ui/icons'
+import { IconSearch, IconUser, IconSliders, IconX, IconDice, IconLock } from '@shared/ui/icons'
 import { useScrollLock } from '@shared/lib/useScrollLock'
 import { isActive, MOBILE_TABS, sheetItemsFor, navItemsFor } from '../model/nav-items'
 import { useMobileNav } from '../model/useMobileNav'
@@ -87,7 +87,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
         <span className="hdr-crumb-label">{currentLabel}</span>
       </div>
       <button type="button" className="hdr-mobile-btn hdr-mobile-search" onClick={() => setSearchOpen(true)} aria-label="Поиск" aria-expanded={searchOpen}>
-        <Icons.search w={18} />
+        <IconSearch w={18} />
       </button>
       <button
         type="button"
@@ -103,7 +103,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
         createPortal(
           <nav className={`mob-tabs${tabsHidden ? ' hidden' : ''}`} aria-label="Мобильная навигация">
             {MOBILE_TABS.map((tab) => {
-              const Icon = Icons[tab.icon]
+              const Icon = tab.icon
               const active = isActive(pathname, tab.href)
               const isProfile = tab.href === ROUTES.profile
               return (
@@ -115,7 +115,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
                 >
                   <span className="mob-tab-icon">
                     {isProfile && hasUser ? (
-                      <span className="mob-tab-avatar">{userAvatar ?? <Icons.user w={20} />}</span>
+                      <span className="mob-tab-avatar">{userAvatar ?? <IconUser w={20} />}</span>
                     ) : (
                       <Icon w={20} />
                     )}
@@ -125,7 +125,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
               )
             })}
             <button type="button" className="mob-tab mob-tab-more" onClick={() => setMoreOpen(true)} aria-label="Ещё">
-              <span className="mob-tab-icon"><Icons.sliders w={20} /></span>
+              <span className="mob-tab-icon"><IconSliders w={20} /></span>
               <span className="mob-tab-lbl">Ещё</span>
             </button>
           </nav>,
@@ -141,7 +141,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
               <div className="mob-sheet-head">
                 <span className="mob-sheet-title">Меню</span>
                 <button type="button" className="mob-sheet-close" onClick={() => setMoreOpen(false)} aria-label="Закрыть">
-                  <Icons.x w={18} />
+                  <IconX w={18} />
                 </button>
               </div>
               <div className="mob-sheet-body">
@@ -151,12 +151,12 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
                     className="mob-sheet-cta"
                     onClick={() => { setMoreOpen(false); openGachapon() }}
                   >
-                    <Icons.dice w={14} /> Случайный напиток
+                    <IconDice w={14} /> Случайный напиток
                   </button>
                 )}
                 {!hasUser && (
                   <Link href={ROUTES.auth.login} className="mob-sheet-cta" onClick={() => setMoreOpen(false)}>
-                    <Icons.lock w={14} /> Войти / Регистрация
+                    <IconLock w={14} /> Войти / Регистрация
                   </Link>
                 )}
                 <div className="mob-sheet-list">
@@ -183,7 +183,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
             <div className="mob-search" role="dialog" aria-label="Поиск" aria-modal="true" onClick={(e) => e.stopPropagation()}>
               <HeaderSearchBar forceInput onSubmit={() => setSearchOpen(false)} />
               <button type="button" className="mob-search-close" onClick={() => setSearchOpen(false)} aria-label="Закрыть">
-                <Icons.x w={16} />
+                <IconX w={16} />
               </button>
             </div>
           </div>,

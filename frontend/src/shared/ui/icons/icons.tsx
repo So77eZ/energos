@@ -9,7 +9,7 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'width' | 'heig
   w?: number
 }
 
-type IconFC = (p?: IconProps) => JSX.Element
+export type IconFC = (p?: IconProps) => JSX.Element
 
 const bolt: IconFC = (p = {}) => {
   const { w = 16, ...rest } = p
@@ -413,3 +413,25 @@ export const Icons = {
 } as const
 
 export type IconName = keyof typeof Icons
+
+// Именованные экспорты — для tree-shaking там, где набор иконок известен
+// статически (шапка в глобальном layout'е). Импорт `{ IconGrid }` НЕ тянет
+// объект `Icons` целиком, в отличие от `import { Icons }` + `Icons.grid`.
+// Объект `Icons` остаётся для динамического lookup `Icons[key]` в admin/profile.
+export const IconBolt = bolt
+export const IconSearch = search
+export const IconSliders = sliders
+export const IconUser = user
+export const IconX = x
+export const IconDice = dice
+export const IconLock = lock
+export const IconDots = dots
+export const IconChevron = chevron
+export const IconArrow = arrow
+export const IconGrid = grid
+export const IconMap = map
+export const IconTrophy = trophy
+export const IconScale = scale
+export const IconBook = book
+export const IconMsg = msg
+export const IconPlus = plus
