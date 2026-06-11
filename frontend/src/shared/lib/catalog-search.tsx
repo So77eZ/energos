@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
-import type { Tier } from '@entities/drink'
+import type { Tier } from '@shared/model/tier'
 
 export type SortOption =
   | 'name'
