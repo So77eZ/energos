@@ -62,7 +62,7 @@ export function ReviewsTab({ reviews, drinkMap, enrichedMap }: ReviewsTabProps) 
               <div className="prof-rev-can">
                 {drink?.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={drink.image_url} alt={drink.name} style={{ maxHeight: 108, width: 'auto', objectFit: 'contain' }} />
+                  <img src={drink.image_url} alt={drink.name} loading="lazy" decoding="async" style={{ maxHeight: 108, width: 'auto', objectFit: 'contain' }} />
                 ) : enriched ? (
                   <EnergyCan can={enriched.can} w={50} h={108} />
                 ) : null}
