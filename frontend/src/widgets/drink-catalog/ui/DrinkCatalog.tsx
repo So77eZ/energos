@@ -1,13 +1,10 @@
 'use client'
 
-import dynamic from 'next/dynamic'
-import { HiddenBolt } from '@features/easter-eggs'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useRef } from 'react'
-import { DrinkCard, enrichDrinks } from '@entities/drink'
-import type { Drink, EnrichedDrink, Tier } from '@entities/drink'
-import type { Review } from '@entities/review'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { DrinkCard } from '@entities/drink'
+import type { EnrichedDrink, Tier } from '@entities/drink'
 import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
 import { useFavorites } from '@features/favorites'
 import { Icons } from '@shared/ui/icons'
@@ -15,20 +12,7 @@ import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
 import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
 import { useInfiniteReveal } from '../model/useInfiniteReveal'
-import { StatsStrip } from '@widgets/stats-strip/ui/StatsStrip'
-import { HomeHero } from '@widgets/home-hero/ui/HomeHero'
-import { HomeSideRail } from '@widgets/home-side-rail/ui/HomeSideRail'
 import { HeatmapView } from './HeatmapView'
-
-// Three.js is ~150 KB gzipped — load only on the client and only when the
-// catalog actually mounts. The component renders nothing below 1440px (CSS
-// `.three-bg` is `display: none`), so the bundle is wasted on small screens.
-// If that bothers us later, gate the dynamic import on a `window.matchMedia`
-// check; for now the JS cost is the only penalty.
-const ThreeCans = dynamic(() => import('@widgets/three-cans/ui/ThreeCans').then((m) => m.ThreeCans), {
-  ssr: false,
-  loading: () => null,
-})
 
 const PAGE_SIZE = 12
 
@@ -39,20 +23,15 @@ const SORT_OPTIONS: readonly SortOption[] = [
 const TIERS: readonly Tier[] = ['S', 'A', 'B', 'C', 'D']
 
 interface DrinkCatalogProps {
-  initialDrinks: Drink[]
-  allReviews: Review[]
+  /** Обогащённый каталог считает page.tsx (server) — виджет получает готовым. */
+  enriched: EnrichedDrink[]
+  /** Hero исключается из грида (рендерится отдельно на page-уровне). */
+  heroId: number | null
+  /** Боковая колонка (HomeSideRail) — слот от page, чтобы не было widget→widget. */
+  sideRail: ReactNode
 }
 
-/** Hero shows the highest-rated drink with at least one review. */
-function pickHero(drinks: EnrichedDrink[]): EnrichedDrink | null {
-  const candidates = drinks.filter((d) => d.rating != null && d.reviewCount > 0)
-  if (candidates.length === 0) return null
-  return candidates.reduce((best, d) => (d.rating! > best.rating! ? d : best))
-}
-
-export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
-  const enriched = useMemo(() => enrichDrinks(initialDrinks, allReviews), [initialDrinks, allReviews])
-  const hero = useMemo(() => pickHero(enriched), [enriched])
+export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) {
   const { filtered } = useFilterDrinks(enriched)
   const { toggle, isFavorite } = useFavorites()
   const {
@@ -133,11 +112,9 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   useEffect(() => { setPriceBounds(priceBounds) }, [priceBounds, setPriceBounds])
 
   // Exclude hero drink from the grid to avoid duplication on the default view.
-  // When the user actively filters/sorts, the hero pin stays — the grid still
-  // hides it, but if the filter excludes the hero, the grid is unaffected.
   const gridSource = useMemo(
-    () => (hero ? filtered.filter((d) => d.id !== hero.id) : filtered),
-    [filtered, hero],
+    () => (heroId != null ? filtered.filter((d) => d.id !== heroId) : filtered),
+    [filtered, heroId],
   )
 
   const resetKey = JSON.stringify({ search, sort, tiers, priceRange, onlyNew, noSugarOnly })
@@ -162,7 +139,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
     else window.scrollTo({ top: 0, behavior })
   }, [search, reducedMotion])
 
-  if (initialDrinks.length === 0) {
+  if (enriched.length === 0) {
     return (
       <div className="empty">
         <Icons.beaker />
@@ -172,12 +149,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   }
 
   return (
-    <div className="page page-home">
-      <HiddenBolt id="catalog" />
-      <ThreeCans />
-      <StatsStrip drinks={enriched} />
-      {hero && <HomeHero drink={hero} rank={1} />}
-
+    <>
       <div ref={sortRef} className="cat-anchor">
         <SortBar />
       </div>
@@ -214,7 +186,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
                   <DrinkCard
                     key={drink.id}
                     drink={drink}
-                    rank={i + (hero ? 2 : 1)}
+                    rank={i + (heroId != null ? 2 : 1)}
                     isFav={isFavorite(drink.id)}
                     onToggleFav={() => toggle(drink.id, drink.name)}
                   />
@@ -239,8 +211,8 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
           )}
         </div>
 
-        <HomeSideRail drinks={enriched} />
+        {sideRail}
       </div>
-    </div>
+    </>
   )
 }
