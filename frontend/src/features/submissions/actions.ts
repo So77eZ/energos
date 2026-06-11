@@ -1,8 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { submissionApi } from '@entities/submission/api/submissionApi'
 import { getToken } from '@shared/lib/session'
+import { submissionApi } from '@entities/submission'
 import type { Submission, SubmissionCreate, SubmissionStatus } from '@entities/submission'
 
 export async function fetchSubmissionsAction(): Promise<Submission[]> {

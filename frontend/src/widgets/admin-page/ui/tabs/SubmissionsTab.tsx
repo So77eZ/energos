@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Submission, SubmissionStatus } from '@entities/submission'
 import { useConfirm } from '@shared/lib/confirm'
-import { useSubmissions } from '@shared/lib/submissions'
+import { useSubmissions } from '@features/submissions'
 import { Icons } from '@shared/ui/icons'
 import type { IconName } from '@shared/ui/icons'
 
