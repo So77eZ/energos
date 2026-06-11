@@ -18,7 +18,7 @@ import { SubmissionsProvider } from '@features/submissions'
 import { ThemeProvider, THEME_INIT_SCRIPT } from '@shared/lib/theme'
 import { ToastProvider } from '@shared/lib/toast'
 import { UserProvider } from '@entities/user'
-import { AppShell } from '@shared/ui/app-shell/AppShell'
+import { AppShell } from './_shell/AppShell'
 
 export const metadata: Metadata = {
   title: 'Energos — рейтинг энергетиков',
