@@ -3,6 +3,7 @@
 import { DrinkCard, type EnrichedDrink } from '@entities/drink'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
+import { useFavorites } from '@features/favorites'
 import { ProfileEmpty } from './ProfileEmpty'
 
 interface FavoritesTabProps {
@@ -10,6 +11,7 @@ interface FavoritesTabProps {
 }
 
 export function FavoritesTab({ favDrinks }: FavoritesTabProps) {
+  const { toggle, isFavorite } = useFavorites()
   if (favDrinks.length === 0) {
     return (
       <ProfileEmpty
@@ -25,7 +27,12 @@ export function FavoritesTab({ favDrinks }: FavoritesTabProps) {
     <section className="prof-section">
       <div className="grid grid-regular">
         {favDrinks.map((d) => (
-          <DrinkCard key={d.id} drink={d} />
+          <DrinkCard
+            key={d.id}
+            drink={d}
+            isFav={isFavorite(d.id)}
+            onToggleFav={() => toggle(d.id, d.name)}
+          />
         ))}
       </div>
     </section>

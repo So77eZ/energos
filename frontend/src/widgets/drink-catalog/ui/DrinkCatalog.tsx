@@ -9,6 +9,7 @@ import { DrinkCard, enrichDrinks } from '@entities/drink'
 import type { Drink, EnrichedDrink, Tier } from '@entities/drink'
 import type { Review } from '@entities/review'
 import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
+import { useFavorites } from '@features/favorites'
 import { Icons } from '@shared/ui/icons'
 import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
@@ -53,6 +54,7 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
   const enriched = useMemo(() => enrichDrinks(initialDrinks, allReviews), [initialDrinks, allReviews])
   const hero = useMemo(() => pickHero(enriched), [enriched])
   const { filtered } = useFilterDrinks(enriched)
+  const { toggle, isFavorite } = useFavorites()
   const {
     search,
     view, setView,
@@ -213,6 +215,8 @@ export function DrinkCatalog({ initialDrinks, allReviews }: DrinkCatalogProps) {
                     key={drink.id}
                     drink={drink}
                     rank={i + (hero ? 2 : 1)}
+                    isFav={isFavorite(drink.id)}
+                    onToggleFav={() => toggle(drink.id, drink.name)}
                   />
                 ))}
               </div>
