@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ROUTES } from '@shared/config/routes'
-import type { User } from '@entities/user'
+import { Avatar, type User } from '@entities/user'
 
 interface HeaderAvatarProps {
   user: User
@@ -12,7 +12,6 @@ interface HeaderAvatarProps {
 export function HeaderAvatar({ user }: HeaderAvatarProps) {
   const pathname = usePathname()
   const active = pathname === ROUTES.profile
-  const letter = user.username.charAt(0).toUpperCase()
   const role = user.role === 'admin' ? 'admin' : 'user'
 
   return (
@@ -21,9 +20,14 @@ export function HeaderAvatar({ user }: HeaderAvatarProps) {
       className={`nav-avatar${active ? ' active' : ''}`}
       title={`${user.username} — открыть профиль`}
     >
-      <span className="nav-avatar-letter" style={{ background: 'var(--accent)' }}>
-        {letter}
-      </span>
+      <Avatar
+        username={user.username}
+        seed={user.id}
+        size={32}
+        avatarKind={user.avatar_kind}
+        avatarUrl={user.avatar_url}
+        avatarSeed={user.avatar_seed}
+      />
       <span className="nav-avatar-meta">
         <span className="nav-avatar-name">{user.username}</span>
         <span className="nav-avatar-role">{role}</span>

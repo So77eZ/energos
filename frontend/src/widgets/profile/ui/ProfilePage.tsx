@@ -6,7 +6,7 @@ import { evaluateAchievements } from '@entities/achievement'
 import type { Drink } from '@entities/drink'
 import { enrichDrinks, tierFromRating } from '@entities/drink'
 import { calcRating, type Review } from '@entities/review'
-import type { User } from '@entities/user'
+import { Avatar, pickAvatarColor, type User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
 import { readEggs, allLightningFound } from '@features/easter-eggs'
 import { readCanGame, evaluateCanBadges } from '@features/can-game'
@@ -33,14 +33,6 @@ interface ProfilePageProps {
   drinks: Drink[]
 }
 
-const AVATAR_COLORS = ['var(--c-cyan)', 'var(--c-pink)', 'var(--c-green)', 'var(--c-amber)', 'var(--c-purple)']
-
-function pickAvatarColor(seed: string | number): string {
-  const s = String(seed)
-  let hash = 0
-  for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
-}
 
 function parseTab(raw: string | null): TabId {
   if (raw && (TAB_IDS as string[]).includes(raw)) return raw as TabId
@@ -144,7 +136,6 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
 
   const avatarColor = pickAvatarColor(user.id)
   const isAdmin = user.role === 'admin'
-  const letter = user.username.charAt(0).toUpperCase()
 
   return (
     <div className="page page-profile">
@@ -154,9 +145,14 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           className="prof-hero-bg"
           style={{ background: `radial-gradient(ellipse at 30% 50%, ${avatarColor}22, transparent 60%)` }}
         />
-        <div className="prof-avatar" style={{ background: avatarColor }}>
-          <span className="prof-avatar-letter">{letter}</span>
-        </div>
+        <Avatar
+          username={user.username}
+          seed={user.id}
+          size={120}
+          avatarKind={user.avatar_kind}
+          avatarUrl={user.avatar_url}
+          avatarSeed={user.avatar_seed}
+        />
         <div className="prof-info">
           <div className="prof-eyebrow">
             <span className={`prof-role-tag${isAdmin ? '' : ' prof-role-user'}`}>
