@@ -43,6 +43,11 @@
   --txt-quiet:  #5c5c70;
   --line:       rgba(255,255,255,0.08);
   --line-strong:rgba(255,255,255,0.14);
+  /* Ink на filled-accent кнопках. Тёмный в ОБЕИХ темах: акценты (cyan/green/amber…)
+     светлые → тёмный текст читается всегда. Раньше использовался --bg-deep, но в
+     light он светлый → белое-на-светло-cyan ≈1.4:1 (primary-CTA нечитаем). Дарк не
+     трогаем — там тоже тёмный ink. */
+  --on-accent:  #0a0a12;
 
   --radar-grid: rgba(255,255,255,0.07);
   --shadow-card:0 8px 28px rgba(0,0,0,0.5);
@@ -61,7 +66,7 @@
 
   --txt:        #161a22;
   --txt-dim:    #545b6c;
-  --txt-quiet:  #8b93a6;
+  --txt-quiet:  #5b6473;
   --line:       rgba(28,38,58,0.10);
   --line-strong:rgba(28,38,58,0.17);
 
@@ -380,7 +385,7 @@ body::before {
 .nav-cta {
   margin-left: 6px;
   padding: 8px 16px; border-radius: var(--r-sm);
-  background: var(--accent); color: var(--bg-deep);
+  background: var(--accent); color: var(--on-accent);
   font-weight: 700; font-size: 11.5px; letter-spacing: 0.5px;
   text-transform: uppercase;
   box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.35);
@@ -398,7 +403,7 @@ body::before {
 .nav-avatar-letter {
   width: 26px; height: 26px; border-radius: 5px;
   display: grid; place-items: center;
-  color: var(--bg-deep); font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  color: var(--on-accent); font-family: var(--font-display); font-weight: 700; font-size: 12px;
   box-shadow: 0 0 10px currentColor;
 }
 .nav-avatar-meta { display: none; flex-direction: column; line-height: 1.15; }
@@ -552,7 +557,7 @@ body::before {
 .cta-primary {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 11px 18px;
-  background: var(--accent); color: var(--bg-deep);
+  background: var(--accent); color: var(--on-accent);
   border-radius: var(--r-sm);
   font-weight: 700; font-size: 12.5px; letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -704,7 +709,7 @@ body::before {
 .filter-count {
   font-family: var(--font-display); font-weight: 700;
   font-size: 10px; padding: 2px 6px; border-radius: 999px;
-  background: var(--accent); color: var(--bg-deep);
+  background: var(--accent); color: var(--on-accent);
 }
 
 /* ─── Filter popover (раскрывается из filter-btn) ──────────────── */
@@ -1420,7 +1425,7 @@ body::before {
 .rev-avatar {
   width: 32px; height: 32px; border-radius: var(--r-sm);
   display: grid; place-items: center;
-  color: var(--bg-deep); font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  color: var(--on-accent); font-family: var(--font-display); font-weight: 700; font-size: 13px;
 }
 .rev-actions { display: flex; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
 
@@ -1601,7 +1606,7 @@ body::before {
 .prof-avatar {
   width: 120px; height: 120px; border-radius: var(--r-md);
   display: grid; place-items: center;
-  color: var(--bg-deep);
+  color: var(--on-accent);
   box-shadow: 0 0 32px currentColor, inset 0 -8px 16px rgba(0,0,0,0.3);
 }
 .prof-avatar-letter { font-family: var(--font-display); font-weight: 900; font-size: 56px; }
@@ -1770,7 +1775,7 @@ body::before {
 }
 .auth-tab:hover { color: var(--txt); }
 .auth-tab.active {
-  background: var(--accent); color: var(--bg-deep);
+  background: var(--accent); color: var(--on-accent);
   box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.4);
 }
 
@@ -2358,6 +2363,36 @@ body::before {
   border-color: rgba(var(--accent-rgb), 0.6);
 }
 
+/* Notch-safe боковые инсеты (viewport-fit:cover в layout.tsx). env()=0 без выреза → no-op. */
+.app { padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); }
+
+/* Мобильный FAB-рейл над bottom-tab-баром (.mob-tabs = 64px + safe-area, z-800).
+   Без этого twk-fab(16)/up-fab(72) ложатся на бар (z-900 поверх). twk/up/toast
+   двигаются единым блоком на одну env(safe-area-inset-bottom) → стопка не разъезжается.
+   Десктоп-геометрия: twk top@60, up top@116, toast 8px над up — те же зазоры над баром.
+   right-инсет — под landscape-вырез справа (фикс-элементы вне .app-padding). */
+@media (max-width: 640px) {
+  .twk-fab    { bottom: calc(80px  + env(safe-area-inset-bottom, 0)); right: calc(16px + env(safe-area-inset-right, 0)); } /* 64 бар + 16 зазор */
+  .up-fab     { bottom: calc(136px + env(safe-area-inset-bottom, 0)); right: calc(16px + env(safe-area-inset-right, 0)); } /* +56: 44 высота + 12 */
+  .toast-host { bottom: calc(188px + env(safe-area-inset-bottom, 0)); right: calc(16px + env(safe-area-inset-right, 0)); } /* +52: 44 + 8 зазор */
+  .mob-tabs   { padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); }
+  /* taste-map список «ВСЕ ТОЧКИ» — последний блок страницы; FAB-рейл (right ~16–60)
+     накрывал правую колонку рейтингов. Отодвигаем контент из-под рейла. */
+  .tm-legend  { padding-right: 64px; }
+}
+
+/* Touch tap-targets (WCAG 2.5.5). Мелкие иконки-кнопки получают 44px тап-зону через
+   hit-slop ::after — БЕЗ изменения визуального размера (плотность карточек не плывёт).
+   select-min — короткий, растягиваем по высоте. Только coarse-указатель (touch). */
+@media (hover: none) and (pointer: coarse) {
+  .card-fav, .card-compare { position: relative; }
+  .card-fav::after, .card-compare::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 44px; height: 44px; transform: translate(-50%, -50%);
+  }
+  .select-min { min-height: 44px; }
+}
+
 .twk-panel {
   position: fixed; right: 16px; bottom: 72px; z-index: 900;
   width: 300px; max-height: calc(100vh - 96px);
@@ -2418,7 +2453,7 @@ body::before {
 }
 .twk-seg-btn:hover { color: var(--txt); }
 .twk-seg-btn.active {
-  background: var(--accent); color: var(--bg-deep);
+  background: var(--accent); color: var(--on-accent);
   box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.35);
 }
 
@@ -2519,7 +2554,7 @@ body::before {
 .adm-tab-badge {
   font-family: var(--font-display); font-weight: 700;
   font-size: 10px; padding: 1px 7px;
-  background: var(--c-amber); color: var(--bg-deep);
+  background: var(--c-amber); color: var(--on-accent);
   border-radius: 999px;
   letter-spacing: 0.5px;
 }
@@ -2586,7 +2621,7 @@ body::before {
 .sub-user-avatar {
   width: 20px; height: 20px; border-radius: 4px;
   display: grid; place-items: center;
-  background: var(--accent); color: var(--bg-deep);
+  background: var(--accent); color: var(--on-accent);
   font-family: var(--font-display); font-weight: 800; font-size: 11px;
 }
 .sub-price { color: var(--c-pink); font-weight: 600; }
@@ -2675,7 +2710,7 @@ body::before {
 .lb-avatar {
   width: 32px; height: 32px; border-radius: var(--r-sm);
   display: grid; place-items: center;
-  color: var(--bg-deep);
+  color: var(--on-accent);
   font-family: var(--font-display); font-weight: 700; font-size: 14px;
   flex-shrink: 0;
   box-shadow: 0 0 10px currentColor;
@@ -3453,7 +3488,7 @@ body::before {
   .mob-tab-avatar {
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
-    color: var(--bg-deep); font-weight: 700; font-size: 11px;
+    color: var(--on-accent); font-weight: 700; font-size: 11px;
   }
   /* контент (вкл. футер) не должен прятаться под баром */
   body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0)); }
@@ -3484,6 +3519,9 @@ body::before {
   width: 100%; box-sizing: border-box; text-align: left;
   border: none; cursor: pointer; font-family: inherit; font-size: inherit;
 }
+/* Вторичный CTA (гачапон) — outline, чтобы не конкурировал с filled-логином как
+   второй primary. Один filled + один outline = ясная иерархия в шите. */
+.mob-sheet-cta-ghost { background: transparent; border: 1px solid rgba(var(--accent-rgb), .4); }
 .mob-sheet-list { display: flex; flex-direction: column; gap: 2px; }
 .mob-sheet-item {
   display: flex; align-items: center; gap: 12px; padding: 13px 10px; border-radius: 10px;

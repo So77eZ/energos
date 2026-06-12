@@ -148,7 +148,7 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
                 {gachapon && (
                   <button
                     type="button"
-                    className="mob-sheet-cta"
+                    className="mob-sheet-cta mob-sheet-cta-ghost"
                     onClick={() => { setMoreOpen(false); openGachapon() }}
                   >
                     <IconDice w={14} /> Случайный напиток
