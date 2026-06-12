@@ -193,6 +193,8 @@
 
 ### 📝 Заявки на добавление энергетика — доделать связь фронт↔бэк
 
+> 📌 **Для бекендера:** бэк-пункты консолидированы в [`docs/backend-contract.md`](docs/backend-contract.md) (#8) — единый handoff. Ниже — детальный контекст + фронт-статус.
+
 Фича заявок (`POST/GET/PATCH /api/add-requests/`) подключена на фронте ([submissionApi.ts](frontend/src/entities/submission/api/submissionApi.ts), [SubmissionsTab.tsx](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx), [SubmitForm.tsx](frontend/src/widgets/submit-page/ui/SubmitForm.tsx)), но связь рвётся в нескольких местах. Security-разрывы (публичная картинка, OOM/MIME, валидация полей) вынесены в секцию Безопасность ниже — здесь только функциональные.
 
 #### Бэк
@@ -238,6 +240,8 @@
 - **🟡 Реальные даты в карточке заявки (ждёт бэк).** Пока бэк не отдаёт `created_at`/`resolved_at` (см. задачи Бэк выше), фронт фоллбэчит дату на `new Date()` — при релоуде «сегодня». После фикса бэка убрать фоллбэк в [submissionApi](frontend/src/entities/submission/api/submissionApi.ts) и маппить `resolved_at`.
 
 ### 🛡 Безопасность
+
+> 📌 **Для бекендера:** actionable-версия консолидирована в [`docs/backend-contract.md`](docs/backend-contract.md) (#9) — единый handoff. Ниже — детальный аудит/контекст.
 
 Аудит от 2026-05-30. Сгруппировано по серьёзности. Все ссылки на код — текущий backend (FastAPI).
 
