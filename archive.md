@@ -5,6 +5,13 @@
 
 ---
 
+## Аватарки + `<Sheet>`-примитив
+
+- ~~**Аватарки пользователей**~~ ✅ (PR#32, мобильный z-index фикс #33) `entities/user` — универсальный `<Avatar username size seed? avatarKind? avatarUrl? avatarSeed? />` (upload→`<img>`, preset→identicon, иначе буквенный кружок `pickAvatarColor`); мемо-`makeIdenticon`; заменил инлайн-кружки в Header/Profile/Leaders + слот в UserReviewCard. `features/avatar-editor` — `AvatarEditorSheet` (react-easy-crop + свой canvas mask-overlay для WYSIWYG hex/rounded + бренд-стейдж + пресеты + crop→PNG alpha с EXIF-ориентацией). Форма печётся в PNG (без shape-поля); пресет/буква всегда circle. **Висяк бэк #10** (`docs/backend-contract.md`): `avatar_kind/url/seed` + POST/PUT(preset)/DELETE `/api/auth/me/avatar` — пока бека нет, работает на localStorage-демо (`TODO(backend #10)`), демо-резолв client-side.
+- ~~**Единый `<Sheet>`/`<Overlay>`-примитив**~~ ✅ (PR#34) `shared/ui/Sheet` — инкапсулирует `createPortal(document.body)` + mounted-guard + `useScrollLock` + focus-trap + ESC + scrim + варианты bottom/center + опц. шапка; z через проп `zIndex`/CSS-var `--sheet-z`. Убирает родовую stacking-граблю (fixed-оверлей внутри `<main>` z-index:1 перекрывался `.mob-tabs` z-800). `AvatarEditorSheet` мигрирован (получил focus-trap+Esc бонусом). Остаток (миграция MobileNav/Gachapon, named-обёртки) — в активном тех-долге.
+
+---
+
 ## Геймификация: бейджи, банки-игра, гачапон, пасхалки, heatmap
 
 Спринт вовлечённости. Бо́льшая часть считается на клиенте; часть метрик бейджей — висячка под бэкенд.

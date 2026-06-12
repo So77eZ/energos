@@ -48,26 +48,6 @@
 - **Бренд напитка как отдельное поле в БД** — сейчас фронт берёт первый ALL-CAPS токен из имени (`RED BULL Red Edition` → бренд `RED BULL`), fallback `ENERGOS`. С нормальным полем `brand` всё было бы стабильнее и можно фильтровать.
 - **Объём напитка как отдельное поле** — `0.45 л`, `0.25 л` сидит в имени. `cleanDrinkName()` его выкидывает, но потерянная информация полезная — фильтр по объёму и группировка дублей по объёму невозможны.
 - **Описание/blurb напитка** — поле для hero/карточки, 1–2 предложения о вкусе/составе. Сейчас место в дизайне есть, но в БД пусто.
-- **Аватарки пользователей** — сейчас аватар везде это цветной кружок с первой буквой ника (`pickAvatarColor` от хеша user_id, буква = `username[0]`). Пора дать возможность загружать настоящие.
-
-  **Бэк:**
-  - Миграция: колонка `users.avatar_url: str | None` (nullable; null = fallback на буквенный аватар).
-  - `POST /api/auth/me/avatar` (multipart, auth) — приём картинки. Та же валидация что у `POST /energy-drinks/{id}/upload-image/`: jpeg/png/webp/gif, лимит ~2 МБ (меньше чем у напитков, аватарки маленькие).
-  - `DELETE /api/auth/me/avatar` (auth, 204) — снять (вернуться к буквенному).
-  - Хранилище — то же что и для drink-изображений (видимо `/uploads/avatars/{user_id}.{ext}` с очисткой старого файла при замене).
-  - В `UserResponse` добавить `avatar_url: str | None`.
-
-  **Фронт:**
-  - В `entities/user/api/authApi.ts` добавить `uploadAvatar(file, token)` и `removeAvatar(token)`.
-  - Универсальный компонент `<Avatar user={user} size={40} />` который проверяет `user.avatar_url`: если есть — `<img>`, иначе — цветной кружок с буквой (текущая логика). Заменить инлайн-кружки в:
-    - [HeaderAvatar.tsx](frontend/src/widgets/header/ui/HeaderAvatar.tsx)
-    - `prof-avatar` в [ProfilePage.tsx](frontend/src/widgets/profile/ui/ProfilePage.tsx)
-    - `rev-avatar` в [UserReviewCard.tsx](frontend/src/entities/review/ui/UserReviewCard.tsx) и [MyReviewCard.tsx](frontend/src/entities/review/ui/MyReviewCard.tsx)
-    - `lb-avatar` в [LeadersTab.tsx](frontend/src/widgets/admin-page/ui/tabs/LeadersTab.tsx)
-  - В профиле — клик по аватару открывает file picker; preview; кнопка «Сохранить» / «Удалить аватар» / «Отмена». После upload — обновить `useCurrentUser()` контекст и `router.refresh()`.
-  - Опционально: crop-step через `react-easy-crop` (~30KB) — обрезать в квадрат 256×256 перед отправкой. Иначе бэк сам круглит через CSS `border-radius: 50%`.
-
-  **Опционально (на потом):** Gravatar-fallback по email (если будем хранить email — см. пункт «Сброс пароля / верификация email»), или DiceBear identicons для неавторизованных/новых юзеров — детерминистично от user_id, чтобы у каждого был свой узнаваемый рисунок ещё до того как загрузил настоящую.
 
 ### 🟢 Низкий приоритет / По желанию
 
@@ -191,7 +171,7 @@
 - **N+1 запросов `/emojis/` под каждым отзывом** — `EmojiBar` фетчит реакции на mount, по одному запросу на каждый отзыв. На странице с 20 отзывами это 20 параллельных GET'ов к `/api/reviews/{id}/emojis/`. **Фикс на бэке:** добавить агрегат `emoji_summary: [{ emoji, count, user_ids }]` (или `[{ emoji, count, mine }]` если знаем юзера через token) в основную схему `EnergyDrinkReviewSchema`. После этого `EmojiBar` принимает `initialReactions` пропом и не дёргает API на mount.
 - **`base64` фото в payload заявки — может вылететь 1+ МБ** — сейчас фото в `/api/submissions` кодируется base64 и идёт в JSON. На многомегабайтных снимках это излишне раздувает payload. Альтернатива: загрузка отдельным шагом `POST /uploads` → получает `photo_url` → `POST /submissions` с этим url. Либо multipart-форма. *(Замечание устарело: фронт уже шлёт `multipart/form-data` через [submissionApi.create](frontend/src/entities/submission/api/submissionApi.ts#L29). Пункт про OOM/лимит размера актуален — см. секцию Безопасность.)*
 
-- **Единый `<Sheet>`/`<Overlay>`-примитив для модалок** — `position:fixed`-оверлей, отрендеренный внутри `<main>` (через page/widget), запирается в stacking-context `.main` (`z-index:1`), и `.mob-tabs` (z-800) + FAB-рейл рисуются поверх него при любом его z-index. Лечится `createPortal(document.body)` (так делают `Gachapon`/`MobileNav`/`Fireworks`/`AvatarEditorSheet` после PR #33) либо монтированием в root-провайдере (как confirm/toast). **Проблема родовая** — каждый новый внутри-страничный оверлей наступает на грабли заново. Долгофикс: общий примитив `<Sheet>`/`<Overlay>`, инкапсулирующий `createPortal(body)` + `useScrollLock` + scrim + анимацию; все будущие шиты идут через него → нельзя «случайно» отрендерить fixed-оверлей внутри main, паттерн вшит. Заодно унифицирует scroll-lock (body-portal без лока проскролливается под шитом). Кандидаты на миграцию: `AvatarEditorSheet`, mob-bottom-sheets в `MobileNav`, фильтр-popover.
+- **Миграция оставшихся оверлеев на `<Sheet>`-примитив** — примитив `shared/ui/Sheet` сделан (PR #34): `createPortal(body)` + `useScrollLock` + focus-trap + ESC + scrim + варианты bottom/center; `AvatarEditorSheet` уже мигрирован. Осталось перевести на него: mob-bottom-sheets в `MobileNav` (mob-sheet/mob-search; прокинуть `zIndex={960}`), `GachaponMachine` (variant=center). Опц. named-обёртки `ConfirmSheet`/`GachaponSheet`. NB: `FilterPanel` — anchored-popover (дропдаун у кнопки), это ДРУГОЙ примитив (`<Popover>`), не `<Sheet>`.
 
 ### 📝 Заявки на добавление энергетика — доделать связь фронт↔бэк
 
