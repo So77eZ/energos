@@ -8,6 +8,7 @@ import { enrichDrinks, tierFromRating } from '@entities/drink'
 import { calcRating, type Review } from '@entities/review'
 import { Avatar, pickAvatarColor, type User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
+import { AvatarEditorSheet, resolveAvatar, readAvatarDemo, type ResolvedAvatar } from '@features/avatar-editor'
 import { readEggs, allLightningFound } from '@features/easter-eggs'
 import { readCanGame, evaluateCanBadges } from '@features/can-game'
 import { HiddenBolt } from '@features/easter-eggs'
@@ -43,6 +44,16 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [tab, setTab] = useState<TabId>(() => parseTab(searchParams.get('tab')))
+
+  // Редактор аватара + демо-резолв. localStorage недоступен в SSR → стартуем без демо
+  // (resolveAvatar(user, null)), демо подтягиваем в useEffect; ре-резолв при закрытии
+  // редактора (editAvatar→false) подхватывает только что сохранённый демо-аватар.
+  // Бек #10: router.refresh() вернёт user.avatar_*, демо станет не нужен.
+  const [editAvatar, setEditAvatar] = useState(false)
+  const [av, setAv] = useState<ResolvedAvatar>(() => resolveAvatar(user, null))
+  useEffect(() => {
+    setAv(resolveAvatar(user, readAvatarDemo(user.id)))
+  }, [user, editAvatar])
 
   // Sync URL ?tab=... when tab changes (scroll: false чтобы не дёргать страницу).
   useEffect(() => {
@@ -145,14 +156,22 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           className="prof-hero-bg"
           style={{ background: `radial-gradient(ellipse at 30% 50%, ${avatarColor}22, transparent 60%)` }}
         />
-        <Avatar
-          username={user.username}
-          seed={user.id}
-          size={120}
-          avatarKind={user.avatar_kind}
-          avatarUrl={user.avatar_url}
-          avatarSeed={user.avatar_seed}
-        />
+        <button
+          type="button"
+          className="prof-avatar-edit"
+          onClick={() => setEditAvatar(true)}
+          aria-label="Изменить аватар"
+        >
+          <Avatar
+            username={user.username}
+            seed={user.id}
+            size={120}
+            avatarKind={av.kind}
+            avatarUrl={av.url}
+            avatarSeed={av.seed}
+          />
+          <span className="prof-avatar-pencil"><Icons.edit w={15} /></span>
+        </button>
         <div className="prof-info">
           <div className="prof-eyebrow">
             <span className={`prof-role-tag${isAdmin ? '' : ' prof-role-user'}`}>
@@ -225,6 +244,13 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       {tab === 'submissions'  && <SubmissionsTab mySubs={mySubs} />}
       {tab === 'achievements' && <AchievementsTab achievements={achievements} />}
       {tab === 'appearance'   && <AppearanceTab />}
+
+      <AvatarEditorSheet
+        userId={user.id}
+        open={editAvatar}
+        onClose={() => setEditAvatar(false)}
+        onSaved={() => router.refresh()}
+      />
     </div>
   )
 }
