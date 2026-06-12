@@ -1,10 +1,10 @@
 'use client'
 
 import Cropper, { type Area } from 'react-easy-crop'
-import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AVATAR_PRESET_SEEDS, makeIdenticon } from '@entities/user'
 import { Icons } from '@shared/ui/icons'
+import { Sheet } from '@shared/ui/Sheet'
 import { shapePath, AVATAR_SHAPES, type AvatarShape } from '../lib/shape-path'
 import { getCroppedImg, loadOriented } from '../lib/crop-output'
 import { saveAvatarAction, savePresetAction, removeAvatarAction } from '../model/actions'
@@ -28,18 +28,14 @@ export function AvatarEditorSheet({ userId, open, onClose, onSaved }: Props) {
   const [shape, setShape] = useState<AvatarShape>('circle')
   const [area, setArea] = useState<Area | null>(null)
   const [busy, setBusy] = useState(false)
-  // Портал в body: sheet рендерится внутри <main> (z-index:1 = stacking-context),
-  // а mob-tabs (z-800) — sibling main → без портала таб-бар рисуется поверх sheet.
-  const [mounted, setMounted] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
 
-  useEffect(() => setMounted(true), [])
-
   const onCropComplete = useCallback((_: Area, px: Area) => setArea(px), [])
 
-  // WYSIWYG-маска: рисуем форму (scrim-дырка + accent-ring glow + thirds) поверх Cropper,
-  // тем же shapePath, что в crop-output → preview == output для всех форм (вкл. hex/rounded).
+  // WYSIWYG-маска: форма (scrim-дырка + accent-ring glow + thirds) поверх Cropper, тем же
+  // shapePath, что в crop-output → preview == output. Sheet рендерит children всегда → canvas-ref
+  // стабилен; перерисовка при смене shape/open (на open=true маска видима).
   useEffect(() => {
     const cv = overlayRef.current
     if (!cv) return
@@ -75,7 +71,7 @@ export function AvatarEditorSheet({ userId, open, onClose, onSaved }: Props) {
       ctx.beginPath(); ctx.moveTo(g, c - d / 2); ctx.lineTo(g, c + d / 2); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(c - d / 2, g); ctx.lineTo(c + d / 2, g); ctx.stroke()
     }
-  }, [shape, open, mounted])
+  }, [shape, open])
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -109,72 +105,60 @@ export function AvatarEditorSheet({ userId, open, onClose, onSaved }: Props) {
     try { await removeAvatarAction(userId); onSaved(); onClose() } finally { setBusy(false) }
   }
 
-  if (!mounted) return null
-
-  return createPortal(
-    <>
-      <div className={`ava-scrim${open ? ' open' : ''}`} onClick={onClose} />
-      <section className={`ava-sheet${open ? ' open' : ''}`} role="dialog" aria-label="Редактор аватара" aria-modal="true">
-        <div className="ava-grab" />
-        <div className="ava-sheet-hd">
-          <h3>РЕДАКТОР АВАТАРА</h3>
-          <button type="button" className="ava-x" onClick={onClose} aria-label="Закрыть"><Icons.x w={15} /></button>
-        </div>
-
-        <div className="ava-stage-wrap" style={{ width: STAGE, height: STAGE }}>
-          {imgUrl ? (
-            <Cropper
-              image={imgUrl}
-              crop={crop}
-              zoom={zoom}
-              aspect={1}
-              cropShape="rect"
-              showGrid={false}
-              objectFit="contain"
-              cropSize={{ width: STAGE * 0.86, height: STAGE * 0.86 }}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCropComplete}
-              style={{ cropAreaStyle: { border: 'none', boxShadow: 'none', color: 'transparent' } }}
-            />
-          ) : (
-            <div className="ava-stage-empty"><Icons.upload w={28} /><span>Загрузи фото для кадрирования</span></div>
-          )}
-          <canvas ref={overlayRef} className="ava-overlay" style={{ width: STAGE, height: STAGE }} />
-        </div>
-
-        {imgUrl && (
-          <div className="ava-zoom-row">
-            <Icons.search w={15} />
-            <input type="range" min={1} max={3.2} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
-          </div>
+  return (
+    <Sheet open={open} onClose={onClose} variant="bottom" title="РЕДАКТОР АВАТАРА">
+      <div className="ava-stage-wrap" style={{ width: STAGE, height: STAGE }}>
+        {imgUrl ? (
+          <Cropper
+            image={imgUrl}
+            crop={crop}
+            zoom={zoom}
+            aspect={1}
+            cropShape="rect"
+            showGrid={false}
+            objectFit="contain"
+            cropSize={{ width: STAGE * 0.86, height: STAGE * 0.86 }}
+            onCropChange={setCrop}
+            onZoomChange={setZoom}
+            onCropComplete={onCropComplete}
+            style={{ cropAreaStyle: { border: 'none', boxShadow: 'none', color: 'transparent' } }}
+          />
+        ) : (
+          <div className="ava-stage-empty"><Icons.upload w={28} /><span>Загрузи фото для кадрирования</span></div>
         )}
+        <canvas ref={overlayRef} className="ava-overlay" style={{ width: STAGE, height: STAGE }} />
+      </div>
 
-        <div className="ava-lbl">Форма фото</div>
-        <div className="ava-seg">
-          {AVATAR_SHAPES.map((s) => (
-            <button key={s} type="button" className={shape === s ? 'on' : ''} onClick={() => setShape(s)}>{SHAPE_LABEL[s]}</button>
-          ))}
+      {imgUrl && (
+        <div className="ava-zoom-row">
+          <Icons.search w={15} />
+          <input type="range" min={1} max={3.2} step={0.01} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
         </div>
+      )}
 
-        <div className="ava-lbl">Или выбери пресет</div>
-        <div className="ava-presets">
-          {AVATAR_PRESET_SEEDS.map((seed) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <button key={seed} type="button" className="ava-preset" onClick={() => onPreset(seed)} aria-label={`Пресет ${seed}`} disabled={busy}>
-              <img src={makeIdenticon(seed)} alt="" />
-            </button>
-          ))}
-        </div>
+      <div className="ava-lbl">Форма фото</div>
+      <div className="ava-seg">
+        {AVATAR_SHAPES.map((s) => (
+          <button key={s} type="button" className={shape === s ? 'on' : ''} onClick={() => setShape(s)}>{SHAPE_LABEL[s]}</button>
+        ))}
+      </div>
 
-        <div className="ava-actions">
-          <button type="button" className="cta-ghost" onClick={onDelete} disabled={busy}><Icons.trash w={15} /> Удалить</button>
-          <button type="button" className="cta-ghost" onClick={() => fileRef.current?.click()} disabled={busy}><Icons.upload w={15} /> Загрузить</button>
-          <button type="button" className="cta-primary" onClick={onSaveUpload} disabled={busy || !imgUrl}><Icons.check w={15} /> Сохранить</button>
-        </div>
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
-      </section>
-    </>,
-    document.body,
+      <div className="ava-lbl">Или выбери пресет</div>
+      <div className="ava-presets">
+        {AVATAR_PRESET_SEEDS.map((seed) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <button key={seed} type="button" className="ava-preset" onClick={() => onPreset(seed)} aria-label={`Пресет ${seed}`} disabled={busy}>
+            <img src={makeIdenticon(seed)} alt="" />
+          </button>
+        ))}
+      </div>
+
+      <div className="ava-actions">
+        <button type="button" className="cta-ghost" onClick={onDelete} disabled={busy}><Icons.trash w={15} /> Удалить</button>
+        <button type="button" className="cta-ghost" onClick={() => fileRef.current?.click()} disabled={busy}><Icons.upload w={15} /> Загрузить</button>
+        <button type="button" className="cta-primary" onClick={onSaveUpload} disabled={busy || !imgUrl}><Icons.check w={15} /> Сохранить</button>
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
+    </Sheet>
   )
 }
