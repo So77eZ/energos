@@ -3952,3 +3952,44 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
   font-family: var(--font-display); font-weight: 700; line-height: 1;
 }
 .avatar-img { display: block; object-fit: cover; background: var(--bg-surface); }
+
+/* ── Avatar editor sheet (features/avatar-editor) ──────── */
+.ava-scrim {
+  position: fixed; inset: 0; z-index: 940; background: rgba(3,4,10,.66);
+  backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .26s;
+}
+.ava-scrim.open { opacity: 1; pointer-events: auto; }
+.ava-sheet {
+  position: fixed; left: 50%; bottom: 0; z-index: 941; width: min(440px, 100vw);
+  transform: translate(-50%, 104%); transition: transform .32s cubic-bezier(.22,1,.36,1);
+  background: linear-gradient(180deg, #14141f, #0c0c15); border: 1px solid var(--line-strong);
+  border-radius: 24px 24px 0 0; padding: 14px 20px calc(env(safe-area-inset-bottom,0) + 20px);
+  box-shadow: 0 -20px 60px rgba(0,0,0,.6); max-height: 92vh; overflow-y: auto;
+}
+.ava-sheet.open { transform: translate(-50%, 0); }
+.ava-grab { width: 40px; height: 4px; border-radius: 99px; background: var(--line-strong); margin: 2px auto 12px; }
+.ava-sheet-hd { display: flex; align-items: center; margin-bottom: 14px; }
+.ava-sheet-hd h3 { font-family: var(--font-display); font-size: 15px; letter-spacing: 1.5px; }
+.ava-x { margin-left: auto; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line);
+  display: grid; place-items: center; color: var(--txt-dim); cursor: pointer; background: transparent; }
+.ava-stage-wrap { position: relative; margin: 0 auto 6px; border-radius: 14px; overflow: hidden; background: #0c0c15; }
+.ava-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.ava-stage-empty { position: absolute; inset: 0; display: grid; place-items: center; gap: 8px;
+  color: var(--txt-quiet); font-size: 11px; text-align: center; }
+.ava-stage-empty svg { color: var(--txt-dim); }
+.ava-zoom-row { display: flex; align-items: center; gap: 12px; margin: 12px 2px 6px; color: var(--txt-dim); }
+.ava-zoom-row input[type=range] { flex: 1; }
+.ava-lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.5px; color: var(--txt-quiet);
+  text-transform: uppercase; margin: 14px 0 9px; }
+.ava-seg { display: flex; gap: 6px; background: var(--bg-input); padding: 4px; border-radius: var(--r-md); border: 1px solid var(--line); }
+.ava-seg button { flex: 1; height: 40px; border-radius: 7px; font-family: var(--font-mono); font-weight: 700;
+  font-size: 11px; letter-spacing: .8px; color: var(--txt-dim); text-transform: uppercase; background: transparent;
+  border: none; cursor: pointer; }
+.ava-seg button.on { background: var(--accent); color: var(--on-accent); }
+.ava-presets { display: flex; gap: 11px; flex-wrap: wrap; margin: 9px 0 2px; }
+.ava-preset { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; padding: 0; cursor: pointer;
+  border: 2px solid transparent; background: transparent; }
+.ava-preset:active { transform: scale(.94); }
+.ava-preset img { width: 100%; height: 100%; display: block; }
+.ava-actions { display: flex; gap: 10px; margin-top: 18px; }
+.ava-actions .cta-ghost, .ava-actions .cta-primary { flex: 1; justify-content: center; }
