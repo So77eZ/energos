@@ -326,6 +326,46 @@ Security-headers (HSTS/nosniff/X-Frame/CSP — часть может Caddy), CAP
 
 ---
 
+## #10 — Аватарки пользователей (новая фича)
+
+**Приоритет: 🟡 (фича; дизайн-макет готов, фронт-редактор будет).**
+
+Сейчас аватар везде — буквенный кружок (`pickAvatarColor` от хеша user_id + `username[0]`).
+Даём загрузку (кроп→форма) + готовые neon-пресеты. Решения по модели (зафиксированы):
+форма **печётся** в PNG (бэк хранит только URL, без shape-поля); пресеты — по **seed**
+(клиент регенерит, без upload).
+
+### Модель (`users`)
+
+```python
+avatar_kind: str | None   # 'upload' | 'preset' | None (None = буквенный fallback)
+avatar_url:  str | None   # для kind='upload': PNG с впечённой формой (png/webp, alpha!)
+avatar_seed: str | None   # для kind='preset': клиент регенерит identicon из seed
+```
+Миграция: 3 nullable-колонки. Все три в `UserResponse` (+ отдаёт `GET /api/auth/me/`).
+
+### Эндпоинты
+
+- **`POST /api/auth/me/avatar`** (multipart, auth) — приём **готового кропнутого PNG**
+  (форма уже впечена клиентом, прозрачные углы). Ставит `kind='upload'`, `avatar_url`,
+  обнуляет `avatar_seed`. Возвращает `UserResponse`.
+  ⚠️ **Переиспользовать upload-hardening из #9**: size чанками (~2 МБ, аватарки мелкие),
+  magic-bytes (**png/webp обязательно — alpha**; jpeg опц., без прозрачности),
+  EXIF-strip, имя из uuid+ext. Хранилище — то же, что drink-картинки (после #5 — свой origin).
+- **`PUT /api/auth/me/avatar/preset`** (json `{seed: str}`, auth) — ставит `kind='preset'`,
+  `avatar_seed`, обнуляет `avatar_url`. Валидировать `seed` (`max_length`, `^[a-z0-9_]+$`).
+- **`DELETE /api/auth/me/avatar`** (auth, 204) — обнуляет все три → буквенный fallback.
+
+### Коннектор на фронте
+
+- Универсальный `<Avatar user size />`: `kind==='upload'` → `<img src=avatar_url>`;
+  `kind==='preset'` → регенерит identicon из `seed` (canvas, детерминированно);
+  иначе — буквенный кружок (текущая логика). Заменит инлайн-кружки в HeaderAvatar,
+  ProfilePage, review-cards, LeadersTab.
+- Редактор (bottom-sheet, react-easy-crop) шлёт `canvas.toBlob` PNG в `POST`.
+
+---
+
 ## Сводка приоритетов
 
 | # | Что | Приоритет | Блокирует на фронте |
@@ -336,4 +376,5 @@ Security-headers (HSTS/nosniff/X-Frame/CSP — часть может Caddy), CAP
 | #8 | Заявки: `created_at`/`resolved_at`/`status`-валидация | 🔴 | даты заявок + статусы в карточках |
 | #7 | JWT: `SECRET_KEY` без дефолта, refresh-токен, `iss`/`aud` | 🔴/🟠 | — (фронт cookie уже укреплён, #28) |
 | #4 | `emoji_summary` в `EnergyDrinkReviewSchema` | 🟡 | N+1 фетч реакций |
+| #10 | Аватарки: `avatar_kind/url/seed` + `POST/PUT/DELETE /me/avatar` (upload-hardening из #9) | 🟡 | загрузку аватара (фронт-редактор будет) |
 | #8/#9 | DELETE/sort/rate-limit заявок, CORS, max_length, доп.баги | 🟡/🟢 | мелочь / hardening |
