@@ -29,7 +29,8 @@ export interface SheetProps {
   children: ReactNode
 }
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 export function Sheet({
   open,
@@ -48,8 +49,12 @@ export function Sheet({
   const [mounted, setMounted] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const lastFocus = useRef<HTMLElement | null>(null)
+  // onClose в ref → keydown-listener стабилен (не пересоздаётся на каждый инлайн-onClose
+  // из родителя), нет окна, где Esc проваливается между remove/add listener.
+  const onCloseRef = useRef(onClose)
 
   useEffect(() => setMounted(true), [])
+  useEffect(() => { onCloseRef.current = onClose })
 
   // Тот же отлаженный хук, что у MobileNav/Gachapon (морозит document.body, чинит scrollY).
   useScrollLock(open && lockScroll)
@@ -75,7 +80,7 @@ export function Sheet({
     getFocusables()[0]?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && closeOnEsc) {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (e.key === 'Tab') {
@@ -94,12 +99,13 @@ export function Sheet({
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open, closeOnEsc, onClose])
+  }, [open, closeOnEsc])
 
   if (!mounted) return null
 
   const oc = open ? ' open' : ''
   return createPortal(
+    // var-scope: --sheet-z/--sheet-w наследуются детьми; обёртка без layout (дети fixed).
     <div
       className="sheet-layer"
       style={{ '--sheet-z': zIndex, '--sheet-w': `${width}px` } as CSSProperties}
