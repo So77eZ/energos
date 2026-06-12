@@ -3944,3 +3944,11 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
    оверлее с useScrollLock — body заморожен, скролл к якорю всё равно затирается
    восстановлением позиции при закрытии, так что мобильного варианта нет. */
 .cat-anchor { scroll-margin-top: 92px; }
+
+/* ── Универсальный <Avatar> (entities/user) ──────── */
+.avatar { border-radius: 50%; overflow: hidden; flex: 0 0 auto; }
+.avatar-letter {
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; line-height: 1;
+}
+.avatar-img { display: block; object-fit: cover; background: var(--bg-surface); }
