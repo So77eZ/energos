@@ -1,6 +1,7 @@
 'use client'
 
 import Cropper, { type Area } from 'react-easy-crop'
+import { createPortal } from 'react-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AVATAR_PRESET_SEEDS, makeIdenticon } from '@entities/user'
 import { Icons } from '@shared/ui/icons'
@@ -27,8 +28,13 @@ export function AvatarEditorSheet({ userId, open, onClose, onSaved }: Props) {
   const [shape, setShape] = useState<AvatarShape>('circle')
   const [area, setArea] = useState<Area | null>(null)
   const [busy, setBusy] = useState(false)
+  // Портал в body: sheet рендерится внутри <main> (z-index:1 = stacking-context),
+  // а mob-tabs (z-800) — sibling main → без портала таб-бар рисуется поверх sheet.
+  const [mounted, setMounted] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => setMounted(true), [])
 
   const onCropComplete = useCallback((_: Area, px: Area) => setArea(px), [])
 
@@ -69,7 +75,7 @@ export function AvatarEditorSheet({ userId, open, onClose, onSaved }: Props) {
       ctx.beginPath(); ctx.moveTo(g, c - d / 2); ctx.lineTo(g, c + d / 2); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(c - d / 2, g); ctx.lineTo(c + d / 2, g); ctx.stroke()
     }
-  }, [shape, open])
+  }, [shape, open, mounted])
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -103,7 +109,9 @@ export function AvatarEditorSheet({ userId, open, onClose, onSaved }: Props) {
     try { await removeAvatarAction(userId); onSaved(); onClose() } finally { setBusy(false) }
   }
 
-  return (
+  if (!mounted) return null
+
+  return createPortal(
     <>
       <div className={`ava-scrim${open ? ' open' : ''}`} onClick={onClose} />
       <section className={`ava-sheet${open ? ' open' : ''}`} role="dialog" aria-label="Редактор аватара" aria-modal="true">
@@ -166,6 +174,7 @@ export function AvatarEditorSheet({ userId, open, onClose, onSaved }: Props) {
         </div>
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
       </section>
-    </>
+    </>,
+    document.body,
   )
 }
