@@ -14,7 +14,7 @@ import {
   type Review,
   type ReviewMetrics,
 } from '@entities/review'
-import type { User } from '@entities/user'
+import { Avatar, type User } from '@entities/user'
 import { BadgeCluster } from '@entities/achievement'
 import { EmojiBar } from '@features/emoji-reactions'
 import { Icons } from '@shared/ui/icons'
@@ -281,6 +281,7 @@ export function DrinkPage({
                 <UserReviewCard
                   key={r.id}
                   review={r}
+                  avatar={<Avatar username={r.username} seed={r.user_id ?? r.username ?? '?'} size={36} />}
                   badges={<BadgeCluster ownedIds={r.authorBadges ?? []} clusterBg="var(--bg-card)" />}
                   reactions={<EmojiBar reviewId={r.id} />}
                 />

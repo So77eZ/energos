@@ -6,6 +6,7 @@
 
 import { useMemo } from 'react'
 import type { Review } from '@entities/review'
+import { Avatar, pickAvatarColor } from '@entities/user'
 import { Icons } from '@shared/ui/icons'
 
 interface LeadersTabProps {
@@ -28,13 +29,6 @@ function buildLeaderboard(reviews: Review[]): Entry[] {
     map.set(r.username, e)
   }
   return Array.from(map.values()).sort((a, b) => b.reviews - a.reviews)
-}
-
-const AVATAR_COLORS = ['var(--c-cyan)', 'var(--c-pink)', 'var(--c-green)', 'var(--c-amber)', 'var(--c-purple)']
-function pickAvatarColor(seed: string): string {
-  let hash = 0
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
 }
 
 const MEDALS = ['🥇', '🥈', '🥉'] as const
@@ -61,14 +55,12 @@ export function LeadersTab({ reviews }: LeadersTabProps) {
       </div>
       {board.map((u, i) => {
         const isTop3 = i < 3
-        const color = pickAvatarColor(u.username)
+        const color = pickAvatarColor(u.username) // цвет полоски отзывов = цвет аватара юзера
         return (
           <div key={u.username} className={`lb-row${isTop3 ? ' lb-top' : ''}`}>
             <span className="lb-pos">{MEDALS[i] ?? i + 1}</span>
             <span className="lb-name">
-              <span className="lb-avatar" style={{ background: color }}>
-                {u.username.charAt(0).toUpperCase()}
-              </span>
+              <Avatar username={u.username} seed={u.username} size={28} />
               <span className="lb-username">{u.username}</span>
               {u.isAdmin && <span className="lb-role">admin</span>}
             </span>

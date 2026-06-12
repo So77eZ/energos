@@ -1,4 +1,7 @@
 export type { User, AuthToken } from './model/types'
+export { Avatar } from './ui/Avatar'
+export { makeIdenticon, AVATAR_PRESET_SEEDS } from './lib/avatar-identicon'
+export { pickAvatarColor } from './lib/avatar-color'
 export { authApi } from './api/authApi'
 export { favoritesApi } from './api/favoritesApi'
 export { UserProvider, useCurrentUser } from './model/user-provider'
