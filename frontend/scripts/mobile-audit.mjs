@@ -81,5 +81,16 @@ try {
 await page.close()
 await actx.close()
 
+// Light-theme pass @375 — контраст светлой темы (--txt-quiet: футер/МИН-МАКС/оси, неон-акценты).
+const lctx = await browser.newContext({
+  viewport: { width: 375, height: 812 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
+})
+await lctx.addInitScript(killAgeGate)
+await lctx.addInitScript(`try { localStorage.setItem('energos_theme', JSON.stringify({ theme: 'light' })) } catch {}`)
+for (const [name, path] of [['catalog', '/'], ['drink', '/drinks?id=55'], ['glossary', '/glossary'], ['tastemap', '/taste-map'], ['login', '/auth/login']]) {
+  await shoot(lctx, `light__${name}`, path)
+}
+await lctx.close()
+
 await browser.close()
 console.log('DONE')

@@ -2371,6 +2371,9 @@ body::before {
   .up-fab     { bottom: calc(136px + env(safe-area-inset-bottom, 0)); right: calc(16px + env(safe-area-inset-right, 0)); } /* +56: 44 высота + 12 */
   .toast-host { bottom: calc(188px + env(safe-area-inset-bottom, 0)); right: calc(16px + env(safe-area-inset-right, 0)); } /* +52: 44 + 8 зазор */
   .mob-tabs   { padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); }
+  /* taste-map список «ВСЕ ТОЧКИ» — последний блок страницы; FAB-рейл (right ~16–60)
+     накрывал правую колонку рейтингов. Отодвигаем контент из-под рейла. */
+  .tm-legend  { padding-right: 64px; }
 }
 
 /* Touch tap-targets (WCAG 2.5.5). Мелкие иконки-кнопки получают 44px тап-зону через
@@ -3511,6 +3514,9 @@ body::before {
   width: 100%; box-sizing: border-box; text-align: left;
   border: none; cursor: pointer; font-family: inherit; font-size: inherit;
 }
+/* Вторичный CTA (гачапон) — outline, чтобы не конкурировал с filled-логином как
+   второй primary. Один filled + один outline = ясная иерархия в шите. */
+.mob-sheet-cta-ghost { background: transparent; border: 1px solid rgba(var(--accent-rgb), .4); }
 .mob-sheet-list { display: flex; flex-direction: column; gap: 2px; }
 .mob-sheet-item {
   display: flex; align-items: center; gap: 12px; padding: 13px 10px; border-radius: 10px;
