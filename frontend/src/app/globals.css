@@ -2373,6 +2373,18 @@ body::before {
   .mob-tabs   { padding-left: env(safe-area-inset-left, 0); padding-right: env(safe-area-inset-right, 0); }
 }
 
+/* Touch tap-targets (WCAG 2.5.5). Мелкие иконки-кнопки получают 44px тап-зону через
+   hit-slop ::after — БЕЗ изменения визуального размера (плотность карточек не плывёт).
+   select-min — короткий, растягиваем по высоте. Только coarse-указатель (touch). */
+@media (hover: none) and (pointer: coarse) {
+  .card-fav, .card-compare { position: relative; }
+  .card-fav::after, .card-compare::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 44px; height: 44px; transform: translate(-50%, -50%);
+  }
+  .select-min { min-height: 44px; }
+}
+
 .twk-panel {
   position: fixed; right: 16px; bottom: 72px; z-index: 900;
   width: 300px; max-height: calc(100vh - 96px);
