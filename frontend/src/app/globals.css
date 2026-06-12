@@ -3965,6 +3965,43 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
 }
 .avatar-img { display: block; object-fit: cover; background: var(--bg-surface); }
 
+/* ── Sheet primitive (shared/ui/Sheet) ──────────────────
+   Чроме модальных оверлеев: scrim + панель (bottom/center) + grab + шапка.
+   z через --sheet-z (scrim=z, панель=z+1), ширина через --sheet-w.
+   Всегда портал в body (вне stacking-context .main) — см. gotcha. */
+.sheet-scrim {
+  position: fixed; inset: 0; z-index: var(--sheet-z, 940); background: rgba(3,4,10,.66);
+  backdrop-filter: blur(3px); opacity: 0; pointer-events: none; transition: opacity .26s;
+}
+.sheet-scrim.open { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed; z-index: calc(var(--sheet-z, 940) + 1);
+  background: linear-gradient(180deg, #14141f, #0c0c15); border: 1px solid var(--line-strong);
+  box-shadow: 0 -20px 60px rgba(0,0,0,.6); max-height: 92vh; overflow-y: auto;
+}
+/* bottom: слайд снизу, grab, скруглён сверху */
+.sheet--bottom {
+  left: 50%; bottom: 0; width: min(var(--sheet-w, 440px), 100vw);
+  transform: translate(-50%, 104%); transition: transform .32s cubic-bezier(.22,1,.36,1);
+  border-radius: 24px 24px 0 0; padding: 14px 20px calc(env(safe-area-inset-bottom,0) + 20px);
+}
+.sheet--bottom.open { transform: translate(-50%, 0); }
+/* center: fade + zoom по центру, без grab */
+.sheet--center {
+  left: 50%; top: 50%; width: min(var(--sheet-w, 440px), calc(100vw - 32px));
+  transform: translate(-50%, -50%) scale(.96); opacity: 0; pointer-events: none;
+  transition: opacity .24s ease, transform .24s cubic-bezier(.22,1,.36,1);
+  border-radius: 20px; padding: 20px;
+}
+.sheet--center.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+.sheet-grab { width: 40px; height: 4px; border-radius: 99px; background: var(--line-strong); margin: 2px auto 12px; }
+.sheet-hd { display: flex; align-items: center; margin-bottom: 14px; }
+.sheet-hd h3 { font-family: var(--font-display); font-size: 15px; letter-spacing: 1.5px; }
+.sheet-close {
+  margin-left: auto; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line);
+  display: grid; place-items: center; color: var(--txt-dim); cursor: pointer; background: transparent;
+}
+
 /* ── Avatar editor sheet (features/avatar-editor) ──────── */
 .ava-scrim {
   position: fixed; inset: 0; z-index: 940; background: rgba(3,4,10,.66);
