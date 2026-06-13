@@ -1,0 +1,9 @@
+#!/bin/sh
+# Локальный pre-push гейт — зеркалит CI-фронт-джоб (кроме build, он долгий).
+# Активация: git config core.hooksPath .githooks
+# Обойти разово: git push --no-verify
+echo "▶ pre-push: tsc + vitest (frontend)…"
+cd "$(git rev-parse --show-toplevel)/frontend" || exit 1
+npx tsc --noEmit || { echo "✗ tsc — push отменён (--no-verify чтобы обойти)"; exit 1; }
+npx vitest run   || { echo "✗ vitest — push отменён (--no-verify чтобы обойти)"; exit 1; }
+echo "✓ pre-push ok"
