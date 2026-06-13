@@ -1,0 +1,28 @@
+name: ✨ Фича / улучшение
+description: Предложить функциональность или улучшение
+labels: ["feature"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Задача / проблема
+      description: Что хочется и зачем (какую боль закрывает).
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Предлагаемое решение
+  - type: dropdown
+    id: area
+    attributes:
+      label: Зона
+      options:
+        - frontend
+        - backend
+        - fullstack
+        - infra
+  - type: textarea
+    id: notes
+    attributes:
+      label: Заметки / альтернативы (опц.)
