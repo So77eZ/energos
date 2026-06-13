@@ -3994,9 +3994,16 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
   border-radius: 20px; padding: 20px;
 }
 .sheet--center.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+/* top: зеркало bottom — слайд сверху, full-width на телефоне (min), без grab, safe-area-top */
+.sheet--top {
+  left: 50%; top: 0; width: min(var(--sheet-w, 440px), 100vw);
+  transform: translate(-50%, -104%); transition: transform .32s cubic-bezier(.22,1,.36,1);
+  border-radius: 0 0 24px 24px; padding: calc(env(safe-area-inset-top,0) + 14px) 20px 20px;
+}
+.sheet--top.open { transform: translate(-50%, 0); }
 .sheet-grab { width: 40px; height: 4px; border-radius: 99px; background: var(--line-strong); margin: 2px auto 12px; }
 .sheet-hd { display: flex; align-items: center; margin-bottom: 14px; }
-.sheet-hd h3 { font-family: var(--font-display); font-size: 15px; letter-spacing: 1.5px; }
+.sheet-hd h3 { font-family: var(--font-display); font-size: 15px; letter-spacing: 1.5px; text-transform: uppercase; }
 .sheet-close {
   margin-left: auto; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line);
   display: grid; place-items: center; color: var(--txt-dim); cursor: pointer; background: transparent;
