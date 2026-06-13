@@ -170,9 +170,6 @@
 
 - **N+1 запросов `/emojis/` под каждым отзывом** — `EmojiBar` фетчит реакции на mount, по одному запросу на каждый отзыв. На странице с 20 отзывами это 20 параллельных GET'ов к `/api/reviews/{id}/emojis/`. **Фикс на бэке:** добавить агрегат `emoji_summary: [{ emoji, count, user_ids }]` (или `[{ emoji, count, mine }]` если знаем юзера через token) в основную схему `EnergyDrinkReviewSchema`. После этого `EmojiBar` принимает `initialReactions` пропом и не дёргает API на mount.
 - **`base64` фото в payload заявки — может вылететь 1+ МБ** — сейчас фото в `/api/submissions` кодируется base64 и идёт в JSON. На многомегабайтных снимках это излишне раздувает payload. Альтернатива: загрузка отдельным шагом `POST /uploads` → получает `photo_url` → `POST /submissions` с этим url. Либо multipart-форма. *(Замечание устарело: фронт уже шлёт `multipart/form-data` через [submissionApi.create](frontend/src/entities/submission/api/submissionApi.ts#L29). Пункт про OOM/лимит размера актуален — см. секцию Безопасность.)*
-
-- **Миграция оставшихся оверлеев на `<Sheet>`-примитив** — примитив `shared/ui/Sheet` сделан (PR #34): `createPortal(body)` + `useScrollLock` + focus-trap + ESC + scrim + варианты bottom/center; `AvatarEditorSheet` уже мигрирован. Осталось перевести на него: mob-bottom-sheets в `MobileNav` (mob-sheet/mob-search; прокинуть `zIndex={960}`), `GachaponMachine` (variant=center). Опц. named-обёртки `ConfirmSheet`/`GachaponSheet`. NB: `FilterPanel` — anchored-popover (дропдаун у кнопки), это ДРУГОЙ примитив (`<Popover>`), не `<Sheet>`.
-
 ### 📝 Заявки на добавление энергетика — доделать связь фронт↔бэк
 
 > 📌 **Для бекендера:** бэк-пункты консолидированы в [`docs/backend-contract.md`](docs/backend-contract.md) (#8) — единый handoff. Ниже — детальный контекст + фронт-статус.
