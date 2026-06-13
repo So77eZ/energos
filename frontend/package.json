@@ -14,8 +14,8 @@
   "dependencies": {
     "@types/three": "^0.184.1",
     "next": "^15.3.4",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "react-easy-crop": "^6.0.2",
     "three": "^0.184.0"
   },
