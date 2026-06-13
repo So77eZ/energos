@@ -3999,6 +3999,7 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
   left: 50%; top: 0; width: min(var(--sheet-w, 440px), 100vw);
   transform: translate(-50%, -104%); transition: transform .32s cubic-bezier(.22,1,.36,1);
   border-radius: 0 0 24px 24px; padding: calc(env(safe-area-inset-top,0) + 14px) 20px 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6); /* вниз (база .sheet светит вверх — для bottom) */
 }
 .sheet--top.open { transform: translate(-50%, 0); }
 .sheet-grab { width: 40px; height: 4px; border-radius: 99px; background: var(--line-strong); margin: 2px auto 12px; }
