@@ -9,7 +9,7 @@ export interface SheetProps {
   open: boolean
   onClose: () => void
   /** bottom = слайд снизу (default), center = модалка по центру. */
-  variant?: 'bottom' | 'center'
+  variant?: 'bottom' | 'center' | 'top'
   /** Есть → шапка (title + close-x). Нет → голая панель. */
   title?: string
   /** aria-label диалога. Default = title. */
