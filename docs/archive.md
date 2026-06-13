@@ -34,7 +34,7 @@
 
 ## Карта вкусов: выбор осей + фикс наложения подписи
 
-- ~~**Карта вкусов: выбор осей X/Y**~~ ✅ Уже было реализовано (два `<select>` по всем 6 метрикам в [TasteMapChart.tsx](frontend/src/widgets/taste-map/ui/TasteMapChart.tsx), точки строятся по `metrics[axisX]/[axisY]`). Backlog-пункт «только 2 из 6» устарел — пикеры добавлены при миграции. Вычеркнут.
+- ~~**Карта вкусов: выбор осей X/Y**~~ ✅ Уже было реализовано (два `<select>` по всем 6 метрикам в [TasteMapChart.tsx](../frontend/src/widgets/taste-map/ui/TasteMapChart.tsx), точки строятся по `metrics[axisX]/[axisY]`). Backlog-пункт «только 2 из 6» устарел — пикеры добавлены при миграции. Вычеркнут.
 - ~~**Визуальный баг: подпись оси X перекрывала квадрант Q4**~~ ✅ «СЛАДОСТЬ →» (заголовок X) и «Q4: СБАЛАНСИРОВАНО» оба сидели в правом нижнем углу графика и накладывались. Заголовок X вынесен **под** ось (ниже числовых меток, `y = VIEWBOX_H - PAD + 42`) — конвенциональное место подписи, квадрант остаётся в углу. Проверено скриншотом.
 
 ---
@@ -42,14 +42,14 @@
 ## Сравнение напитков: «только различающиеся» + золото победителя
 
 - ~~**Side-by-side сравнение с тогглером «Только различающиеся» + золотая обводка победителя**~~ ✅ Страница `/compare` уже имела side-by-side бары + ★-победителя; добавлено недостающее:
-  - **Тоггл «Только различающиеся»** ([ComparePage.tsx](frontend/src/widgets/compare-page/ui/ComparePage.tsx)) — свитч (переиспользован `.filt-toggle`) над метриками; `visibleMetrics` прячет строки где показанные (округлённые до 0.1, как видит юзер) значения совпадают у всех. Пустое состояние «Все метрики совпадают».
-  - **Золотая рамка победителя** ([globals.css](frontend/src/app/globals.css)): `.cmp-bar-cell.winner` и звезда `.cmp-winner` переведены с accent-цвета на `color-mix(var(--c-amber) 72%, accent 28%)` — «трофейное» золото, оттенок которого плывёт с акцентом темы. Победитель по метрике = max value.
+  - **Тоггл «Только различающиеся»** ([ComparePage.tsx](../frontend/src/widgets/compare-page/ui/ComparePage.tsx)) — свитч (переиспользован `.filt-toggle`) над метриками; `visibleMetrics` прячет строки где показанные (округлённые до 0.1, как видит юзер) значения совпадают у всех. Пустое состояние «Все метрики совпадают».
+  - **Золотая рамка победителя** ([globals.css](../frontend/src/app/globals.css)): `.cmp-bar-cell.winner` и звезда `.cmp-winner` переведены с accent-цвета на `color-mix(var(--c-amber) 72%, accent 28%)` — «трофейное» золото, оттенок которого плывёт с акцентом темы. Победитель по метрике = max value.
 
 ---
 
 ## Техдолг фронта: чистка dead-code (glass shim + enrichDrinks)
 
-- ~~**Compatibility-shim `.glass` / `.glass-surface`**~~ ✅ Удалён из [globals.css](frontend/src/app/globals.css). Аудит показал: `.glass-surface` — ноль потребителей; `.glass` использовал только `shared/ui/Card`, а сам `Card` нигде не импортировался. Снесён и shim-блок, и мёртвый компонент `Card` (Card.tsx + index.ts). `.card-glass` (реальная карточка каталога) — другой класс, не тронут.
+- ~~**Compatibility-shim `.glass` / `.glass-surface`**~~ ✅ Удалён из [globals.css](../frontend/src/app/globals.css). Аудит показал: `.glass-surface` — ноль потребителей; `.glass` использовал только `shared/ui/Card`, а сам `Card` нигде не импортировался. Снесён и shim-блок, и мёртвый компонент `Card` (Card.tsx + index.ts). `.card-glass` (реальная карточка каталога) — другой класс, не тронут.
 - ~~**`enrichDrinks` дважды на drink-странице**~~ ❌ Признан невалидным, убран из backlog. `enrichDrinks` уже O(n+m) (индексация отзывов в `Map`), везде в `useMemo` либо разовый вызов в server-компоненте. Разные роуты (главная vs `/drinks`) не рендерятся одновременно — «соседства» нет. Единственная микро-дупликация (активный напиток энричится в `enrichDrink` + повторно внутри `enrichDrinks(pool)` для SimilarRail) ничтожна. Провайдер/кэш = оверинжиниринг.
 
 ---
@@ -57,52 +57,52 @@
 ## Техдолг фронта: prefers-reduced-motion
 
 - ~~**`prefers-reduced-motion` — глушить декоративную анимацию**~~ ✅ Гибрид CSS + JS:
-  - **CSS** ([globals.css](frontend/src/app/globals.css)): блок `@media (prefers-reduced-motion: reduce)` прячет `.liquid-bg` (жидкие блобы) и `.app.has-scan::after` (CRT-развёртку), замораживает бесконечные keyframes у ticker (`tick`/`pulse`), auth-визуала (`authCanSpin`/`linePulse`/blob) и age-gate-блобов. Базовые fade/scale-переходы оставлены.
-  - **JS** ([ThreeCans.tsx](frontend/src/widgets/three-cans/ui/ThreeCans.tsx)): 3D-банки крутятся непрерывно (idle-wobble + орбита льдинок), поэтому при reduce-motion компонент вовсе не монтирует Three.js-сцену (`matchMedia`, lazy-init + listener на смену настройки) — экономит ещё и WebGL/CPU.
+  - **CSS** ([globals.css](../frontend/src/app/globals.css)): блок `@media (prefers-reduced-motion: reduce)` прячет `.liquid-bg` (жидкие блобы) и `.app.has-scan::after` (CRT-развёртку), замораживает бесконечные keyframes у ticker (`tick`/`pulse`), auth-визуала (`authCanSpin`/`linePulse`/blob) и age-gate-блобов. Базовые fade/scale-переходы оставлены.
+  - **JS** ([ThreeCans.tsx](../frontend/src/widgets/three-cans/ui/ThreeCans.tsx)): 3D-банки крутятся непрерывно (idle-wobble + орбита льдинок), поэтому при reduce-motion компонент вовсе не монтирует Three.js-сцену (`matchMedia`, lazy-init + listener на смену настройки) — экономит ещё и WebGL/CPU.
   - Кроссфейд смены темы (View Transitions) уже учитывал reduced-motion с прошлого спринта.
 
 ---
 
 ## 3D-банки: мобайл-гейт + accent-привязка
 
-- ~~**3D-банки: брекпоинт-чувствительность (не жрать батарею на мобиле)**~~ ✅ [ThreeCansLazy.tsx](frontend/src/widgets/three-cans/ui/ThreeCansLazy.tsx) гейтит через `useMinWidth(1440)` — ниже брейкпоинта возвращает `null`, поэтому `dynamic(ssr:false)`-импорт three.js (~150 КБ) даже не качается и WebGL не монтируется (не просто `display:none` — нет рендера/загрузки/rAF). Сильнее, чем просил бэклог-пункт.
-- ~~**3D-банки: цвет полосок привязать к акценту**~~ ✅ [ThreeCans.tsx](frontend/src/widgets/three-cans/ui/ThreeCans.tsx) красит полоски/свет банок активным акцентом из `useTheme` (`ACCENT_MAP[accent].rgb`): левая банка = текущий акцент, правая = следующий в `ACCENT_CYCLE`. Не захардкожено. reduced-motion — статичный кадр без rAF (см. секцию выше).
+- ~~**3D-банки: брекпоинт-чувствительность (не жрать батарею на мобиле)**~~ ✅ [ThreeCansLazy.tsx](../frontend/src/widgets/three-cans/ui/ThreeCansLazy.tsx) гейтит через `useMinWidth(1440)` — ниже брейкпоинта возвращает `null`, поэтому `dynamic(ssr:false)`-импорт three.js (~150 КБ) даже не качается и WebGL не монтируется (не просто `display:none` — нет рендера/загрузки/rAF). Сильнее, чем просил бэклог-пункт.
+- ~~**3D-банки: цвет полосок привязать к акценту**~~ ✅ [ThreeCans.tsx](../frontend/src/widgets/three-cans/ui/ThreeCans.tsx) красит полоски/свет банок активным акцентом из `useTheme` (`ACCENT_MAP[accent].rgb`): левая банка = текущий акцент, правая = следующий в `ACCENT_CYCLE`. Не захардкожено. reduced-motion — статичный кадр без rAF (см. секцию выше).
 - **Остаток (бэк-висяк):** заменить абстрактные банки на реальные топ-2 напитка по рейтингу — нужно поле `can_colors`/генератор + способ взять топ-2. В активном improvements (🟢).
 
 ---
 
 ## Техдолг фронта: шрифты, emoji-picker, тема, Monocraft
 
-- ~~**Все Google Fonts грузятся всегда**~~ ✅ [layout.tsx](frontend/src/app/layout.tsx) грузит только always-load набор (JetBrains Mono / Russo One / Exo 2). Опциональные Share Tech Mono / Orbitron / Rajdhani подгружаются динамически через `ensureFontLoaded()` в [applyFont](frontend/src/shared/lib/user-preferences.ts) только когда юзер их выбрал — три неиспользуемых семейства больше не тянутся на каждый первый рендер.
-- ~~**`FONT_INIT_SCRIPT` не валидирует значение шрифта**~~ ✅ Устарел — `readPrefs()` в [user-preferences.ts](frontend/src/shared/lib/user-preferences.ts) проверяет `font` против `FONTS` и падает на дефолт при мусоре. Отдельного inline-скрипта больше нет.
-- ~~**Emoji-picker позиционируется только вверх**~~ ✅ [EmojiBar](frontend/src/features/emoji-reactions/ui/EmojiBar.tsx) меряет место над якорем при открытии (`getBoundingClientRect`) и флипает вниз (класс `.is-down`, [globals.css](frontend/src/app/globals.css)) когда сверху < 52px — у верхних отзывов picker больше не уезжает за viewport.
-- ~~**Мусор `energos_favorites_mock` в localStorage**~~ ✅ One-shot `localStorage.removeItem('energos_favorites_mock')` на mount в [FavoritesProvider](frontend/src/shared/lib/favorites/favorites-provider.tsx).
-- ~~**Monocraft.ttc — 5.9MB**~~ ✅ Сконвертирован в `.woff2` через fontTools (взят regular weight 400 из 12-шрифтовой коллекции): **5.9MB → 446KB (-92%)**. `@font-face` в [globals.css](frontend/src/app/globals.css) переведён на `format('woff2')`, исходный `.ttc` удалён.
-- ~~**Анимация перехода dark↔light (flash)**~~ ✅ [theme-provider.tsx](frontend/src/shared/lib/theme/theme-provider.tsx) оборачивает смену темы в View Transitions API (кроссфейд `.35s`). Только на явном dark↔light (не первый рендер, не accent/toggle), с guard на `prefers-reduced-motion` и graceful no-op где API не поддержан.
+- ~~**Все Google Fonts грузятся всегда**~~ ✅ [layout.tsx](../frontend/src/app/layout.tsx) грузит только always-load набор (JetBrains Mono / Russo One / Exo 2). Опциональные Share Tech Mono / Orbitron / Rajdhani подгружаются динамически через `ensureFontLoaded()` в [applyFont](../frontend/src/shared/lib/user-preferences.ts) только когда юзер их выбрал — три неиспользуемых семейства больше не тянутся на каждый первый рендер.
+- ~~**`FONT_INIT_SCRIPT` не валидирует значение шрифта**~~ ✅ Устарел — `readPrefs()` в [user-preferences.ts](../frontend/src/shared/lib/user-preferences.ts) проверяет `font` против `FONTS` и падает на дефолт при мусоре. Отдельного inline-скрипта больше нет.
+- ~~**Emoji-picker позиционируется только вверх**~~ ✅ [EmojiBar](../frontend/src/features/emoji-reactions/ui/EmojiBar.tsx) меряет место над якорем при открытии (`getBoundingClientRect`) и флипает вниз (класс `.is-down`, [globals.css](../frontend/src/app/globals.css)) когда сверху < 52px — у верхних отзывов picker больше не уезжает за viewport.
+- ~~**Мусор `energos_favorites_mock` в localStorage**~~ ✅ One-shot `localStorage.removeItem('energos_favorites_mock')` на mount в [FavoritesProvider](../frontend/src/shared/lib/favorites/favorites-provider.tsx).
+- ~~**Monocraft.ttc — 5.9MB**~~ ✅ Сконвертирован в `.woff2` через fontTools (взят regular weight 400 из 12-шрифтовой коллекции): **5.9MB → 446KB (-92%)**. `@font-face` в [globals.css](../frontend/src/app/globals.css) переведён на `format('woff2')`, исходный `.ttc` удалён.
+- ~~**Анимация перехода dark↔light (flash)**~~ ✅ [theme-provider.tsx](../frontend/src/shared/lib/theme/theme-provider.tsx) оборачивает смену темы в View Transitions API (кроссфейд `.35s`). Только на явном dark↔light (не первый рендер, не accent/toggle), с guard на `prefers-reduced-motion` и graceful no-op где API не поддержан.
 
 ---
 
 ## Техдолг фронта: сброс фильтров + ошибки удаления отзыва
 
-- ~~**`sort`/`noSugarOnly` не сбрасывались при смене маршрута**~~ ✅ `SearchResetter` в [catalog-search.tsx](frontend/src/shared/lib/catalog-search.tsx) теперь сбрасывает все восемь полей контекста (добавлены `sort`, `tiers`, `priceRange`, `onlyNew`, `noSugarOnly`, `view`), а не только `search`/`searchItems`/`filterOpen`. «Сначала дороже» больше не висит после ухода со страницы.
-- ~~**`deleteReviewAction` молча игнорировал ошибки**~~ ✅ Экшен в [actions.ts](frontend/src/features/submit-review/model/actions.ts) возвращает `{ error }` (с обработкой `RateLimitError` по образцу `saveReviewAction`) вместо `// ignore`; редирект только при успехе. [DrinkPage.handleDelete](frontend/src/widgets/drink-page/ui/DrinkPage.tsx) показывает `toast({ kind: 'err' })` при провале.
+- ~~**`sort`/`noSugarOnly` не сбрасывались при смене маршрута**~~ ✅ `SearchResetter` в [catalog-search.tsx](../frontend/src/shared/lib/catalog-search.tsx) теперь сбрасывает все восемь полей контекста (добавлены `sort`, `tiers`, `priceRange`, `onlyNew`, `noSugarOnly`, `view`), а не только `search`/`searchItems`/`filterOpen`. «Сначала дороже» больше не висит после ухода со страницы.
+- ~~**`deleteReviewAction` молча игнорировал ошибки**~~ ✅ Экшен в [actions.ts](../frontend/src/features/submit-review/model/actions.ts) возвращает `{ error }` (с обработкой `RateLimitError` по образцу `saveReviewAction`) вместо `// ignore`; редирект только при успехе. [DrinkPage.handleDelete](../frontend/src/widgets/drink-page/ui/DrinkPage.tsx) показывает `toast({ kind: 'err' })` при провале.
 - ~~**`avgReview` использует `userReviews[0]` как базу**~~ ✅ Уже было исправлено ранее — `DrinkPage` считает `averageMetrics(userReviews)` и передаёт `metrics`/`count`/`rating` явными пропами в `AvgReviewCard`, без spread'а чужого отзыва. Пункт в backlog был устаревшим.
 
 ---
 
 ## Фильтрация отзывов по оценке и периоду (коммит `997a6ed`)
 
-- ~~**Фильтрация отзывов по рейтингу и дате**~~ ✅ На странице напитка под отзывами рядом с сортировкой добавлены два `.select-min`: фильтр по оценке (Все / 5 / 4+ / 3+ / 2+ / 1+, по округлённому `calcRating`) и по периоду (всё время / год / месяц / неделя, по `created_at`). [DrinkPage.tsx](frontend/src/widgets/drink-page/ui/DrinkPage.tsx). Секция держится пока есть отзывы вообще — при пустом фильтре контролы остаются + empty-state; счётчик «N из M» при активном фильтре.
+- ~~**Фильтрация отзывов по рейтингу и дате**~~ ✅ На странице напитка под отзывами рядом с сортировкой добавлены два `.select-min`: фильтр по оценке (Все / 5 / 4+ / 3+ / 2+ / 1+, по округлённому `calcRating`) и по периоду (всё время / год / месяц / неделя, по `created_at`). [DrinkPage.tsx](../frontend/src/widgets/drink-page/ui/DrinkPage.tsx). Секция держится пока есть отзывы вообще — при пустом фильтре контролы остаются + empty-state; счётчик «N из M» при активном фильтре.
 
 ---
 
 ## Каталог: URL-пагинация, токенный поиск, скелетоны, 404 (коммит `447bd23`)
 
-- ~~**Сохранение страницы пагинации при back-навигации**~~ ✅ `page` перенесён в URL (`?page=N`) через `useSearchParams` в [DrinkCatalog.tsx](frontend/src/widgets/drink-catalog/ui/DrinkCatalog.tsx) (state→URL one-way, init из URL — паттерн как в ComparePage). Переживает back, шарится. Главная обёрнута в `<Suspense>` ([page.tsx](frontend/src/app/page.tsx)) — требование useSearchParams.
+- ~~**Сохранение страницы пагинации при back-навигации**~~ ✅ `page` перенесён в URL (`?page=N`) через `useSearchParams` в [DrinkCatalog.tsx](../frontend/src/widgets/drink-catalog/ui/DrinkCatalog.tsx) (state→URL one-way, init из URL — паттерн как в ComparePage). Переживает back, шарится. Главная обёрнута в `<Suspense>` ([page.tsx](../frontend/src/app/page.tsx)) — требование useSearchParams.
 - ~~**Остальное состояние каталога в URL**~~ ✅ (`94211f5`) Синкаются `sort`, `tiers`, `price`, `new`, `zero`, `view` — гидратация из URL при маунте + зеркалирование при изменениях. Первый write пропускается, чтобы не затереть URL дефолтами. `search` намеренно НЕ синкается — его сбрасывает `SearchResetter` при навигации. Дефолты (`sort=name`/`view=grid`/пустые фильтры) в URL не пишутся.
-- ~~**Поиск независимо от порядка слов**~~ ✅ В [useFilterDrinks.ts](frontend/src/features/filter-drinks/model/useFilterDrinks.ts) подстрока заменена на токены: `split(/\s+/)` + `tokens.every(t => name.includes(t))`. «burn киви яблоко» находит «BURN Яблоко, киви».
-- ~~**`loading.tsx` / Suspense-границы**~~ ✅ [app/loading.tsx](frontend/src/app/loading.tsx) — скелетон каталога (hero + sortbar + сетка из 8 карточек), `.skel` shimmer-анимация, `prefers-reduced-motion: reduce` отключает.
-- ~~**`not-found.tsx` для несуществующего `?id=`**~~ ✅ [drinks/page.tsx](frontend/src/app/drinks/page.tsx) при заданном, но несуществующем id вызывает `notFound()` вместо молчаливого показа первого напитка; [drinks/not-found.tsx](frontend/src/app/drinks/not-found.tsx) — 404-страница с CTA в каталог.
+- ~~**Поиск независимо от порядка слов**~~ ✅ В [useFilterDrinks.ts](../frontend/src/features/filter-drinks/model/useFilterDrinks.ts) подстрока заменена на токены: `split(/\s+/)` + `tokens.every(t => name.includes(t))`. «burn киви яблоко» находит «BURN Яблоко, киви».
+- ~~**`loading.tsx` / Suspense-границы**~~ ✅ [app/loading.tsx](../frontend/src/app/loading.tsx) — скелетон каталога (hero + sortbar + сетка из 8 карточек), `.skel` shimmer-анимация, `prefers-reduced-motion: reduce` отключает.
+- ~~**`not-found.tsx` для несуществующего `?id=`**~~ ✅ [drinks/page.tsx](../frontend/src/app/drinks/page.tsx) при заданном, но несуществующем id вызывает `notFound()` вместо молчаливого показа первого напитка; [drinks/not-found.tsx](../frontend/src/app/drinks/not-found.tsx) — 404-страница с CTA в каталог.
 - ~~**Сортировка по цене**~~ ✅ Уже была реализована ранее (таб «По цене» в SortBar + `price_asc`/`price_desc` в useFilterDrinks) — пункт был устаревшим в backlog.
 
 ---
