@@ -63,6 +63,14 @@
 
 ---
 
+## 3D-банки: мобайл-гейт + accent-привязка
+
+- ~~**3D-банки: брекпоинт-чувствительность (не жрать батарею на мобиле)**~~ ✅ [ThreeCansLazy.tsx](frontend/src/widgets/three-cans/ui/ThreeCansLazy.tsx) гейтит через `useMinWidth(1440)` — ниже брейкпоинта возвращает `null`, поэтому `dynamic(ssr:false)`-импорт three.js (~150 КБ) даже не качается и WebGL не монтируется (не просто `display:none` — нет рендера/загрузки/rAF). Сильнее, чем просил бэклог-пункт.
+- ~~**3D-банки: цвет полосок привязать к акценту**~~ ✅ [ThreeCans.tsx](frontend/src/widgets/three-cans/ui/ThreeCans.tsx) красит полоски/свет банок активным акцентом из `useTheme` (`ACCENT_MAP[accent].rgb`): левая банка = текущий акцент, правая = следующий в `ACCENT_CYCLE`. Не захардкожено. reduced-motion — статичный кадр без rAF (см. секцию выше).
+- **Остаток (бэк-висяк):** заменить абстрактные банки на реальные топ-2 напитка по рейтингу — нужно поле `can_colors`/генератор + способ взять топ-2. В активном improvements (🟢).
+
+---
+
 ## Техдолг фронта: шрифты, emoji-picker, тема, Monocraft
 
 - ~~**Все Google Fonts грузятся всегда**~~ ✅ [layout.tsx](frontend/src/app/layout.tsx) грузит только always-load набор (JetBrains Mono / Russo One / Exo 2). Опциональные Share Tech Mono / Orbitron / Rajdhani подгружаются динамически через `ensureFontLoaded()` в [applyFont](frontend/src/shared/lib/user-preferences.ts) только когда юзер их выбрал — три неиспользуемых семейства больше не тянутся на каждый первый рендер.
