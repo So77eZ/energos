@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ROUTES } from '@shared/config/routes'
 import { IconSearch, IconUser, IconSliders, IconX, IconDice, IconLock } from '@shared/ui/icons'
-import { useScrollLock } from '@shared/lib/useScrollLock'
+import { Sheet } from '@shared/ui/Sheet'
 import { isActive, MOBILE_TABS, sheetItemsFor, navItemsFor } from '../model/nav-items'
 import { useMobileNav } from '../model/useMobileNav'
 import { HeaderSearchBar } from './HeaderSearchBar'
@@ -22,59 +22,13 @@ interface MobileNavProps {
 
 export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
   const pathname = usePathname()
-  const { moreOpen, searchOpen, tabsHidden, overlayOpen, setMoreOpen, setSearchOpen } = useMobileNav()
+  const { moreOpen, searchOpen, tabsHidden, setMoreOpen, setSearchOpen } = useMobileNav()
   const { gachapon } = useTheme()
   const { open: openGachapon } = useGachapon()
   const [mounted, setMounted] = useState(false)
-  const lastFocus = useRef<HTMLElement | null>(null)
 
+  // mounted-guard только для mob-tabs (свой портал; не модалка). Шиты порталит Sheet сам.
   useEffect(() => setMounted(true), [])
-  useScrollLock(overlayOpen)
-
-  // Esc закрывает; focus-trap внутри открытого диалога; возврат фокуса при закрытии.
-  useEffect(() => {
-    if (!overlayOpen) {
-      lastFocus.current?.focus?.()
-      lastFocus.current = null
-      return
-    }
-    lastFocus.current = document.activeElement as HTMLElement
-    const dialog = document.querySelector<HTMLElement>(moreOpen ? '.mob-sheet' : '.mob-search')
-    // Список фокусируемых пересобираем НА КАЖДЫЙ Tab, а не один раз: контент
-    // диалога меняется (напр. результаты поиска рендерятся после ввода), и
-    // захваченный список устарел бы — часть элементов выпала бы из trap.
-    const getFocusables = () =>
-      dialog
-        ? Array.from(
-            dialog.querySelectorAll<HTMLElement>(
-              'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])',
-            ),
-          )
-        : []
-    getFocusables()[0]?.focus()
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setMoreOpen(false)
-        setSearchOpen(false)
-        return
-      }
-      if (e.key === 'Tab') {
-        const focusables = getFocusables()
-        if (focusables.length === 0) return
-        const first = focusables[0]
-        const last = focusables[focusables.length - 1]
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault()
-          last.focus()
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault()
-          first.focus()
-        }
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [overlayOpen, moreOpen, setMoreOpen, setSearchOpen])
 
   const currentLabel = navItemsFor(isAdmin).find((i) => isActive(pathname, i.href))?.label ?? ''
   const sheetItems = sheetItemsFor(isAdmin)
@@ -132,63 +86,48 @@ export function MobileNav({ isAdmin, hasUser, userAvatar }: MobileNavProps) {
           document.body,
         )}
 
-      {mounted &&
-        moreOpen &&
-        createPortal(
-          <div className="mob-sheet-overlay" onClick={() => setMoreOpen(false)}>
-            <div className="mob-sheet" role="dialog" aria-label="Меню" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-              <div className="mob-sheet-grab" />
-              <div className="mob-sheet-head">
-                <span className="mob-sheet-title">Меню</span>
-                <button type="button" className="mob-sheet-close" onClick={() => setMoreOpen(false)} aria-label="Закрыть">
-                  <IconX w={18} />
-                </button>
-              </div>
-              <div className="mob-sheet-body">
-                {gachapon && (
-                  <button
-                    type="button"
-                    className="mob-sheet-cta mob-sheet-cta-ghost"
-                    onClick={() => { setMoreOpen(false); openGachapon() }}
-                  >
-                    <IconDice w={14} /> Случайный напиток
-                  </button>
-                )}
-                {!hasUser && (
-                  <Link href={ROUTES.auth.login} className="mob-sheet-cta" onClick={() => setMoreOpen(false)}>
-                    <IconLock w={14} /> Войти / Регистрация
-                  </Link>
-                )}
-                <div className="mob-sheet-list">
-                  {sheetItems.map((r) => (
-                    <NavMenuLink
-                      key={r.href}
-                      item={r}
-                      className="mob-sheet-item"
-                      iconSize={16}
-                      onNavigate={() => setMoreOpen(false)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {mounted &&
-        searchOpen &&
-        createPortal(
-          <div className="mob-search-overlay" onClick={() => setSearchOpen(false)}>
-            <div className="mob-search" role="dialog" aria-label="Поиск" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-              <HeaderSearchBar forceInput onSubmit={() => setSearchOpen(false)} />
-              <button type="button" className="mob-search-close" onClick={() => setSearchOpen(false)} aria-label="Закрыть">
-                <IconX w={16} />
+      <Sheet variant="bottom" title="Меню" zIndex={960} open={moreOpen} onClose={() => setMoreOpen(false)}>
+        {moreOpen && (
+          <div className="mob-sheet-body">
+            {gachapon && (
+              <button
+                type="button"
+                className="mob-sheet-cta mob-sheet-cta-ghost"
+                onClick={() => { setMoreOpen(false); openGachapon() }}
+              >
+                <IconDice w={14} /> Случайный напиток
               </button>
+            )}
+            {!hasUser && (
+              <Link href={ROUTES.auth.login} className="mob-sheet-cta" onClick={() => setMoreOpen(false)}>
+                <IconLock w={14} /> Войти / Регистрация
+              </Link>
+            )}
+            <div className="mob-sheet-list">
+              {sheetItems.map((r) => (
+                <NavMenuLink
+                  key={r.href}
+                  item={r}
+                  className="mob-sheet-item"
+                  iconSize={16}
+                  onNavigate={() => setMoreOpen(false)}
+                />
+              ))}
             </div>
-          </div>,
-          document.body,
+          </div>
         )}
+      </Sheet>
+
+      <Sheet variant="top" zIndex={960} className="mob-search" ariaLabel="Поиск" open={searchOpen} onClose={() => setSearchOpen(false)}>
+        {searchOpen && (
+          <>
+            <HeaderSearchBar forceInput onSubmit={() => setSearchOpen(false)} />
+            <button type="button" className="mob-search-close" onClick={() => setSearchOpen(false)} aria-label="Закрыть">
+              <IconX w={16} />
+            </button>
+          </>
+        )}
+      </Sheet>
     </>
   )
 }

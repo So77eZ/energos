@@ -3506,22 +3506,8 @@ body::before {
   body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0)); }
 }
 
-/* ─── Mobile sheet + search overlay (порталы) ─────────────────── */
-.mob-sheet-overlay, .mob-search-overlay {
-  position: fixed; inset: 0; z-index: 960;
-  background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
-  display: flex;
-}
-.mob-sheet-overlay { align-items: flex-end; }
-.mob-sheet {
-  width: 100%; max-height: 80vh; overflow-y: auto;
-  background: var(--bg-card); border-radius: 18px 18px 0 0; padding: 10px 16px 24px;
-  animation: sheet-up .25s ease;
-}
-.mob-sheet-grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 6px auto 12px; }
-.mob-sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.mob-sheet-title { font-weight: 700; }
-.mob-sheet-close, .mob-search-close { border: 0; background: none; color: var(--txt-dim); cursor: pointer; }
+/* ─── Mobile sheet + search overlay (Sheet-примитив) ──────────── */
+.mob-search-close { border: 0; background: none; color: var(--txt-dim); cursor: pointer; }
 .mob-sheet-cta {
   display: flex; align-items: center; gap: 8px; padding: 12px; margin-bottom: 10px;
   border-radius: 10px; background: rgba(var(--accent-rgb), .12); color: var(--accent);
@@ -3543,11 +3529,15 @@ body::before {
 .mob-sheet-item.active { color: var(--accent); background: rgba(var(--accent-rgb), .08); }
 .mob-sheet-item svg:last-child { opacity: .4; }
 
-.mob-search-overlay { align-items: flex-start; }
-.mob-search { width: 100%; display: flex; align-items: center; gap: 8px; padding: 14px 16px; background: var(--bg-card); }
+/* mob-search как Sheet variant=top: плоский full-width бар поверх .sheet/.sheet--top.
+   .sheet.mob-search (0,2,0) бьёт .sheet--top (0,1,0) независимо от порядка в файле;
+   padding сохраняет safe-area-top (бар у верхней кромки). */
+.mob-search { display: flex; align-items: center; gap: 8px; }
+.sheet.mob-search {
+  background: var(--bg-card); border: none; box-shadow: none; border-radius: 0;
+  padding: calc(env(safe-area-inset-top, 0) + 14px) 16px 14px;
+}
 .mob-search .hdr-search { flex: 1; display: block; }
-
-@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
 /* ─── Live ticker (additions) ─────────────────────────────────── */
 .ticker-row.frozen { animation: none; }
