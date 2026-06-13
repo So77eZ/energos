@@ -6,12 +6,12 @@
 
 ### 🔴 Высокий приоритет
 
-- **Фото напитков не грузятся на мобильных (РФ-сети)** — диагностика показала: загруженные фото отдаются в браузер **напрямую с Supabase** (`https://<project>.supabase.co/storage/...`, [database.py:50](backend/src/database.py#L50), `<img src={drink.image_url}>` в [DrinkCard.tsx:73](frontend/src/entities/drink/ui/DrinkCard.tsx#L73)). Supabase = AWS, его режут/блокируют российские мобильные операторы → `<img>` не грузится. Десктоп с дружелюбной сети/VPN/кэша тянет, мобила по сотовой — нет. Сам сайт (Caddy) при этом открывается на том же URL — значит свой origin в РФ доступен, недоступен только хост картинок.
+- **Фото напитков не грузятся на мобильных (РФ-сети)** — диагностика показала: загруженные фото отдаются в браузер **напрямую с Supabase** (`https://<project>.supabase.co/storage/...`, [database.py:50](../backend/src/database.py#L50), `<img src={drink.image_url}>` в [DrinkCard.tsx:73](../frontend/src/entities/drink/ui/DrinkCard.tsx#L73)). Supabase = AWS, его режут/блокируют российские мобильные операторы → `<img>` не грузится. Десктоп с дружелюбной сети/VPN/кэша тянет, мобила по сотовой — нет. Сам сайт (Caddy) при этом открывается на том же URL — значит свой origin в РФ доступен, недоступен только хост картинок.
 
   **Принцип фикса:** клиент должен ходить за картинкой только на свой origin (Caddy-хост), не на supabase.co напрямую. Дальнейшее зависит от того, **дотягивается ли сам сервер (Caddy/backend) до Supabase**.
 
   **Ситуация A — сервер достаёт Supabase (VPS за рубежом / есть обход):** проксировать, без миграции данных.
-  - **Caddy reverse-proxy (минимум кода).** В [server/Caddyfile](server/Caddyfile) добавить роут, отдающий объекты Supabase через свой origin:
+  - **Caddy reverse-proxy (минимум кода).** В [server/Caddyfile](../server/Caddyfile) добавить роут, отдающий объекты Supabase через свой origin:
 
     ```caddy
     handle_path /img/* {
@@ -22,12 +22,12 @@
     }
     ```
 
-  - В [SupabaseService.upload_image](backend/src/database.py#L31) возвращать/хранить `image_url` как относительный `/img/<file_name>` вместо абсолютного Supabase-URL (либо переписывать на отдаче в API). `delete_image` подправить под новый формат ключа.
+  - В [SupabaseService.upload_image](../backend/src/database.py#L31) возвращать/хранить `image_url` как относительный `/img/<file_name>` вместо абсолютного Supabase-URL (либо переписывать на отдаче в API). `delete_image` подправить под новый формат ключа.
   - Существующие записи в БД с абсолютными URL — миграцией заменить префикс на `/img/`.
   - Итог: браузер грузит `https://<свой-домен>/img/<key>`, Caddy сам ходит в Supabase server-side.
 
   **Ситуация B — сервер в РФ и тоже не достаёт Supabase:** проксирование не спасёт, переезжать с Supabase.
-  - **Вариант B1 — сменить S3-хранилище на РФ-дружественное** (Yandex Object Storage / VK Cloud — S3-совместимы). boto3 уже используется ([database.py:16](backend/src/database.py#L16)) — поменять `endpoint_url`, `region_name`, ключи (`SUPABASE_*` → новые env), формат public-URL в [upload_image:50](backend/src/database.py#L50). Мигрировать существующие файлы в новый бакет + переписать `image_url` в БД.
+  - **Вариант B1 — сменить S3-хранилище на РФ-дружественное** (Yandex Object Storage / VK Cloud — S3-совместимы). boto3 уже используется ([database.py:16](../backend/src/database.py#L16)) — поменять `endpoint_url`, `region_name`, ключи (`SUPABASE_*` → новые env), формат public-URL в [upload_image:50](../backend/src/database.py#L50). Мигрировать существующие файлы в новый бакет + переписать `image_url` в БД.
   - **Вариант B2 — локальное хранилище** (`/uploads`-том, отдаёт Caddy). Убрать boto3/S3 целиком: `upload_image` пишет файл в смонтированный том, `image_url = /uploads/<file_name>`, Caddy отдаёт статикой (`file_server`). Проще, без внешних провайдеров, но без CDN и привязка к диску сервера. Согласовать с тем, что для заявок (`add-requests`) картинки уже лежат в БД (`LargeBinary`) — можно унифицировать подход.
 
   **Решающий вопрос до старта:** где хостится прод и достаёт ли сервер Supabase — определяет A vs B.
@@ -166,29 +166,29 @@
 ### 🔧 Технический долг
 
 - **N+1 запросов `/emojis/` под каждым отзывом** — `EmojiBar` фетчит реакции на mount, по одному запросу на каждый отзыв. На странице с 20 отзывами это 20 параллельных GET'ов к `/api/reviews/{id}/emojis/`. **Фикс на бэке:** добавить агрегат `emoji_summary: [{ emoji, count, user_ids }]` (или `[{ emoji, count, mine }]` если знаем юзера через token) в основную схему `EnergyDrinkReviewSchema`. После этого `EmojiBar` принимает `initialReactions` пропом и не дёргает API на mount.
-- **`base64` фото в payload заявки — может вылететь 1+ МБ** — сейчас фото в `/api/submissions` кодируется base64 и идёт в JSON. На многомегабайтных снимках это излишне раздувает payload. Альтернатива: загрузка отдельным шагом `POST /uploads` → получает `photo_url` → `POST /submissions` с этим url. Либо multipart-форма. *(Замечание устарело: фронт уже шлёт `multipart/form-data` через [submissionApi.create](frontend/src/entities/submission/api/submissionApi.ts#L29). Пункт про OOM/лимит размера актуален — см. секцию Безопасность.)*
+- **`base64` фото в payload заявки — может вылететь 1+ МБ** — сейчас фото в `/api/submissions` кодируется base64 и идёт в JSON. На многомегабайтных снимках это излишне раздувает payload. Альтернатива: загрузка отдельным шагом `POST /uploads` → получает `photo_url` → `POST /submissions` с этим url. Либо multipart-форма. *(Замечание устарело: фронт уже шлёт `multipart/form-data` через [submissionApi.create](../frontend/src/entities/submission/api/submissionApi.ts#L29). Пункт про OOM/лимит размера актуален — см. секцию Безопасность.)*
 
 ### 📝 Заявки на добавление энергетика — доделать связь фронт↔бэк
 
-> 📌 **Для бекендера:** бэк-пункты консолидированы в [`docs/backend-contract.md`](docs/backend-contract.md) (#8) — единый handoff. Ниже — детальный контекст + фронт-статус.
+> 📌 **Для бекендера:** бэк-пункты консолидированы в [`docs/backend-contract.md`](backend-contract.md) (#8) — единый handoff. Ниже — детальный контекст + фронт-статус.
 
-Фича заявок (`POST/GET/PATCH /api/add-requests/`) подключена на фронте ([submissionApi.ts](frontend/src/entities/submission/api/submissionApi.ts), [SubmissionsTab.tsx](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx), [SubmitForm.tsx](frontend/src/widgets/submit-page/ui/SubmitForm.tsx)), но связь рвётся в нескольких местах. Security-разрывы (публичная картинка, OOM/MIME, валидация полей) вынесены в секцию Безопасность ниже — здесь только функциональные.
+Фича заявок (`POST/GET/PATCH /api/add-requests/`) подключена на фронте ([submissionApi.ts](../frontend/src/entities/submission/api/submissionApi.ts), [SubmissionsTab.tsx](../frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx), [SubmitForm.tsx](../frontend/src/widgets/submit-page/ui/SubmitForm.tsx)), но связь рвётся в нескольких местах. Security-разрывы (публичная картинка, OOM/MIME, валидация полей) вынесены в секцию Безопасность ниже — здесь только функциональные.
 
 #### Бэк
 
-- **🔴 `created_at` не проставляется и не отдаётся — даты заявок фейковые.** [Base](backend/src/models/base.py#L9) объявляет `created_at: datetime | None` (nullable, без default), а [create_request](backend/src/api/energy_drink_add_request.py#L54-L64) его не задаёт → в БД `NULL`. Плюс схема [`EnergyDrinkAddRequestRead`](backend/src/schemas/energy_drink_add_request.py#L5) его не содержит → фронт делает `created_at || new Date()` ([:15](frontend/src/entities/submission/api/submissionApi.ts#L15)) и при каждом релоуде показывает «сегодня».
+- **🔴 `created_at` не проставляется и не отдаётся — даты заявок фейковые.** [Base](../backend/src/models/base.py#L9) объявляет `created_at: datetime | None` (nullable, без default), а [create_request](../backend/src/api/energy_drink_add_request.py#L54-L64) его не задаёт → в БД `NULL`. Плюс схема [`EnergyDrinkAddRequestRead`](../backend/src/schemas/energy_drink_add_request.py#L5) его не содержит → фронт делает `created_at || new Date()` ([:15](../frontend/src/entities/submission/api/submissionApi.ts#L15)) и при каждом релоуде показывает «сегодня».
 
   **Фикс:** проставлять `created_at=datetime.utcnow()` при создании (или `server_default=func.now()` в модели + миграция) и добавить `created_at: datetime` в `EnergyDrinkAddRequestRead`.
 
-- **🔴 Нет времени решения (`resolved_at`) — карточка approved/rejected не показывает дату.** Фронт ждёт `resolved_at` ([types.ts:15](frontend/src/entities/submission/model/types.ts#L15)), бэк не отдаёт. Блок `sub.resolved_at && (…)` в [SubmissionsTab](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx#L184) никогда не рендерится.
+- **🔴 Нет времени решения (`resolved_at`) — карточка approved/rejected не показывает дату.** Фронт ждёт `resolved_at` ([types.ts:15](../frontend/src/entities/submission/model/types.ts#L15)), бэк не отдаёт. Блок `sub.resolved_at && (…)` в [SubmissionsTab](../frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx#L184) никогда не рендерится.
 
-  **Фикс:** проставлять `updated_at=datetime.utcnow()` в [update_request_status](backend/src/api/energy_drink_add_request.py#L110) и отдавать его как `resolved_at` (или отдельное поле) в схеме.
+  **Фикс:** проставлять `updated_at=datetime.utcnow()` в [update_request_status](../backend/src/api/energy_drink_add_request.py#L110) и отдавать его как `resolved_at` (или отдельное поле) в схеме.
 
-- **🔴 `status` в PATCH не валидируется — принимает любую строку.** [update_request_status](backend/src/api/energy_drink_add_request.py#L130) делает `db_request.status = status_update.status` без проверки против `EnergyDrinkAddRequestStatus`. Можно записать `status="banana"`. Также нет guard'а на переход: уже resolved-заявку можно ремодерировать (а картинка уже обнулена — повторный approve без фото).
+- **🔴 `status` в PATCH не валидируется — принимает любую строку.** [update_request_status](../backend/src/api/energy_drink_add_request.py#L130) делает `db_request.status = status_update.status` без проверки против `EnergyDrinkAddRequestStatus`. Можно записать `status="banana"`. Также нет guard'а на переход: уже resolved-заявку можно ремодерировать (а картинка уже обнулена — повторный approve без фото).
 
-  **Фикс:** типизировать поле в [схеме](backend/src/schemas/energy_drink_add_request.py#L20) как `status: EnergyDrinkAddRequestStatus` (Pydantic отвалидирует enum). Запретить переход из терминального состояния (403/409 если `db_request.status != PENDING`).
+  **Фикс:** типизировать поле в [схеме](../backend/src/schemas/energy_drink_add_request.py#L20) как `status: EnergyDrinkAddRequestStatus` (Pydantic отвалидирует enum). Запретить переход из терминального состояния (403/409 если `db_request.status != PENDING`).
 
-- **🟡 Approve не создаёт реальный напиток.** [update_request_status](backend/src/api/energy_drink_add_request.py#L130) только меняет статус; `energy_drinks` запись не появляется. Админ заводит карточку руками (так и написано в confirm-диалоге [SubmissionsTab:43](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx#L43)).
+- **🟡 Approve не создаёт реальный напиток.** [update_request_status](../backend/src/api/energy_drink_add_request.py#L130) только меняет статус; `energy_drinks` запись не появляется. Админ заводит карточку руками (так и написано в confirm-диалоге [SubmissionsTab:43](../frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx#L43)).
 
   **Фикс (на выбор):** (a) при `approved` создавать черновик `EnergyDrink` из полей заявки (`name`, `price`, `no_sugar`, image) и возвращать его `id`, чтобы фронт сразу вёл админа на `/admin/drinks/{id}/edit` дозаполнить метрики; либо (b) явно оставить ручным и убрать ожидание авто-создания. Решение зафиксировать в [api.md](api.md).
 
@@ -196,65 +196,65 @@
 
   **Фикс:** `DELETE /{id}` с проверкой «владелец своей pending-заявки ИЛИ admin», `204 No Content`.
 
-- **🟡 Список без сортировки и фильтра.** [get_requests](backend/src/api/energy_drink_add_request.py#L71) отдаёт в порядке БД, без `ORDER BY`, без фильтра по статусу, без пагинации. Фронт тянет всё и фильтрует/сортирует на клиенте.
+- **🟡 Список без сортировки и фильтра.** [get_requests](../backend/src/api/energy_drink_add_request.py#L71) отдаёт в порядке БД, без `ORDER BY`, без фильтра по статусу, без пагинации. Фронт тянет всё и фильтрует/сортирует на клиенте.
 
   **Фикс:** `ORDER BY created_at DESC`; опц. query-параметр `?status=pending` и пагинация `limit/offset`. Это же закрывает счётчики на дашборде без перекачки всех заявок.
 
-- **🟢 Нет rate-limit на создание.** В отличие от [reviews.py:30](backend/src/api/reviews.py#L30) (`@limiter.limit("5/minute")`), `POST /api/add-requests/` ничем не ограничен — спам-заявками легко завалить очередь.
+- **🟢 Нет rate-limit на создание.** В отличие от [reviews.py:30](../backend/src/api/reviews.py#L30) (`@limiter.limit("5/minute")`), `POST /api/add-requests/` ничем не ограничен — спам-заявками легко завалить очередь.
 
   **Фикс:** навесить `@limiter.limit("5/minute")` + аргумент `request: Request` по образцу reviews.
 
 #### Фронт
 
-- **✅ Причина отклонения доходит до API.** `admin_comment` прокинут через всю цепочку [api](frontend/src/entities/submission/api/submissionApi.ts) → [action](frontend/src/shared/lib/submissions/actions.ts) → [provider](frontend/src/shared/lib/submissions/submissions-provider.tsx). Модалка отклонения [RejectModal](frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx) с textarea причины + чипами-пресетами заменила хардкод «Не прошло модерацию».
+- **✅ Причина отклонения доходит до API.** `admin_comment` прокинут через всю цепочку [api](../frontend/src/entities/submission/api/submissionApi.ts) → [action](../frontend/src/shared/lib/submissions/actions.ts) → [provider](../frontend/src/shared/lib/submissions/submissions-provider.tsx). Модалка отклонения [RejectModal](../frontend/src/widgets/admin-page/ui/tabs/SubmissionsTab.tsx) с textarea причины + чипами-пресетами заменила хардкод «Не прошло модерацию».
 
-- **✅ `admin_comment` мапится на отображение** — `reject_reason = item.admin_comment` в [mapBackendToFrontend](frontend/src/entities/submission/api/submissionApi.ts). Видно и в админ-карточке, и в «Мои заявки».
+- **✅ `admin_comment` мапится на отображение** — `reject_reason = item.admin_comment` в [mapBackendToFrontend](../frontend/src/entities/submission/api/submissionApi.ts). Видно и в админ-карточке, и в «Мои заявки».
 
-- **✅ Тоггл `no_sugar` в форме** — switch «Без сахара» в [SubmitForm](frontend/src/widgets/submit-page/ui/SubmitForm.tsx), реальное значение уходит в `formData` (убран хардкод `'false'`).
+- **✅ Тоггл `no_sugar` в форме** — switch «Без сахара» в [SubmitForm](../frontend/src/widgets/submit-page/ui/SubmitForm.tsx), реальное значение уходит в `formData` (убран хардкод `'false'`).
 
 - **🔴 E — approve→черновик (ждёт бэк).** Бэкендер делает создание `EnergyDrink` с `is_draft` + publish-эндпоинт. Дизайн-мокап готов (`frontendNew/.../page-admin.jsx` — `createDraftFromSubmission`, гейтинг публикации по метрикам, баннер черновика). Портировать в боевой `frontend/` после появления эндпоинтов.
 
-- **🟡 Реальные даты в карточке заявки (ждёт бэк).** Пока бэк не отдаёт `created_at`/`resolved_at` (см. задачи Бэк выше), фронт фоллбэчит дату на `new Date()` — при релоуде «сегодня». После фикса бэка убрать фоллбэк в [submissionApi](frontend/src/entities/submission/api/submissionApi.ts) и маппить `resolved_at`.
+- **🟡 Реальные даты в карточке заявки (ждёт бэк).** Пока бэк не отдаёт `created_at`/`resolved_at` (см. задачи Бэк выше), фронт фоллбэчит дату на `new Date()` — при релоуде «сегодня». После фикса бэка убрать фоллбэк в [submissionApi](../frontend/src/entities/submission/api/submissionApi.ts) и маппить `resolved_at`.
 
 ### 🛡 Безопасность
 
-> 📌 **Для бекендера:** actionable-версия консолидирована в [`docs/backend-contract.md`](docs/backend-contract.md) (#9) — единый handoff. Ниже — детальный аудит/контекст.
+> 📌 **Для бекендера:** actionable-версия консолидирована в [`docs/backend-contract.md`](backend-contract.md) (#9) — единый handoff. Ниже — детальный аудит/контекст.
 
 Аудит от 2026-05-30. Сгруппировано по серьёзности. Все ссылки на код — текущий backend (FastAPI).
 
 #### 🔴 Critical (фиксить срочно)
 
-- **Broken access control: любой залогиненный юзер может управлять каталогом** — в [backend/src/api/energy_drink.py](backend/src/api/energy_drink.py) эндпоинты `POST /` (создать напиток), `PUT /{id}/`, `DELETE /{id}/`, `POST /{id}/upload-image/` зависят только от `Depends(get_current_user)`, нет проверки `current_user.role == Role.ADMIN`. Любой зарегистрированный пользователь может создавать, изменять, удалять напитки и заливать картинки в Supabase bucket (квоты/счёт за хранилище). Admin-check присутствует только в `reviews.py:134,170` и `energy_drink_add_request.py:116`.
+- **Broken access control: любой залогиненный юзер может управлять каталогом** — в [backend/src/api/energy_drink.py](../backend/src/api/energy_drink.py) эндпоинты `POST /` (создать напиток), `PUT /{id}/`, `DELETE /{id}/`, `POST /{id}/upload-image/` зависят только от `Depends(get_current_user)`, нет проверки `current_user.role == Role.ADMIN`. Любой зарегистрированный пользователь может создавать, изменять, удалять напитки и заливать картинки в Supabase bucket (квоты/счёт за хранилище). Admin-check присутствует только в `reviews.py:134,170` и `energy_drink_add_request.py:116`.
 
   **Фикс:** ввести зависимость `require_admin` (HTTP 403 если `role != Role.ADMIN`) и навесить её на все четыре эндпоинта drinks. Можно прямо как `Depends(require_admin)` рядом с `get_current_user`.
 
-- **`GET /api/add-requests/{id}/image` — публично, без auth** — [backend/src/api/energy_drink_add_request.py:93-107](backend/src/api/energy_drink_add_request.py#L93-L107) `get_request_image` не зависит от `get_current_user`. Любой по ID `1, 2, 3, ...` сливает приватные картинки чужих заявок (фото банки с возможным контекстом — комната, лицо, документы).
+- **`GET /api/add-requests/{id}/image` — публично, без auth** — [backend/src/api/energy_drink_add_request.py:93-107](../backend/src/api/energy_drink_add_request.py#L93-L107) `get_request_image` не зависит от `get_current_user`. Любой по ID `1, 2, 3, ...` сливает приватные картинки чужих заявок (фото банки с возможным контекстом — комната, лицо, документы).
 
   **Фикс:** добавить `current_user: User = Depends(get_current_user)` + проверку «либо владелец заявки, либо admin».
 
-- **`POST /api/add-requests/` — OOM + MIME spoof** — [backend/src/api/energy_drink_add_request.py:49-51](backend/src/api/energy_drink_add_request.py#L49-L51) `image_bytes = await image.read()` целиком в RAM, без `Content-Length` проверки и без проверки реального типа (magic-bytes функция `_get_image_mime_type` есть, но вызывается только при GET; POST принимает что угодно). Атакующий шлёт 1 ГБ или HTML с подделанным MIME.
+- **`POST /api/add-requests/` — OOM + MIME spoof** — [backend/src/api/energy_drink_add_request.py:49-51](../backend/src/api/energy_drink_add_request.py#L49-L51) `image_bytes = await image.read()` целиком в RAM, без `Content-Length` проверки и без проверки реального типа (magic-bytes функция `_get_image_mime_type` есть, но вызывается только при GET; POST принимает что угодно). Атакующий шлёт 1 ГБ или HTML с подделанным MIME.
 
   **Фикс:** проверять size во время чтения (чанками с лимитом ~5 МБ) + вызвать `_get_image_mime_type(image_bytes)` сразу после чтения, отказывать если не один из четырёх известных. Заодно валидировать `name`/`comment`/`admin_comment` через `max_length`.
 
-- **`SECRET_KEY` дефолтится в пустую строку** — [backend/config.py:12](backend/config.py#L12) `SECRET_KEY: str = os.getenv("SECRET_KEY", "")`. Если переменная не задана — JWT подписывается пустой строкой и любой может выпустить валидный токен. Pydantic Settings не валидирует обязательность.
+- **`SECRET_KEY` дефолтится в пустую строку** — [backend/config.py:12](../backend/config.py#L12) `SECRET_KEY: str = os.getenv("SECRET_KEY", "")`. Если переменная не задана — JWT подписывается пустой строкой и любой может выпустить валидный токен. Pydantic Settings не валидирует обязательность.
 
   **Фикс:** `SECRET_KEY: str` без default + валидатор `@field_validator("SECRET_KEY")` с `len >= 32`. Падать на старте если не задана. Аналогично для `DB_URL` и `SUPABASE_*` ключей.
 
-- **`NoDirectAccessMiddleware` — обходимая псевдо-защита** — [backend/main.py:14-29](backend/main.py#L14-L29) блокирует запросы без `Origin`/`Referer`. Атакующий просто шлёт `Referer: https://x` curl'ом — обходит. Никакой реальной защиты не даёт, но создаёт ложное чувство безопасности. Браузер всё равно ставит эти заголовки сам.
+- **`NoDirectAccessMiddleware` — обходимая псевдо-защита** — [backend/main.py:14-29](../backend/main.py#L14-L29) блокирует запросы без `Origin`/`Referer`. Атакующий просто шлёт `Referer: https://x` curl'ом — обходит. Никакой реальной защиты не даёт, но создаёт ложное чувство безопасности. Браузер всё равно ставит эти заголовки сам.
 
   **Фикс:** удалить middleware. Полагаться на CORS + auth + rate-limit. Если нужен anti-scraping слой — другой механизм (Cloudflare Turnstile, IP-allowlist на админ-роуты).
 
 #### 🟠 High
 
-- **Upload: `Content-Length` не проверяется до полного чтения в память** — [backend/src/database.py:37-41](backend/src/database.py#L37-L41) сначала `content = await file.read()` (целиком в RAM), потом сверяет `len > 5MB`. Атакующий шлёт файл 1 ГБ → сервер OOM'ится до проверки.
+- **Upload: `Content-Length` не проверяется до полного чтения в память** — [backend/src/database.py:37-41](../backend/src/database.py#L37-L41) сначала `content = await file.read()` (целиком в RAM), потом сверяет `len > 5MB`. Атакующий шлёт файл 1 ГБ → сервер OOM'ится до проверки.
 
   **Фикс:** читать чанками `while chunk := await file.read(64*1024)` и обрывать как только накопилось > 5 МБ. Дополнительно — `app.add_middleware(..., max_request_size=...)` или nginx/Caddy лимит `request_body 6m`.
 
 - **Upload: MIME-тип берётся из заголовка клиента** — `file.content_type` подделывается. Файл `.html` с `Content-Type: image/jpeg` пройдёт валидацию, попадёт в публичный Supabase bucket с MIME `image/jpeg`, но по факту HTML — XSS-вектор если кто-то откроет URL напрямую (Supabase отдаёт ровно тот MIME, который записали).
 
-  **Фикс:** проверять реальный тип через magic bytes — `PIL.Image.open(BytesIO(content)).verify()` (если бросило исключение — не картинка). Дополнительно — пересохранять через PIL чтобы выкинуть полиглот-payload'ы. Уже есть готовый `_get_image_mime_type` в [backend/src/api/energy_drink_add_request.py:28-37](backend/src/api/energy_drink_add_request.py#L28-L37) — вынести в общий util и звать в `SupabaseService.upload_image` тоже.
+  **Фикс:** проверять реальный тип через magic bytes — `PIL.Image.open(BytesIO(content)).verify()` (если бросило исключение — не картинка). Дополнительно — пересохранять через PIL чтобы выкинуть полиглот-payload'ы. Уже есть готовый `_get_image_mime_type` в [backend/src/api/energy_drink_add_request.py:28-37](../backend/src/api/energy_drink_add_request.py#L28-L37) — вынести в общий util и звать в `SupabaseService.upload_image` тоже.
 
-- **Upload: имя файла из юзера не санитизируется** — [backend/src/database.py:42](backend/src/database.py#L42) `f"{uuid.uuid4()}_{file.filename}"`. `file.filename` может содержать `../`, `/`, NUL, unicode-control. UUID-префикс защитит от перезаписи, но S3-ключ может оказаться невалидным или эзотерическим (`%00`, RTL-override). Имя возвращается клиенту через URL и попадает в `<img src>`.
+- **Upload: имя файла из юзера не санитизируется** — [backend/src/database.py:42](../backend/src/database.py#L42) `f"{uuid.uuid4()}_{file.filename}"`. `file.filename` может содержать `../`, `/`, NUL, unicode-control. UUID-префикс защитит от перезаписи, но S3-ключ может оказаться невалидным или эзотерическим (`%00`, RTL-override). Имя возвращается клиенту через URL и попадает в `<img src>`.
 
   **Фикс:** игнорировать `file.filename` целиком — использовать `f"{uuid4()}{ext_from_mime}"` где ext выводится из проверенного MIME (`.jpg`/`.png`/`.webp`/`.gif`).
 
@@ -262,29 +262,29 @@
 
   **Фикс:** при resave через PIL — `img.save(buf, format=..., exif=b"")` или явно `del img.info["exif"]`.
 
-- **Mass assignment: PUT `/reviews/{id}/` позволяет подменить `user_id`** — [backend/src/api/reviews.py:114-148](backend/src/api/reviews.py#L114-L148) применяет `setattr` для всех полей `EnergyDrinkReviewSchema`, исключая только `id/created_at/updated_at/username/from_admin`. Поле `user_id` (которое есть в схеме) НЕ исключено. Юзер может в payload поставить `user_id: 42` и подменить владельца своего отзыва. Аналогично — `energy_drink_id` (можно «переселить» отзыв на чужой напиток).
+- **Mass assignment: PUT `/reviews/{id}/` позволяет подменить `user_id`** — [backend/src/api/reviews.py:114-148](../backend/src/api/reviews.py#L114-L148) применяет `setattr` для всех полей `EnergyDrinkReviewSchema`, исключая только `id/created_at/updated_at/username/from_admin`. Поле `user_id` (которое есть в схеме) НЕ исключено. Юзер может в payload поставить `user_id: 42` и подменить владельца своего отзыва. Аналогично — `energy_drink_id` (можно «переселить» отзыв на чужой напиток).
 
   **Фикс:** добавить `user_id` в exclude-list. Или лучше — использовать отдельную `UpdateEnergyDrinkReviewSchema` без read-only полей вообще (как `Create` уже отделён).
 
-- **Аналогично mass assignment в `PUT /energy-drinks/{id}/`** — [backend/src/api/energy_drink.py:108-111](backend/src/api/energy_drink.py#L108-L111) сетит любое поле кроме id/created/updated. Если в `EnergyDrinkSchema` появится поле типа `is_featured`, `slug`, `image_url` — юзер сможет руками подменить `image_url` на свой URL (после фикса admin-check на эндпоинт это становится меньшей проблемой, но всё равно).
+- **Аналогично mass assignment в `PUT /energy-drinks/{id}/`** — [backend/src/api/energy_drink.py:108-111](../backend/src/api/energy_drink.py#L108-L111) сетит любое поле кроме id/created/updated. Если в `EnergyDrinkSchema` появится поле типа `is_featured`, `slug`, `image_url` — юзер сможет руками подменить `image_url` на свой URL (после фикса admin-check на эндпоинт это становится меньшей проблемой, но всё равно).
 
   **Фикс:** отдельная `UpdateEnergyDrinkSchema` с явным whitelist полей.
 
-- **JWT: 30-минутный access token без refresh + без revocation** — [backend/src/auth.py:11,22-32](backend/src/auth.py#L11). Украденный токен живёт 30 минут, logout не инвалидирует (нет blacklist), нет refresh-token флоу. Нет `iss`/`aud` claims — токен от dev-окружения может пройти в prod если SECRET_KEY совпадает.
+- **JWT: 30-минутный access token без refresh + без revocation** — [backend/src/auth.py:11,22-32](../backend/src/auth.py#L11). Украденный токен живёт 30 минут, logout не инвалидирует (нет blacklist), нет refresh-token флоу. Нет `iss`/`aud` claims — токен от dev-окружения может пройти в prod если SECRET_KEY совпадает.
 
   **Фикс:** короткий access (~15 мин) + refresh-token с записью в БД (отзываемый), `iss="energos"`, `aud=<env>`. Logout удаляет refresh из БД. Опционально — JWT jti + blacklist в Redis для access.
 
-- **Rate limit считается по `get_remote_address` за прокси** — [backend/src/rate_limiter.py:8](backend/src/rate_limiter.py#L8). `slowapi.util.get_remote_address` возвращает `request.client.host` = IP реверс-прокси (Caddy/nginx). Все юзеры мира делят один счётчик. Бот легко обходит, легитимные юзеры лочатся.
+- **Rate limit считается по `get_remote_address` за прокси** — [backend/src/rate_limiter.py:8](../backend/src/rate_limiter.py#L8). `slowapi.util.get_remote_address` возвращает `request.client.host` = IP реверс-прокси (Caddy/nginx). Все юзеры мира делят один счётчик. Бот легко обходит, легитимные юзеры лочатся.
 
   **Фикс:** custom `key_func` который читает `X-Forwarded-For` / `X-Real-IP` (первый IP в цепочке). Убедиться что Caddy/nginx ставит этот заголовок и **затирает** клиентский (иначе клиент сам себе подставит фейк-IP).
 
 #### 🟡 Medium
 
-- **CORS: `allow_credentials=True` + `allow_methods=["*"]` + `allow_headers=["*"]`** — [backend/main.py:42-48](backend/main.py#L42-L48). При credentials wildcard методов/заголовков делает CORS-маску достаточно прозрачной для CSRF-подобных атак если JWT уедет в cookie. Сейчас Authorization-header → менее страшно, но при миграции на httpOnly cookie станет дырой. `ALLOWED_ORIGINS` зашит в дефолт `http://localhost,http://server` — оба слишком широкие.
+- **CORS: `allow_credentials=True` + `allow_methods=["*"]` + `allow_headers=["*"]`** — [backend/main.py:42-48](../backend/main.py#L42-L48). При credentials wildcard методов/заголовков делает CORS-маску достаточно прозрачной для CSRF-подобных атак если JWT уедет в cookie. Сейчас Authorization-header → менее страшно, но при миграции на httpOnly cookie станет дырой. `ALLOWED_ORIGINS` зашит в дефолт `http://localhost,http://server` — оба слишком широкие.
 
   **Фикс:** явный whitelist методов (`GET, POST, PUT, DELETE`), явный whitelist заголовков (`Authorization, Content-Type, Accept-Language`). Запретить `*`. `ALLOWED_ORIGINS` без дефолта — из env.
 
-- **Cookie `secure` флаг условный — токен может уйти по plain HTTP** — [frontend/src/shared/lib/session.ts:14](frontend/src/shared/lib/session.ts#L14) `secure: process.env.NEXT_PUBLIC_ORIGIN?.startsWith('https://') || false`. Если env-переменная не задана / опечатка / не пушнули в prod — JWT в cookie идёт без `Secure` флага. Wi-Fi-MITM перехватывает.
+- **Cookie `secure` флаг условный — токен может уйти по plain HTTP** — [frontend/src/shared/lib/session.ts:14](../frontend/src/shared/lib/session.ts#L14) `secure: process.env.NEXT_PUBLIC_ORIGIN?.startsWith('https://') || false`. Если env-переменная не задана / опечатка / не пушнули в prod — JWT в cookie идёт без `Secure` флага. Wi-Fi-MITM перехватывает.
 
   **Фикс:** в prod хардкодить `secure: true` через `process.env.NODE_ENV === 'production'`. Опечатка в URL не должна снимать защиту.
 
@@ -292,13 +292,13 @@
 
   **Фикс:** связано с пунктом про refresh-token — нужен серверный store отозванных токенов (Redis с jti). Или хотя бы blacklist в БД.
 
-- **Cookie maxAge=7d, JWT exp=30 мин — рассинхрон** — [frontend/src/shared/lib/session.ts:17](frontend/src/shared/lib/session.ts#L17). После 30 минут cookie ещё валидна, но любой API-запрос даёт 401. UX-баг (юзер думает что залогинен), не security.
+- **Cookie maxAge=7d, JWT exp=30 мин — рассинхрон** — [frontend/src/shared/lib/session.ts:17](../frontend/src/shared/lib/session.ts#L17). После 30 минут cookie ещё валидна, но любой API-запрос даёт 401. UX-баг (юзер думает что залогинен), не security.
 
 - **CSRF: защита только через `SameSite=Lax`** — нет explicit CSRF-токена. `SameSite=Lax` блокирует POST-CSRF с других сайтов (хорошо), но GET-side-effects уязвимы. Сейчас все мутации через POST/PUT/DELETE — допустимо, но хрупко: одна `GET /api/.../delete/` пройдёт.
 
   **Фикс:** для критичных операций (смена пароля, удаление аккаунта) — `SameSite=Strict` на отдельной cookie. Или double-submit CSRF-токен.
 
-- **Yandex Metrika грузится без consent — 152-ФЗ / GDPR** — [frontend/src/app/layout.tsx:46-58](frontend/src/app/layout.tsx#L46-L58) `ym(...,'init',{webvisor:true,...})` инициализируется при первом рендере. `webvisor:true` записывает движения мыши, клики, скроллы, ввод в формы (если не помечены `data-ym-disable-keys`). Согласие пользователя не запрашивается. Для рос. трафика — нарушение 152-ФЗ (сбор персональных данных без согласия), для ЕС-трафика — GDPR.
+- **Yandex Metrika грузится без consent — 152-ФЗ / GDPR** — [frontend/src/app/layout.tsx:46-58](../frontend/src/app/layout.tsx#L46-L58) `ym(...,'init',{webvisor:true,...})` инициализируется при первом рендере. `webvisor:true` записывает движения мыши, клики, скроллы, ввод в формы (если не помечены `data-ym-disable-keys`). Согласие пользователя не запрашивается. Для рос. трафика — нарушение 152-ФЗ (сбор персональных данных без согласия), для ЕС-трафика — GDPR.
 
   **Фикс:** баннер согласия → инициализация ym только после accept. Альтернатива — `webvisor:false` + только агрегированные метрики (тогда персональных данных нет). Поля паролей/email в формах помечать `data-ym-disable-keys` обязательно.
 
@@ -308,7 +308,7 @@
 
   **Доп. фикс независимо от admin-check:** валидация `image_url` в Pydantic через `HttpUrl` + whitelist хостов (`supabase-url.co`). Чужие URL отклонять.
 
-- **Pydantic-схемы без `max_length` на строковых полях** — `comment` в [backend/src/schemas/reviews.py:12,27](backend/src/schemas/reviews.py#L12), `name` в [backend/src/schemas/energy_drink.py:10](backend/src/schemas/energy_drink.py#L10), `username` уже ограничен (50). Юзер шлёт `comment: "A" * 10_000_000` → 10 МБ в БД на каждый POST. Памяти сервера и места на диске нет.
+- **Pydantic-схемы без `max_length` на строковых полях** — `comment` в [backend/src/schemas/reviews.py:12,27](../backend/src/schemas/reviews.py#L12), `name` в [backend/src/schemas/energy_drink.py:10](../backend/src/schemas/energy_drink.py#L10), `username` уже ограничен (50). Юзер шлёт `comment: "A" * 10_000_000` → 10 МБ в БД на каждый POST. Памяти сервера и места на диске нет.
 
   **Фикс:** `comment: str | None = Field(default=None, max_length=2000)`, `name: str = Field(..., min_length=1, max_length=200)`. По всем схемам — пройтись и проставить разумные лимиты.
 
@@ -319,25 +319,25 @@
 - **SSRF / image-proxy** — бэк не делает `fetch(user_supplied_url)`. Картинки приходят только как `UploadFile` (multipart), загружаются в Supabase. SSRF-вектора нет.
 - **SQL injection** — все запросы через SQLAlchemy с параметризацией (`select(User).where(User.username == ...)`). Чисто.
 - **Path traversal на upload** — Supabase S3 key через `uuid4()` префикс, юзер не контролирует начало ключа (после фикса санитизации `file.filename` — будет полностью чисто).
-- **JWT in localStorage** — нет, JWT в **httpOnly cookie** через [frontend/src/shared/lib/session.ts](frontend/src/shared/lib/session.ts). XSS-кражи токена нет.
+- **JWT in localStorage** — нет, JWT в **httpOnly cookie** через [frontend/src/shared/lib/session.ts](../frontend/src/shared/lib/session.ts). XSS-кражи токена нет.
 
-- **Username enumeration на регистрации** — [backend/src/api/auth.py:27-30](backend/src/api/auth.py#L27-L30) возвращает 400 `username_taken`. Атакующий перебирает имена и узнаёт кто зарегистрирован. (На login уже всё правильно — единое `invalid_credentials`.)
+- **Username enumeration на регистрации** — [backend/src/api/auth.py:27-30](../backend/src/api/auth.py#L27-L30) возвращает 400 `username_taken`. Атакующий перебирает имена и узнаёт кто зарегистрирован. (На login уже всё правильно — единое `invalid_credentials`.)
 
   **Фикс:** компромисс — оставить как есть (UX > enumeration risk для публичной регистрации) ИЛИ перевести на email + OTP (см. соседний пункт про OTP-вход), там enumeration естественно мутится.
 
-- **Парольная политика без проверки на распространённые пароли** — [backend/src/schemas/auth.py:18-30](backend/src/schemas/auth.py#L18-L30) требует upper+lower+digit от 8 символов. `Password1` пройдёт, но это в топ-100 утёкших.
+- **Парольная политика без проверки на распространённые пароли** — [backend/src/schemas/auth.py:18-30](../backend/src/schemas/auth.py#L18-L30) требует upper+lower+digit от 8 символов. `Password1` пройдёт, но это в топ-100 утёкших.
 
   **Фикс:** zxcvbn (Python-порт) для оценки энтропии — отказывать если score < 3. Или k-anonymity Pwned Passwords (`api.pwnedpasswords.com/range/{prefix5}`) — оффлайн-проверка хеша.
 
-- **Emoji-query без валидации** — [backend/src/api/review_emoji.py:39,86](backend/src/api/review_emoji.py#L39) `emoji: str = Query(...)` без `max_length`, regex. Юзер шлёт 10 МБ строку → в БД лезет, уникальный индекс упадёт, но память съест.
+- **Emoji-query без валидации** — [backend/src/api/review_emoji.py:39,86](../backend/src/api/review_emoji.py#L39) `emoji: str = Query(...)` без `max_length`, regex. Юзер шлёт 10 МБ строку → в БД лезет, уникальный индекс упадёт, но память съест.
 
   **Фикс:** `emoji: str = Query(..., max_length=8, regex=r"^\p{Emoji}+$")` (Python: `re` не знает `\p{Emoji}` — взять `emoji` lib или регэксп из её исходников).
 
-- **`upload_image` ловит `Exception` и кладёт `str(e)` в ответ** — [backend/src/database.py:52-55](backend/src/database.py#L52-L55) `detail=f"Failed to upload image: {str(e)}"`. boto3-исключения могут содержать имя бакета, эндпоинт, регион, иногда ключи в ARN. Утечка инфраструктуры наружу.
+- **`upload_image` ловит `Exception` и кладёт `str(e)` в ответ** — [backend/src/database.py:52-55](../backend/src/database.py#L52-L55) `detail=f"Failed to upload image: {str(e)}"`. boto3-исключения могут содержать имя бакета, эндпоинт, регион, иногда ключи в ARN. Утечка инфраструктуры наружу.
 
   **Фикс:** логировать `e` на сервере, отдавать клиенту общий текст «Не удалось загрузить файл, попробуйте позже». Не светить внутренности.
 
-- **Print с ошибкой удаления в `delete_image`** — [backend/src/database.py:67](backend/src/database.py#L67) `print(f"Failed to delete image {key}: {str(e)}")`. Должен быть `logger.error`, иначе ошибки уходят в stdout без структуры и теряются.
+- **Print с ошибкой удаления в `delete_image`** — [backend/src/database.py:67](../backend/src/database.py#L67) `print(f"Failed to delete image {key}: {str(e)}")`. Должен быть `logger.error`, иначе ошибки уходят в stdout без структуры и теряются.
 
 - **Логирование на стороне prod не настроено** (по этому файлу видно) — никакой видимости неудачных логинов, лимитов, 5xx. Невозможно увидеть атаку.
 
@@ -359,19 +359,19 @@
 
 - **API docs `/docs` открыты в prod?** — FastAPI по умолчанию рендерит Swagger. Если `DEPLOY_ENV=prod` — отключать через `FastAPI(docs_url=None, redoc_url=None)` или защитить basic-auth'ом.
 
-- ~~**`role` строкой вместо enum**~~ — ✅ исправлено в [backend/src/constants.py](backend/src/constants.py) (commit `52ac096`). `Role(str, Enum)` с `USER`/`ADMIN`, используется в reviews/auth/models. `energy_drink.py` всё ещё игнорирует — после фикса access control звать `Role.ADMIN`.
+- ~~**`role` строкой вместо enum**~~ — ✅ исправлено в [backend/src/constants.py](../backend/src/constants.py) (commit `52ac096`). `Role(str, Enum)` с `USER`/`ADMIN`, используется в reviews/auth/models. `energy_drink.py` всё ещё игнорирует — после фикса access control звать `Role.ADMIN`.
 
 #### 🐛 Доп. баги в свежих коммитах (не security, но фиксить)
 
-- **Дубль relationship в [backend/src/models/auth.py:30-35](backend/src/models/auth.py#L30-L35)** — `energy_drink_add_requests: Mapped[...]` объявлен дважды подряд. Вторая объявка перезаписывает первую → теряется `cascade="all, delete-orphan"`. SQLAlchemy в свежих версиях выдаёт warning или падает.
+- **Дубль relationship в [backend/src/models/auth.py:30-35](../backend/src/models/auth.py#L30-L35)** — `energy_drink_add_requests: Mapped[...]` объявлен дважды подряд. Вторая объявка перезаписывает первую → теряется `cascade="all, delete-orphan"`. SQLAlchemy в свежих версиях выдаёт warning или падает.
 
   **Фикс:** удалить вторую строку (без cascade).
 
-- **Image заявок хранится как `BYTEA` в БД** — [backend/src/models/energy_drink_add_request.py](backend/src/models/energy_drink_add_request.py) `image: bytes`. БД и pg_dump бэкапы растут на каждую заявку с фото (5 МБ × N). После approve image зануляется (`db_request.image = None` в [`update_request_status:135`](backend/src/api/energy_drink_add_request.py#L135)) — хорошо, но pending-очередь всё равно жирная.
+- **Image заявок хранится как `BYTEA` в БД** — [backend/src/models/energy_drink_add_request.py](../backend/src/models/energy_drink_add_request.py) `image: bytes`. БД и pg_dump бэкапы растут на каждую заявку с фото (5 МБ × N). После approve image зануляется (`db_request.image = None` в [`update_request_status:135`](../backend/src/api/energy_drink_add_request.py#L135)) — хорошо, но pending-очередь всё равно жирная.
 
   **Фикс:** перенести в Supabase bucket (как drink-картинки), хранить только URL. Tot же `SupabaseService.upload_image` — после общего рефакторинга.
 
-- **`UserFavoriteDrinks` в PascalCase для `Table` instance** — [backend/src/models/favorites.py](backend/src/models/favorites.py) переименован с `user_favorite_drinks`. SQLAlchemy `Table` объекты по конвенции snake_case (как и `Base.metadata`-объекты). Стиль-баг, mypy/ruff может заругаться.
+- **`UserFavoriteDrinks` в PascalCase для `Table` instance** — [backend/src/models/favorites.py](../backend/src/models/favorites.py) переименован с `user_favorite_drinks`. SQLAlchemy `Table` объекты по конвенции snake_case (как и `Base.metadata`-объекты). Стиль-баг, mypy/ruff может заругаться.
 
   **Фикс:** вернуть `user_favorite_drinks`.
 
