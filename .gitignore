@@ -188,6 +188,10 @@ cython_debug/
 graphify-out/
 memory/
 docs/superpowers/
+# Внутренние планинг-артефакты — не в публичный репо (локально остаются)
+docs/design-briefs/
+docs/mobile-audit-*.md
+docs/submissions-ui-spec.md
 
 # Git worktrees
 .worktrees/
