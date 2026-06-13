@@ -3536,6 +3536,7 @@ body::before {
 .sheet.mob-search {
   background: var(--bg-card); border: none; box-shadow: none; border-radius: 0;
   padding: calc(env(safe-area-inset-top, 0) + 14px) 16px 14px;
+  width: 100vw; /* бар во всю ширину (перебивает cap min(--sheet-w,..) у .sheet--top) */
 }
 .mob-search .hdr-search { flex: 1; display: block; }
 
