@@ -95,14 +95,6 @@ export function GachaponProvider({ children }: { children: ReactNode }) {
   // Закрыть при смене маршрута.
   useEffect(() => { close() }, [pathname, close])
 
-  // Esc закрывает.
-  useEffect(() => {
-    if (phase === 'idle') return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [phase, close])
-
   return (
     <GachaponContext.Provider value={{ open }}>
       {children}

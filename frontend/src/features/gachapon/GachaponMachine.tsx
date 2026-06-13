@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
-import { createPortal } from 'react-dom'
 import { Icons } from '@shared/ui/icons'
 import {
   TierBadge,
@@ -10,7 +9,7 @@ import {
   splitDrinkBrand,
   type EnrichedDrink,
 } from '@entities/drink'
-import { useScrollLock } from '@shared/lib/useScrollLock'
+import { Sheet } from '@shared/ui/Sheet'
 
 export type GachaponPhase = 'loading' | 'error' | 'spinning' | 'landed'
 
@@ -36,10 +35,10 @@ export function GachaponMachine({
 }: GachaponMachineProps) {
   const windowRef = useRef<HTMLDivElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
-  useScrollLock(true)
+  // open-flip: машина монтируется свежей за сессию (провайдер рендерит при phase!==idle),
+  // флип false→true на маунте прогоняет Sheet center-анимацию входа (одна, без двойной).
+  const [open, setOpen] = useState(false)
+  useEffect(() => setOpen(true), [])
 
   // Императивная прокрутка ленты через WAAPI. Полный режим (CS2): momentum-разгон
   // → проскок мимо саспенс-точки → мягкий стоп off-center (выигрыш не по центру)
@@ -95,20 +94,19 @@ export function GachaponMachine({
     }
   }, [phase, reel, winIndex, dur, reduced, landFrac, onLand])
 
-  if (!mounted) return null
-
   const blend = winner ? winner.blend : '0,229,255'
 
-  return createPortal(
-    <div className="gacha-overlay" onClick={onClose}>
-      <div
-        className="gacha-machine"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Случайный напиток"
-        onClick={(e) => e.stopPropagation()}
-        style={{ '--win-blend': blend } as CSSProperties}
-      >
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      variant="center"
+      className="gacha-shell"
+      width={560}
+      zIndex={960}
+      ariaLabel="Случайный напиток"
+    >
+      <div className="gacha-machine" style={{ '--win-blend': blend } as CSSProperties}>
         <div className="gacha-head">
           <div className="gacha-head-l">
             <span className="gacha-badge"><Icons.dice w={14} /> ГАЧАПОН</span>
@@ -187,7 +185,6 @@ export function GachaponMachine({
           </>
         )}
       </div>
-    </div>,
-    document.body,
+    </Sheet>
   )
 }
