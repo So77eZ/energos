@@ -3547,8 +3547,9 @@ body::before {
 
 /* ═══ Gachapon — slot-machine overlay ═══════════════════════════ */
 /* gacha как Sheet variant=center: Sheet-панель прозрачна, видимая панель — внутр. .gacha-machine.
-   .sheet.gacha-shell (0,2,0) бьёт .sheet--center (0,1,0) — снимает фон/рамку/тень/паддинг. */
-.sheet.gacha-shell { background: none; border: none; box-shadow: none; padding: 0; }
+   .sheet.gacha-shell (0,2,0) бьёт .sheet--center (0,1,0) — снимает фон/рамку/тень/паддинг.
+   max-height/overflow тоже снимаем: гача — фикс-размер (как было), скролл/cap отдаём .gacha-machine. */
+.sheet.gacha-shell { background: none; border: none; box-shadow: none; padding: 0; max-height: none; overflow: visible; }
 .gacha-machine {
   width: 100%; max-width: 560px;
   background:
