@@ -1,0 +1,11 @@
+# CODEOWNERS — авто-реквест ревью по путям при PR.
+# (branch protection: 0 required approvals → это запрос ревью, не блок мёржа)
+
+# Дефолт — владелец репо: фронт, доки, инфра, корень.
+*            @So77eZ
+
+# Бэкенд — ведёт бекендер.
+/backend/    @SeleznevAS-dev
+
+# Деплой / reverse-proxy (Caddy + docker) — оба.
+/server/     @So77eZ @SeleznevAS-dev
