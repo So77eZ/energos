@@ -1,0 +1,28 @@
+name: 🐛 Баг
+description: Сообщить о баге
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Что не так
+      description: Что произошло и что ожидалось.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      placeholder: |
+        1. Открыть …
+        2. Нажать …
+        3. Видно …
+  - type: input
+    id: env
+    attributes:
+      label: Окружение
+      placeholder: браузер / устройство / тема (dark|light) / ширина вьюпорта
+  - type: textarea
+    id: extra
+    attributes:
+      label: Скриншоты / логи (опц.)
