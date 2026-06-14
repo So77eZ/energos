@@ -2,10 +2,27 @@
 
 > Сайт рейтинга энергетических напитков / Energy drink review & ranking platform
 
+[![CI](https://github.com/So77eZ/energos/actions/workflows/ci.yml/badge.svg)](https://github.com/So77eZ/energos/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/So77eZ/energos/actions/workflows/codeql.yml/badge.svg)](https://github.com/So77eZ/energos/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**Быстрый старт:** `docker compose up -d --build` · [Как контрибьютить](.github/CONTRIBUTING.md) · [Доска задач](https://github.com/users/So77eZ/projects/1)
+
+---
+
+## Скриншоты
+
+![Каталог](docs/screenshots/catalog.png)
+
+| Карта вкусов | Тир-лист |
+| --- | --- |
+| ![Карта вкусов](docs/screenshots/taste-map.png) | ![Тир-лист](docs/screenshots/tier.png) |
+
 ---
 
 ## Оглавление / Table of Contents
 
+- [Скриншоты](#скриншоты)
 - [Обзор](#обзор)
 - [Основные цели](#основные-цели)
 - [Структура сайта](#структура-сайта)
