@@ -5,6 +5,7 @@ import { revalidateTag } from 'next/cache'
 import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
+import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
 
 const getNum = (formData: FormData, name: string) => {
   const v = Number(formData.get(name))
@@ -45,6 +46,7 @@ export async function saveReviewAction(
       )
     }
   } catch (e) {
+    await redirectIfSessionExpired(e) // 401 → clear+redirect; иначе вниз
     if (e instanceof RateLimitError) return { error: e.message }
     return { error: e instanceof Error ? e.message : 'Ошибка сохранения' }
   }
@@ -62,6 +64,7 @@ export async function deleteReviewAction(
   try {
     await reviewApi.remove(reviewId, token)
   } catch (e) {
+    await redirectIfSessionExpired(e) // 401 → clear+redirect; иначе вниз
     if (e instanceof RateLimitError) return { error: e.message }
     return { error: e instanceof Error ? e.message : 'Не удалось удалить отзыв' }
   }

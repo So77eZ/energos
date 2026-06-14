@@ -5,6 +5,7 @@ import { revalidateTag } from 'next/cache'
 import { drinkApi } from '@entities/drink'
 import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
+import { withSessionGuard } from '@shared/lib/auth-guard'
 import { ROUTES } from '@shared/config/routes'
 
 function requireToken(token: string | null): asserts token is string {
@@ -41,7 +42,7 @@ function extractMetrics(formData: FormData) {
   }
 }
 
-export async function createDrinkAction(formData: FormData) {
+export const createDrinkAction = withSessionGuard(async (formData: FormData) => {
   const token = await getToken()
   requireToken(token)
 
@@ -52,7 +53,7 @@ export async function createDrinkAction(formData: FormData) {
   revalidateTag('drinks')
   revalidateTag('reviews')
   redirect(ROUTES.admin.drinks)
-}
+})
 
 async function upsertAdminReview(drinkId: number, formData: FormData, token: string) {
   const metrics = extractMetrics(formData)
@@ -81,7 +82,7 @@ async function upsertAdminReview(drinkId: number, formData: FormData, token: str
   }
 }
 
-export async function updateDrinkAction(id: number, formData: FormData) {
+export const updateDrinkAction = withSessionGuard(async (id: number, formData: FormData) => {
   const token = await getToken()
   requireToken(token)
 
@@ -92,9 +93,9 @@ export async function updateDrinkAction(id: number, formData: FormData) {
   revalidateTag('drinks')
   revalidateTag('reviews')
   redirect(ROUTES.admin.drinks)
-}
+})
 
-export async function deleteDrinkAction(id: number) {
+export const deleteDrinkAction = withSessionGuard(async (id: number) => {
   const token = await getToken()
   requireToken(token)
 
@@ -102,4 +103,4 @@ export async function deleteDrinkAction(id: number) {
   revalidateTag('drinks')
   revalidateTag('reviews')
   redirect(ROUTES.admin.drinks)
-}
+})
