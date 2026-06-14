@@ -12,6 +12,20 @@ export class RateLimitError extends Error {
   }
 }
 
+export class SessionExpiredError extends Error {
+  constructor() {
+    super('Сессия истекла, войдите снова.')
+    this.name = 'SessionExpiredError'
+  }
+}
+
+/** Единая точка маппинга статусов ответа в типизированные ошибки.
+ *  Любой authed-запрос (с телом и без) обязан пройти через неё. */
+export function assertResponseOk(res: Response): void {
+  if (res.status === 401) throw new SessionExpiredError() // ДО RateLimit и generic
+  if (res.status === 429) throw new RateLimitError()
+}
+
 async function parseError(res: Response): Promise<string> {
   const text = await res.text()
   try {
@@ -47,7 +61,7 @@ export async function httpRequest<T>(path: string, options?: HttpOptions): Promi
     headers,
     credentials: 'include', // httpOnly cookies for auth
   })
-  if (res.status === 429) throw new RateLimitError()
+  assertResponseOk(res) // 401 → SessionExpiredError, 429 → RateLimitError (ДО generic)
   if (!res.ok) throw new Error(await parseError(res))
   return res.json() as Promise<T>
 }
