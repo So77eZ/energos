@@ -11,6 +11,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Минимальные права GITHUB_TOKEN (checkout — contents:read достаточно).
+permissions:
+  contents: read
+
 jobs:
   frontend:
     name: frontend · tsc · vitest · build

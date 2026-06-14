@@ -39,7 +39,10 @@ export const submissionApi = {
       formData.append('comment', data.comment)
     }
 
-    if (data.photo) {
+    // photo — это data:-URL от файл-пикера (FileReader.readAsDataURL) либо blob:-URL.
+    // Жёстко ограничиваем схему: НЕ фетчим произвольные http(s)-URL (SSRF-guard,
+    // CodeQL js/request-forgery) — фетчится только локальный бинарь из браузера.
+    if (data.photo && /^(data:|blob:)/i.test(data.photo)) {
       try {
         const res = await fetch(data.photo)
         const blob = await res.blob()
