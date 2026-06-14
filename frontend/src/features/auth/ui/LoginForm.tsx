@@ -4,14 +4,14 @@ import { useActionState, useEffect } from 'react'
 import { Icons } from '@shared/ui/icons'
 import { loginAction } from '../model/actions'
 
-export function LoginForm() {
+export function LoginForm({ returnTo = '/' }: { returnTo?: string }) {
   const [state, formAction, isPending] = useActionState(loginAction, null)
 
   useEffect(() => {
     if (state?.success) {
-      window.location.href = '/'
+      window.location.href = returnTo
     }
-  }, [state?.success])
+  }, [state?.success, returnTo])
 
   return (
     <form action={formAction} className="auth-fields">
