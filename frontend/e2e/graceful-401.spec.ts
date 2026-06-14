@@ -59,4 +59,27 @@ test.describe('грейсфул-401: логин-баннер + return-to', () =>
     await expect(page).toHaveURL(/localhost(:\d+)?\/$/)
     expect(page.url()).not.toContain('evil.com')
   })
+
+  // mid-session форс-401: реальный логин → подмена куки на битый токен (PRESENT,
+  // но invalid — клиентский userId из SSR остаётся, гард userId==null не ловит) →
+  // клик authed-экшена → бэк 401 → SessionExpiredError → clear+redirect.
+  test('клик избранного на битом токене → редирект на логин с баннером', async ({ page, context, request }) => {
+    await ensureUser(request)
+    await page.goto('/auth/login')
+    await loginViaForm(page)
+    await expect(page).toHaveURL(/localhost(:\d+)?\/$/) // приземлились на home
+
+    const fav = page.locator('.card-fav').first()
+    await fav.waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
+    test.skip(!(await fav.isVisible().catch(() => false)), 'Каталог пуст — нет .card-fav')
+
+    const origin = new URL(page.url()).origin + '/'
+    await context.addCookies([
+      { name: 'auth_token', value: 'garbage.invalid.token', url: origin, httpOnly: true, sameSite: 'Lax' },
+    ])
+
+    await fav.click()
+    await expect(page).toHaveURL(/\/auth\/login\?.*expired=1/)
+    await expect(page.locator('.auth-notice')).toBeVisible()
+  })
 })
