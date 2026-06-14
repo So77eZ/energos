@@ -2,6 +2,7 @@
 
 import { reviewEmojiApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
+import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
 
 export type ToggleEmojiResult =
   | { ok: true; nowMine: boolean }
@@ -28,6 +29,7 @@ export async function toggleEmojiReactionAction(
       return { ok: true, nowMine: true }
     }
   } catch (e) {
+    await redirectIfSessionExpired(e) // 401 → clear+redirect (бросает NEXT_REDIRECT); иначе вниз
     const msg = e instanceof Error ? e.message : 'Ошибка сервера'
     return { ok: false, error: msg }
   }

@@ -2,6 +2,7 @@
 
 import { favoritesApi } from '@entities/user'
 import { getToken } from '@shared/lib/session'
+import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
 
 export type ToggleFavoriteResult =
   | { ok: true; nowFav: boolean }
@@ -30,6 +31,7 @@ export async function toggleFavoriteAction(
       return { ok: true, nowFav: true }
     }
   } catch (e) {
+    await redirectIfSessionExpired(e) // 401 → clear+redirect (бросает NEXT_REDIRECT); иначе вниз
     const msg = e instanceof Error ? e.message : 'Ошибка сервера'
     return { ok: false, error: msg }
   }

@@ -1,4 +1,4 @@
-import { httpRequest, bearerHeaders } from '@shared/api/http'
+import { httpRequest, bearerHeaders, assertResponseOk } from '@shared/api/http'
 
 // Бэк: backend/src/api/auth.py
 //   GET    /api/auth/me/favorites/             → response_model=list[int] (массив drink_id)
@@ -20,7 +20,9 @@ async function requestNoBody(method: 'PUT' | 'DELETE', path: string, headers: Re
     headers: reqHeaders,
     credentials: 'include',
   })
-  if (!res.ok && res.status !== 404 && res.status !== 204) {
+  if (res.status === 404 || res.status === 204) return // идемпотентность
+  assertResponseOk(res)                                // 401 → SessionExpiredError, 429 → RateLimit
+  if (!res.ok) {
     const text = await res.text().catch(() => res.statusText)
     throw new Error(text || res.statusText)
   }

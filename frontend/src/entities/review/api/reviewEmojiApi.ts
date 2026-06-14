@@ -1,4 +1,4 @@
-import { httpRequest, bearerHeaders } from '@shared/api/http'
+import { httpRequest, bearerHeaders, assertResponseOk } from '@shared/api/http'
 import type { ReviewEmoji } from '../model/emoji-types'
 
 const BASE = '/api/reviews'
@@ -14,7 +14,9 @@ async function deleteNoBody(path: string, headers: Record<string, string>): Prom
     headers: reqHeaders,
     credentials: 'include',
   })
-  if (!res.ok && res.status !== 404) {
+  if (res.status === 404) return // реакции не было — идемпотентно
+  assertResponseOk(res)          // 401 → SessionExpiredError, 429 → RateLimit
+  if (!res.ok) {
     const text = await res.text().catch(() => res.statusText)
     throw new Error(text || res.statusText)
   }
