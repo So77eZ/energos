@@ -1,0 +1,1 @@
+export { AnalyticsConsent } from './AnalyticsConsent'
