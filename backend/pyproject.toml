@@ -16,7 +16,7 @@ dependencies = [
     "pydantic-settings>=2.13.1",
     "pyjwt>=2.12.1",
     "python-multipart>=0.0.24",
-    "sqlalchemy[asyncio]==2.0.50",
+    "sqlalchemy[asyncio]==2.0.51",
     "supabase>=2.28.3",
     "slowapi>=0.1.9",
     "uvicorn>=0.44.0",
