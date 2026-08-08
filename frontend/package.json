@@ -14,13 +14,13 @@
   "dependencies": {
     "@types/three": "^0.184.1",
     "next": "^15.3.4",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "react-easy-crop": "^6.0.2",
-    "three": "^0.184.0"
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-easy-crop": "^6.2.3",
+    "three": "^0.185.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
