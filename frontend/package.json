@@ -12,15 +12,15 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@types/three": "^0.184.1",
+    "@types/three": "^0.186.0",
     "next": "^15.3.4",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "react-easy-crop": "^6.0.2",
-    "three": "^0.184.0"
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-easy-crop": "^6.2.3",
+    "three": "^0.186.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
