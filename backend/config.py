@@ -3,17 +3,17 @@ from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
-    SECRET_KEY: str = Field(..., env="SECRET_KEY")
-    DB_URL: str = Field(..., env="DATABASE_URL")
-    SUPABASE_URL: str = Field(..., env="SUPABASE_URL")
-    SUPABASE_ACCESS_KEY: str = Field(..., env="SUPABASE_ACCESS_KEY")
-    SUPABASE_SECRET_KEY: str = Field(..., env="SUPABASE_SECRET_KEY")
-    SUPABASE_BUCKET_NAME: str = Field(..., env="SUPABASE_BUCKET_NAME")
-    SUPABASE_REGION: str = Field(..., env="SUPABASE_REGION")
-    SECRET_KEY: str = Field(..., env="SECRET_KEY")
-    ALLOWED_ORIGINS: str = Field(..., env="ALLOWED_ORIGINS")
-    PUBLIC_URL: str = Field(..., env="PUBLIC_URL")
-    DEPLOY_ENV: str = Field(..., env="DEPLOY_ENV")
+    SECRET_KEY: str = Field(...)
+    # pydantic v2 игнорирует env= у Field: переменная берётся из имени поля или alias
+    DB_URL: str = Field(..., validation_alias="DATABASE_URL")
+    SUPABASE_URL: str = Field(...)
+    SUPABASE_ACCESS_KEY: str = Field(...)
+    SUPABASE_SECRET_KEY: str = Field(...)
+    SUPABASE_BUCKET_NAME: str = Field(...)
+    SUPABASE_REGION: str = Field(...)
+    ALLOWED_ORIGINS: str = Field(...)
+    PUBLIC_URL: str = Field(...)
+    DEPLOY_ENV: str = Field(...)
 
     @field_validator("SECRET_KEY")
     def validate_secret_key(cls, v: str) -> str:
