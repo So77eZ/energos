@@ -14,19 +14,21 @@
 
 В `backend/config.py` написано `DB_URL: str = Field(..., env="DATABASE_URL")`. В pydantic v2 параметр `env` у `Field` игнорируется, поэтому поле читается из переменной `DB_URL`. А `docker-compose.yml` и `.env.example` задают `DATABASE_URL`, и на импорте конфига бэк падает с `ValidationError: DB_URL Field required`. Сломалось в рефакторинге [#266]. CI этого не поймал, потому что джобы для бэка нет ([#233]).
 
-Фикс в одну строку (проверен на pydantic-settings 2.15):
+Фикс лежит в ветке `fix/config-database-url` (коммит `92848a8`):
 
 ```python
 DB_URL: str = Field(..., validation_alias="DATABASE_URL")
 ```
 
-Без него живой тест не запустится.
+Там же убраны остальные `env=` (они ничего не делают, только сыплют deprecation-предупреждениями) и дубль объявления `SECRET_KEY`.
+
+Проверено на Python 3.14.7 и чистом Postgres. `migration_bootstrap` прогоняет миграции до head, uvicorn стартует, `register`, `login`, `me` и создание напитка отвечают. Без этого фикса живой тест не запустится.
 
 ---
 
 ## 1. Подготовка стенда
 
-1. Применить фикс из раздела 0.
+1. Смержить `fix/config-database-url` (раздел 0).
 2. Создать `.env` из `.env.example`:
    - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` — любые значения. `DATABASE_URL` compose соберёт сам.
    - `SECRET_KEY` — не короче 32 символов: `openssl rand -hex 32`.
@@ -81,7 +83,7 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 - [#107] — дефолт `ALLOWED_ORIGINS` убран в [#266], но `allow_methods` и `allow_headers` по-прежнему `*`.
 - [#102] — аватары пережимаются через canvas (`avatar-editor/lib/crop-output.ts`), и EXIF с них уходит. Фото напитков и заявок загружаются как есть.
 - [#65] — бейдж «Топ-10%» на фронте готов, но бэк не отдаёт `is_top10`, поэтому бейдж никогда не открывается.
-- [#78] — миграция не нужна: `GET /auth/me/` уже отдаёт `created_at`. Не хватает только вывода даты на профиле.
+- [#78] — миграция не нужна: `GET /auth/me/` уже отдаёт `created_at` (подтверждено вживую 26.09). Не хватает только вывода даты на профиле.
 - [#50] — префикс «Напиток энергетический» срезается только при отображении (`cleanDrinkName`), в данных он остаётся.
 
 ---
@@ -92,7 +94,7 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 
 | Ишью | Суть | Живая проверка: что сейчас → что должно быть |
 |---|---|---|
-| [#94] | создавать, менять и удалять напитки может любой залогиненный | `POST $API/energy-drinks/` с токеном `$A` и телом `{"name":"x"}` → сейчас 201, должно быть 403 |
+| [#94] | создавать, менять и удалять напитки может любой залогиненный. **Подтверждено вживую 26.09**: обычный пользователь создал напиток и получил 201 | `POST $API/energy-drinks/` с токеном `$A` и телом `{"name":"x"}` → сейчас 201, должно быть 403 |
 | [#104], [#114] | PUT напитка меняет любое поле схемы, включая `image_url` | `PUT $API/energy-drinks/1/` с `$A` и `{"name":"x","image_url":"https://example.com/p.gif"}` → `image_url` подменился |
 | [#103] | PUT отзыва меняет `user_id` и `energy_drink_id` | alice создаёт отзыв (`POST $API/reviews/` с `{"energy_drink_id":1,"acidity":3,"sweetness":3,"concentration":3,"carbonation":3,"aftertaste":3,"price_quality":3}`), потом `PUT $API/reviews/{id}/` с тем же телом плюс `"user_id":2` → `GET $API/reviews/{id}/` показывает `username: bob` |
 | [#95] | картинку заявки можно скачать без авторизации | создать заявку с любым файлом, затем `curl $API/add-requests/1/image` без токена → 200 |
@@ -107,7 +109,7 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 | [#128], [#133] | нет security-заголовков и CSP | `curl -sI http://localhost/` → нет `Strict-Transport-Security`, `X-Content-Type-Options`, `Content-Security-Policy` |
 | [#113] | ID Метрики зашит в код | `frontend/src/shared/ui/AnalyticsConsent/AnalyticsConsent.tsx:7` |
 | [#130] | на регистрации нет капчи | форма регистрации |
-| [#132] | нет `uv.lock` и аудита зависимостей | в `backend/` нет `uv.lock` |
+| [#132] | нет `uv.lock` и аудита зависимостей | `uv.lock` прямо внесён в `.gitignore` (строка 221), поэтому `uv sync` в Dockerfile каждый раз заново резолвит версии. Фикс: убрать строку из `.gitignore`, закоммитить лок, в Dockerfile использовать `uv sync --frozen` |
 | [#136] | `energy_drink_add_requests` в `User` объявлен дважды, `cascade` теряется | только по коду: удаления пользователей через API нет, вживую не проявится |
 | [#138] | стиль: `Table` назван `UserFavoriteDrinks` | по коду |
 
