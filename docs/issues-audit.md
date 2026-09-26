@@ -10,25 +10,23 @@
 
 ---
 
-## 0. Блокер: бэк на текущем main не стартует
+## 0. Блокер старта бэка — исправлен ([#278])
 
-В `backend/config.py` написано `DB_URL: str = Field(..., env="DATABASE_URL")`. В pydantic v2 параметр `env` у `Field` игнорируется, поэтому поле читается из переменной `DB_URL`. А `docker-compose.yml` и `.env.example` задают `DATABASE_URL`, и на импорте конфига бэк падает с `ValidationError: DB_URL Field required`. Сломалось в рефакторинге [#266]. CI этого не поймал, потому что джобы для бэка нет ([#233]).
+На момент сверки бэк на `main` не стартовал. В `backend/config.py` было написано `DB_URL: str = Field(..., env="DATABASE_URL")`, но в pydantic v2 параметр `env` у `Field` игнорируется, поэтому значение искалось в переменной `DB_URL`. А `docker-compose.yml` и `.env.example` задают `DATABASE_URL`, и на импорте конфига бэк падал с `ValidationError: DB_URL Field required`. Сломалось в рефакторинге [#266]. CI этого не поймал, потому что джобы для бэка нет ([#233]).
 
-Фикс лежит в ветке `fix/config-database-url` (коммит `92848a8`):
+Исправлено в [#278]:
 
 ```python
 DB_URL: str = Field(..., validation_alias="DATABASE_URL")
 ```
 
-Там же убраны остальные `env=` (они ничего не делают, только сыплют deprecation-предупреждениями) и дубль объявления `SECRET_KEY`.
-
-Проверено на Python 3.14.7 и чистом Postgres. `migration_bootstrap` прогоняет миграции до head, uvicorn стартует, `register`, `login`, `me` и создание напитка отвечают. Без этого фикса живой тест не запустится.
+Там же убраны остальные `env=` и дубль объявления `SECRET_KEY`. Проверено на Python 3.14.7 и чистом Postgres: миграции доходят до head, uvicorn стартует, основные эндпоинты отвечают.
 
 ---
 
 ## 1. Подготовка стенда
 
-1. Смержить `fix/config-database-url` (раздел 0).
+1. Взять свежий `main`: в нём уже есть фикс из раздела 0.
 2. Создать `.env` из `.env.example`:
    - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` — любые значения. `DATABASE_URL` compose соберёт сам.
    - `SECRET_KEY` — не короче 32 символов: `openssl rand -hex 32`.
@@ -234,3 +232,4 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 [#139]: https://github.com/So77eZ/energos/issues/139
 [#233]: https://github.com/So77eZ/energos/issues/233
 [#266]: https://github.com/So77eZ/energos/pull/266
+[#278]: https://github.com/So77eZ/energos/pull/278
