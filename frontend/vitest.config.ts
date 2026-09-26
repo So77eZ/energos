@@ -4,6 +4,8 @@ import { resolve } from 'node:path'
 // Только pure-логика (node env). DOM/компоненты тестируются через Playwright e2e.
 // Тест-файлы — рядом с исходниками (*.test.ts). e2e/ исключён (там Playwright).
 export default defineConfig({
+  // tsconfig от Next ставит jsx: preserve — vite 8 (oxc) тогда не трансформирует JSX
+  oxc: { jsx: { runtime: 'automatic' } },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
