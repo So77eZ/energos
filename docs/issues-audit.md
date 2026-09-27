@@ -6,7 +6,22 @@
 - закрыты [#97] (исправлено в [#266]) и [#131] (в истории репозитория ни дампов, ни `.env`);
 - у [#108], [#110], [#113], [#128], [#129], [#133] метка `backend` заменена на `infra`.
 
-Сводка: 11 можно закрывать, 5 сделаны частично, 63 актуальны.
+Сводка на 26.09: 11 можно закрывать, 5 сделаны частично, 63 актуальны.
+
+**Обновлено 2026-09-27.** После сверки исправлено и закрыто ещё 10 ишью, подробности — в разделе «Исправлено после сверки» ниже. Из раздела 2 закрыты [#108], [#110], [#129]. Сейчас: 6 можно закрывать, 5 сделаны частично, 56 актуальны.
+
+---
+
+## Исправлено после сверки (27.09)
+
+Каждый фикс проверен на Postgres 16 с миграциями через `main:app`; [#95] и [#309] — ещё и через `next start`.
+
+| Ишью | PR | Что сделано |
+|---|---|---|
+| [#108], [#110], [#129] | — | закрыты: уже были сделаны (раздел 2) |
+| [#309] | [#310] | календарь активности в профиле по центру (ишью заведено после сверки) |
+
+Попутно: при редактировании отзыва пустой комментарий и при редактировании напитка пустая цена теперь очищаются, раньше `null` пропускался.
 
 ---
 
@@ -60,11 +75,10 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 
 ---
 
-## 2. Сделано, можно закрывать (9)
+## 2. Сделано, можно закрывать (6)
 
 | Ишью | Что сделано | Живая проверка |
 |---|---|---|
-| [#108], [#110], [#129] | cookie в `frontend/src/shared/lib/session.ts`: `secure` в проде, `sameSite: 'lax'`, `maxAge` 30 минут — столько же живёт JWT | DevTools → Application → Cookies → `auth_token`: HttpOnly, SameSite=Lax, истекает через 30 минут |
 | [#51] | сортировка «По отзывам» в обе стороны (`SortBar`) | каталог → сортировка |
 | [#70], [#71] | в глоссарии протокол дегустации из 4 шагов и МИН/МАКС по каждой метрике с брендом (`GlossaryPage`) | `/glossary` |
 | [#72] | тикер в шапке строится из `GET /reviews/` | оставить отзыв и увидеть его в тикере |
@@ -74,7 +88,7 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 ## 3. Неактуально (2)
 
 - [#81] — часть про base64 устарела: фронт уже отправляет `multipart`. Часть про OOM дублирует [#96].
-- [#111] — бэк авторизует по заголовку `Authorization`, а не по cookie. Cookie читает только Next, а его server actions сами сверяют `Origin`. Route handlers в `frontend/src/app` нет.
+- [#111] — бэк авторизует по заголовку `Authorization`, а не по cookie. Cookie читает только Next, а его server actions сами сверяют `Origin`. Единственный route handler — `/submission-image/[id]` из [#307], он только читает (GET).
 
 ## 4. Частично (5)
 
@@ -86,9 +100,9 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 
 ---
 
-## 5. Актуально (63)
+## 5. Актуально (56)
 
-### Безопасность бэка (23)
+### Безопасность бэка (16)
 
 | Ишью | Суть | Живая проверка: что сейчас → что должно быть |
 |---|---|---|
@@ -103,7 +117,7 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 | [#106] | rate limit считается по IP контейнера Caddy, то есть общий на всех | 5 регистраций curl'ом, затем регистрация через UI в браузере → 429, хотя клиент другой. С логином то же самое: 10 входов в минуту на весь сайт |
 | [#105], [#109] | JWT без отзыва и без refresh | войти в UI, скопировать `auth_token`, выйти, затем `curl $API/auth/me/ -H "Authorization: Bearer <токен>"` → 200 ещё 30 минут |
 | [#115] | в схемах нет `max_length` | создать отзыв с `comment` длиной 1 МБ → 201 |
-| [#134] | Swagger доступен | http://localhost/api/docs открывается |
+| [#134] | Swagger доступен, на стенде подтверждено 27.09 | http://localhost/api/docs открывается |
 | [#128], [#133] | нет security-заголовков и CSP | `curl -sI http://localhost/` → нет `Strict-Transport-Security`, `X-Content-Type-Options`, `Content-Security-Policy` |
 | [#113] | ID Метрики зашит в код | `frontend/src/shared/ui/AnalyticsConsent/AnalyticsConsent.tsx:7` |
 | [#130] | на регистрации нет капчи | форма регистрации |
@@ -233,3 +247,11 @@ curl -s -X POST $API/energy-drinks/ -H "Authorization: Bearer $ADM" \
 [#233]: https://github.com/So77eZ/energos/issues/233
 [#266]: https://github.com/So77eZ/energos/pull/266
 [#278]: https://github.com/So77eZ/energos/pull/278
+[#302]: https://github.com/So77eZ/energos/pull/302
+[#304]: https://github.com/So77eZ/energos/pull/304
+[#305]: https://github.com/So77eZ/energos/pull/305
+[#306]: https://github.com/So77eZ/energos/pull/306
+[#307]: https://github.com/So77eZ/energos/pull/307
+[#308]: https://github.com/So77eZ/energos/pull/308
+[#310]: https://github.com/So77eZ/energos/pull/310
+[#309]: https://github.com/So77eZ/energos/issues/309
