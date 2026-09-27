@@ -53,16 +53,21 @@ export const bearerHeaders = (token: string) => ({ Authorization: `Bearer ${toke
 
 type HttpOptions = RequestInit & { next?: { revalidate?: number | false; tags?: string[] } }
 
-export async function httpRequest<T>(path: string, options?: HttpOptions): Promise<T> {
+/** Запрос к бэку без разбора ответа — для бинарных данных (картинки). */
+export function rawRequest(path: string, options?: HttpOptions): Promise<Response> {
   const headers = {
     ...options?.headers,
     ...(typeof window === 'undefined' ? { 'Origin': process.env.NEXT_PUBLIC_ORIGIN ?? 'http://localhost:3000' } : {}),
   }
-  const res = await fetch(`${BASE_URL}${path}`, {
+  return fetch(`${BASE_URL}${path}`, {
     ...options,
     headers,
     credentials: 'include', // httpOnly cookies for auth
   })
+}
+
+export async function httpRequest<T>(path: string, options?: HttpOptions): Promise<T> {
+  const res = await rawRequest(path, options)
   assertResponseOk(res) // 401 → SessionExpiredError, 429 → RateLimitError (ДО generic)
   if (!res.ok) throw new Error(await parseError(res))
   return res.json() as Promise<T>
