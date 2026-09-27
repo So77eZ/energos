@@ -27,32 +27,33 @@
 | Метод | Путь | Auth | Примечание |
 |---|---|---|---|
 | GET | `/` | — | `{"message": "..."}` |
-| POST | `/auth/register/` | — | JSON, rate limit 5/min, 201 |
-| POST | `/auth/login/` | — | **form-urlencoded** (`username`, `password`), rate limit 10/min, `{access_token, token_type}` |
+| GET | `/docs`, `/redoc`, `/openapi.json` | — | только при `API_DOCS=true`, иначе 404 |
+| POST | `/auth/register/` | — | JSON, rate limit 5/min по IP клиента, 201 |
+| POST | `/auth/login/` | — | **form-urlencoded** (`username`, `password`), rate limit 10/min по IP клиента, `{access_token, token_type}` |
 | GET | `/auth/me/` | user | |
 | GET | `/auth/me/favorites/` | user | `[int]` — id напитков |
 | PUT | `/auth/me/favorites/{id}/` | user | 204, идемпотентно |
 | DELETE | `/auth/me/favorites/{id}/` | user | 204, идемпотентно |
 | GET | `/energy-drinks/` | — | `limit` (1..200, опционально), `offset` |
 | GET | `/energy-drinks/{id}/` | — | |
-| POST | `/energy-drinks/` | user (!) | 201 |
-| PUT | `/energy-drinks/{id}/` | user (!) | частичное обновление, `null` игнорируется |
-| DELETE | `/energy-drinks/{id}/` | user (!) | возвращает удалённый объект, удаляет картинку из S3 |
-| POST | `/energy-drinks/{id}/upload-image/` | user (!) | multipart `file`, jpeg/png/webp/gif, ≤5 МБ |
+| POST | `/energy-drinks/` | admin | 201, тело — только `name`, `price`, `no_sugar` |
+| PUT | `/energy-drinks/{id}/` | admin | те же три поля; `price: null` очищает цену |
+| DELETE | `/energy-drinks/{id}/` | admin | возвращает удалённый объект, удаляет картинку из S3 |
+| POST | `/energy-drinks/{id}/upload-image/` | admin | multipart `file`, jpeg/png/webp/gif, ≤5 МБ; единственный способ поменять `image_url` |
 | GET | `/reviews/` | — | все отзывы, без пагинации |
 | GET | `/reviews/user/` | user | отзывы текущего юзера |
 | GET | `/reviews/energy-drink/{id}/` | — | |
 | GET | `/reviews/{id}/` | — | |
-| POST | `/reviews/` | user | rate limit 5/min, `from_admin` берётся из роли |
-| PUT | `/reviews/{id}/` | owner/admin | |
+| POST | `/reviews/` | user | rate limit 5/min по IP клиента, `from_admin` берётся из роли, `comment` ≤2000 |
+| PUT | `/reviews/{id}/` | owner/admin | только 6 оценок и `comment`; `comment: null` очищает |
 | DELETE | `/reviews/{id}/` | owner/admin | возвращает удалённый объект |
 | GET | `/reviews/{id}/emojis/` | — | |
-| POST | `/reviews/{id}/emojis/?emoji=...` | user | эмодзи в **query**, 201, дубль → 400 |
+| POST | `/reviews/{id}/emojis/?emoji=...` | user | эмодзи в **query**, 1..32 символа, 201, дубль → 400 |
 | DELETE | `/reviews/{id}/emojis/?emoji=...` | user | 204 |
-| POST | `/add-requests/` | user | multipart: `name`, `price`, `no_sugar`, `comment`, `image` |
+| POST | `/add-requests/` | user | multipart: `name` (1..80), `price`, `no_sugar`, `comment` (≤500), `image` |
 | GET | `/add-requests/` | user | админ видит все, юзер — свои |
-| GET | `/add-requests/{id}/image` | — (!) | **без trailing slash**, отдаёт bytea, mime по сигнатуре |
-| PATCH | `/add-requests/{id}/status` | admin | **без trailing slash** |
+| GET | `/add-requests/{id}/image` | owner/admin | **без trailing slash**, отдаёт bytea, mime по сигнатуре; чужая заявка → 404. Браузер ходит через route handler Next `/submission-image/{id}` |
+| PATCH | `/add-requests/{id}/status` | admin | **без trailing slash**, `admin_comment` ≤500 |
 
 Отзыв в ответе содержит `username` (join с users). Заявка — `user_name`.
 
@@ -62,7 +63,7 @@
 
 ### Конфиг (env)
 
-`SECRET_KEY` (≥32 символов), `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ACCESS_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_BUCKET_NAME`, `SUPABASE_REGION`, `ALLOWED_ORIGINS` (через запятую), `PUBLIC_URL`, `DEPLOY_ENV`.
+`SECRET_KEY` (≥32 символов), `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ACCESS_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_BUCKET_NAME`, `SUPABASE_REGION`, `ALLOWED_ORIGINS` (через запятую), `PUBLIC_URL`, `DEPLOY_ENV`, `INTERNAL_API_SECRET` (необязательный, общий с фронтом), `API_DOCS` (bool, по умолчанию false).
 
 ---
 
@@ -78,7 +79,25 @@
 - **Пароли.** pwdlib `recommended()` — argon2id в PHC-формате (`$argon2id$v=19$m=...,t=...,p=...$salt$hash`). Если нужна совместимость со старыми хешами, Go должен парсить PHC-строку и брать параметры из неё. Прод-данных нет, так что это нужно только для локальных дампов; всё равно сделать, это полезное упражнение.
 - **`NoDirectAccessMiddleware`.** В `prod` запрос без `Origin` и `Referer` получает 403. SSR-запросы Next ставят `Origin` вручную (`http.ts`). Это не защита (заголовки подделываются тривиально), но поведение нужно либо повторить, либо осознанно выкинуть.
 - **CORS.** `allow_credentials=true`, origins из `ALLOWED_ORIGINS`, все методы и заголовки.
-- **Частичный PUT.** Для drinks и reviews поля со значением `null` или отсутствующие не меняются. В Go нужно различать «нет поля», `null` и значение: указатели или свой `Optional[T]`.
+- **PUT — не частичный.** С 27.09 PUT напитка и отзыва принимает фиксированный набор редактируемых полей и записывает их все, `null` очищает поле. Лишние поля игнорируются (не 422). Различать «нет поля» и `null` не нужно.
+
+### Исправлено в Python 27.09 — Go обязан повторить
+
+Эти дыры закрыты в Python-бэке до переезда. На каждую строку нужен контрактный тест (этап 1): сначала он зелёный на Python, потом на Go. Иначе исправление легко потерять при переписывании.
+
+| Поведение | PR | Где в Python | Контрактный тест |
+|---|---|---|---|
+| Менять каталог может только админ: POST, PUT, DELETE напитка и upload-image | #304 | `get_current_admin` в `src/api/auth.py` | user → 403, без токена → 401, admin → 2xx |
+| POST и PUT напитка принимают только `name` (1..200), `price`, `no_sugar`; `image_url`, `id`, даты из тела игнорируются | #306 | `EnergyDrinkWriteSchema` | тело с `image_url` и `id` → в ответе `image_url` прежний, `id` серверный |
+| PUT напитка: `price: null` очищает цену | #306 | там же | PUT с `null` → `price: null` |
+| PUT отзыва меняет только 6 оценок и `comment`; `user_id`, `energy_drink_id`, `from_admin` игнорируются | #305 | `UpdateEnergyDrinkReviewSchema` | PUT с чужим `user_id` → автор не меняется |
+| PUT отзыва без оценки → 422, `comment: null` очищает текст | #305 | там же | |
+| Картинку заявки видят только автор и админ, чужим — 404, без токена — 401 | #307 | `get_request_image` | три кейса |
+| Лимиты длины: отзыв ≤2000, напиток 1..200, заявка 1..80 и ≤500, `admin_comment` ≤500, эмодзи 1..32 | #308 | схемы и `Form`/`Query` | граница проходит, граница+1 → 422 |
+| Rate limit по IP клиента: `X-Client-IP` учитывается только вместе с верным `X-Internal-Secret` (`INTERNAL_API_SECRET`, сравнение за постоянное время), иначе IP соединения | #302 | `client_ip_key` в `src/rate_limiter.py` | разные `X-Client-IP` с секретом — разные счётчики; с неверным секретом — общий |
+| Swagger (`/docs`, `/redoc`, `/openapi.json`) только при `API_DOCS=true` | #313 | `main.py` | без флага → 404 |
+
+Фронт под это уже подстроен: шлёт `X-Client-IP` и секрет из server actions (`shared/lib/client-ip.ts`), не отправляет `user_id` и `image_url` в PUT, грузит картинку заявки через `/submission-image/{id}`. Go не должен требовать от фронта ничего сверх этого.
 
 ---
 
@@ -86,13 +105,13 @@
 
 Решение по каждому принять до реализации соответствующего модуля. По умолчанию — чинить.
 
-1. **Любой залогиненный юзер может создать, изменить или удалить напиток и заменить ему картинку.** Проверки `role == admin` нет (`backend/src/api/energy_drink.py`). Самая серьёзная дыра. В Go — только admin. Проверить, что фронт шлёт эти запросы только из админки.
-2. **`PUT /reviews/{id}/` позволяет поменять `user_id` и `energy_drink_id`.** Из обновления исключены только `id`, даты, `username` и `from_admin`. Можно «подарить» свой отзыв другому юзеру или перенести на другой напиток. В Go эти поля не изменяются.
-3. **Rate limit почти наверняка общий на всех.** slowapi берёт `request.client.host`, а uvicorn запущен без `--forwarded-allow-ips`, поэтому за Caddy это IP контейнера Caddy (а для SSR — IP контейнера фронта). Итог: 5 регистраций в минуту на весь сайт. В Go брать IP из `X-Forwarded-For` / `X-Real-IP`, доверяя только прокси из своей docker-сети. Проверить на текущем бэке.
-4. **`GET /add-requests/{id}/image` без авторизации.** Перебором id можно выкачать все картинки из заявок. Сделать: владелец или admin.
+1. ~~**Любой залогиненный юзер может создать, изменить или удалить напиток и заменить ему картинку.**~~ **Исправлено в #304, см. раздел 2.** Проверки `role == admin` нет (`backend/src/api/energy_drink.py`). Самая серьёзная дыра. В Go — только admin. Проверить, что фронт шлёт эти запросы только из админки.
+2. ~~**`PUT /reviews/{id}/` позволяет поменять `user_id` и `energy_drink_id`.**~~ **Исправлено в #305.** Из обновления исключены только `id`, даты, `username` и `from_admin`. Можно «подарить» свой отзыв другому юзеру или перенести на другой напиток. В Go эти поля не изменяются.
+3. ~~**Rate limit почти наверняка общий на всех.**~~ **Исправлено в #302** через `X-Client-IP` с общим секретом: запросы к бэку идут от сервера Next, а не от браузера, поэтому одного `X-Forwarded-For` от прокси недостаточно.
+4. ~~**`GET /add-requests/{id}/image` без авторизации.**~~ **Исправлено в #307.** Перебором id можно выкачать все картинки из заявок. Сделать: владелец или admin.
 5. **Картинка заявки без ограничений.** Нет проверки типа и размера, всё пишется в `bytea` в Postgres. Лимит 5 МБ и whitelist типов, как у напитков. Хранение лучше перевести в то же хранилище, что и картинки напитков (см. этап 7).
 6. **`PATCH /add-requests/{id}/status` принимает любую строку.** Валидировать по `pending` / `approved` / `rejected`. Проверить, создаёт ли что-то напиток при одобрении (похоже, фронт делает это отдельным `POST /energy-drinks/`). Возможно, стоит сделать одобрение атомарным на бэке.
-7. **Эмодзи — любая строка любой длины**, уникальность (review, user, emoji) проверяется только в коде, возможна гонка. В Go: ограничить длину (или whitelist из `frontend/src/entities/review/model/emoji-types.ts`), добавить уникальный индекс в БД, ловить `23505`.
+7. **Эмодзи — любая строка** (длина ограничена 1..32 в #308), уникальность (review, user, emoji) проверяется только в коде, возможна гонка. В Go: ограничить длину (или whitelist из `frontend/src/entities/review/model/emoji-types.ts`), добавить уникальный индекс в БД, ловить `23505`.
 8. **Регистрация: гонка на username.** Проверка и вставка идут в разных сессиях, при коллизии будет 500 от unique constraint. В Go ловить `23505` и отдавать 400 `username_taken`.
 9. **Нет пагинации** у `GET /reviews/`, `GET /reviews/energy-drink/{id}/`, `GET /add-requests/`, а у `GET /energy-drinks/` limit необязательный. Для паритета оставить как есть, но заложить `limit`/`offset`, чтобы потом включить.
 10. **Утечка деталей ошибок.** `upload_image` возвращает `str(e)` от boto3 клиенту. В Go логировать внутрь, клиенту отдавать общий текст.
@@ -187,13 +206,13 @@ backend-go/
 - [ ] argon2id + PHC-парсинг (совместимость с pwdlib).
 - [ ] JWT HS256, `sub`/`exp`, middleware `RequireUser` / `RequireAdmin`, юзер в `context`.
 - [ ] `register` (валидация логина и пароля с теми же текстами), `login` (form-urlencoded), `me`.
-- [ ] Rate limiter по реальному IP клиента.
+- [ ] Rate limiter по реальному IP клиента: `X-Client-IP` + `X-Internal-Secret`, как в #302.
 - [ ] CLI `energos admin create/promote`.
 
 ### Этап 4. Напитки + хранилище картинок — [ ]
-- [ ] Интерфейс `Storage` (`Put`, `Delete`, `URL`), реализация на локальной ФС. Раздачу `/uploads/*` делает Caddy.
+- [ ] Интерфейс `Storage` (`Put`, `Delete`, `URL`) поверх S3 API, провайдер задаётся env (#296). Картинки отдаются с собственного домена (#40).
 - [ ] CRUD напитков, частичный PUT, пагинация. **Изменения — только admin.**
-- [ ] Загрузка картинки: проверка mime по содержимому (`http.DetectContentType`), лимит 5 МБ, ключ = uuid + расширение.
+- [ ] Загрузка картинки: WebP/PNG/JPEG по содержимому (`http.DetectContentType`), лимит 512 КБ с потоковым чтением и 413 (#296), ключ = uuid + расширение.
 - [ ] Удаление напитка с картинкой; решение по каскаду.
 
 ### Этап 5. Отзывы, эмодзи, избранное — [ ]
