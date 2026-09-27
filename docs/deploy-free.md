@@ -14,66 +14,76 @@
 
 - **Render засыпает** после 15 минут без запросов. Первый запрос после сна обрабатывается около минуты, и первая загрузка сайта может упасть по таймауту. Помогает обновить страницу.
 - **Supabase ставит проект на паузу**, если к базе неделю никто не обращался. Снимается кнопкой в панели Supabase.
-- **Загрузка картинок не работает**: хранилища нет, запрос на загрузку падает с 500.
+- **Картинки не работают**: хранилища нет. Если прикрепить картинку в форме напитка, отправка формы падает с ошибкой — создавай напитки без фото.
 - **Из РФ сайт может быть доступен нестабильно**, особенно с мобильного интернета: все три сервиса зарубежные.
+- **Пустой каталог выглядит как ошибка**: на пустой базе фронт пишет «Не удалось загрузить напитки». Это нормально, пока не добавлен первый напиток.
 - **Реальные данные сюда не класть.** Известные дыры из `docs/issues-audit.md` (раздел 5) на этом стенде тоже есть.
 
 ## 1. Supabase — база
 
-1. Создать проект, регион — Frankfurt (`eu-central-1`). Пароль БД сохранить.
-2. **Connect** → вкладка **Session pooler** → скопировать строку подключения. Прямое подключение (Direct) на бесплатном тарифе работает только по IPv6, Render его не поддерживает. Transaction pooler (порт 6543) не подходит: ломает prepared statements у asyncpg.
-3. Привести строку к виду, который ждёт бэк: `postgresql://` заменить на `postgresql+asyncpg://`, в конец дописать `?ssl=require`:
+1. Создать проект, регион — Europe. Пароль БД сгенерировать и сохранить; если в нём есть `@ : / # ?`, сгенерировать заново.
+2. **Security: снять галочку «Enable Data API».** Иначе Supabase откроет наружу REST API ко всем таблицам, включая `users` с хешами паролей. Бэк ходит в базу напрямую, Data API ему не нужен; предупреждения Supabase о нём игнорировать.
+3. **Connect** → вкладка **Direct** → метод **Session pooler** → скопировать строку подключения. Прямое подключение (Direct) на бесплатном тарифе работает только по IPv6, Render его не поддерживает. Transaction pooler (порт 6543) не подходит: ломает prepared statements у asyncpg.
+4. Привести строку к виду, который ждёт бэк: `postgresql://` заменить на `postgresql+asyncpg://`, в конец дописать `?ssl=require`:
 
 ```
-postgresql+asyncpg://postgres.<ref>:<пароль>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?ssl=require
+postgresql+asyncpg://postgres.<project-id>:<пароль>@aws-1-<регион>.pooler.supabase.com:5432/postgres?ssl=require
 ```
 
-Если в пароле есть спецсимволы (`@`, `:`, `/`, `#`), их нужно закодировать (URL-encode) или сменить пароль на буквы и цифры.
+Хост и `project-id` взять из «Connection parameters» на той же вкладке. Регион может оказаться любым европейским (например, `eu-west-1`) — на работу это не влияет.
 
 ## 2. Render — бэк
 
 Имя Vercel-проекта нужно знать заранее: адрес фронта будет `https://<имя>.vercel.app`, и он понадобится здесь.
 
 1. **New → Web Service** → подключить GitHub-репозиторий `So77eZ/energos`.
-2. **Root Directory:** `backend`, **Runtime:** Docker (возьмёт `backend/Dockerfile`), **Region:** Frankfurt, **Instance:** Free.
+2. **Root Directory:** `backend`, **Language:** Docker (возьмёт `backend/Dockerfile`, поле Dockerfile Path оставить пустым), **Region:** Frankfurt (по умолчанию стоит Oregon), **Instance:** Free.
 3. **Environment:**
 
 | Переменная | Значение |
 |---|---|
-| `DATABASE_URL` | строка из шага 1.3 |
-| `SECRET_KEY` | `openssl rand -hex 32` |
+| `DATABASE_URL` | строка из шага 1.4 |
+| `SECRET_KEY` | кнопка **Generate** в Render |
 | `ALLOWED_ORIGINS` | `https://<имя>.vercel.app` |
 | `PUBLIC_URL` | `https://<имя>.vercel.app` |
 | `DEPLOY_ENV` | `dev` — при `prod` бэк отвечает 403 на запросы без `Origin`/`Referer`, в том числе на открытие адреса бэка в браузере |
 | `PORT` | `8000` — на этом порту слушает uvicorn из Dockerfile |
 | `SUPABASE_URL` | `http://127.0.0.1:9` — заглушка, хранилища нет |
-| `SUPABASE_ACCESS_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_BUCKET_NAME`, `SUPABASE_REGION` | любые непустые значения, например `none` |
+| `SUPABASE_ACCESS_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_BUCKET_NAME` | любые непустые значения, например `none` |
+| `SUPABASE_REGION` | `us-east-1` — заглушка, но в формате региона AWS |
 
-4. Deploy. При старте контейнер сам прогоняет миграции и запускает uvicorn.
-5. Проверка: `https://<сервис>.onrender.com/` отвечает `{"message":"Energy drink rating API"}`.
+4. **Advanced → Health Check Path:** `/` (подсказка `/healthz` в поле — только плейсхолдер, такого эндпоинта нет). Остальное в Advanced не трогать.
+5. Deploy. При старте контейнер сам прогоняет миграции и запускает uvicorn.
+6. Проверка: `https://<сервис>.onrender.com/` отвечает `{"message":"Energy drink rating API"}`.
 
 ## 3. Vercel — фронт
 
-1. **Add New → Project** → импортировать `So77eZ/energos`, **Root Directory:** `frontend`. Фреймворк Next.js определится сам.
-2. **Environment Variables** задать **до первой сборки**: адрес бэка вшивается в сборку, и после изменения переменных нужен повторный деплой.
+1. **Add New → Project** → импортировать `So77eZ/energos`.
+2. Vercel найдёт в репо и фронт, и бэк и предложит пресет **Services** с `vercel.json`. Это не нужно: **Root Directory → Edit → `frontend`**, после чего пресет станет **Next.js**.
+3. **Environment Variables** задать **до первой сборки**: адрес бэка вшивается в сборку, и после изменения переменных нужен повторный деплой. Vercel сам подтянет десяток переменных из `.env.example` — удалить все, оставить только эти две (без `/` на конце):
 
 | Переменная | Значение |
 |---|---|
 | `API_ORIGIN` | `https://<сервис>.onrender.com` |
 | `NEXT_PUBLIC_ORIGIN` | `https://<имя>.vercel.app` |
 
-3. Deploy и открыть `https://<имя>.vercel.app`.
+4. Deploy. В **Domains** проверить, что выдан ровно `<имя>.vercel.app`; если другой — прописать его в `NEXT_PUBLIC_ORIGIN` здесь и в `ALLOWED_ORIGINS`/`PUBLIC_URL` на Render.
+5. Открыть `https://<имя>.vercel.app`.
 
 ## 4. Первый админ
 
 1. Зарегистрироваться на сайте.
-2. Supabase → **SQL Editor**:
+2. Supabase → **SQL Editor** (иконка `>_` слева):
 
 ```sql
 UPDATE users SET role = 'admin' WHERE username = '<логин>';
 ```
 
-3. Выйти и зайти заново.
+3. Выйти и зайти заново. Админка — в меню **Ещё → Управление**, через неё добавляется первый напиток (без картинки). Каталог обновляется в течение минуты: фронт кеширует список на 60 секунд.
+
+## Секреты
+
+Пароль БД и `SECRET_KEY` не должны попадать на скриншоты, в чаты и в репо: поля со значениями в Render и Vercel скрываются кнопкой-глазом. Если секрет засветился — сменить его (пароль: Supabase → **Database → Settings → Reset database password**, затем обновить `DATABASE_URL` на Render; ключ: **Generate** у `SECRET_KEY` на Render).
 
 ## Обновление
 
