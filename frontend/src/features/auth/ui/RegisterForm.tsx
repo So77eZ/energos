@@ -22,6 +22,7 @@ export function RegisterForm() {
         <input
           id="register-username"
           name="username"
+          defaultValue={state?.username}
           placeholder="например: neon_drift"
           required
           minLength={3}

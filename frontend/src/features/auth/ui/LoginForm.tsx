@@ -22,6 +22,7 @@ export function LoginForm({ returnTo = '/' }: { returnTo?: string }) {
         <input
           id="login-username"
           name="username"
+          defaultValue={state?.username}
           placeholder="например: neon_drift"
           required
           minLength={3}
