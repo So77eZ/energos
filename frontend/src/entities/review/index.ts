@@ -1,4 +1,4 @@
-export type { Review, ReviewMetrics, ReviewCreate } from './model/types'
+export type { Review, ReviewMetrics, ReviewCreate, ReviewUpdate } from './model/types'
 export {
   METRIC_LABELS,
   METRIC_SHORT,

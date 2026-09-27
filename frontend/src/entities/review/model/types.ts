@@ -25,6 +25,9 @@ export interface Review extends ReviewMetrics {
 // и на фронте, и (если потребуется) на бэке.
 export type ReviewCreate = Omit<Review, 'id' | 'user_id' | 'username' | 'created_at' | 'updated_at'>
 
+// PUT отзыва меняет только оценки и комментарий: напиток и автора бэк не трогает (#103).
+export type ReviewUpdate = ReviewMetrics & { comment: string | null }
+
 export const METRIC_LABELS: Record<keyof ReviewMetrics, string> = {
   acidity: 'Кислотность',
   sweetness: 'Сладость',

@@ -32,3 +32,18 @@ class CreateEnergyDrinkReviewSchema(BaseModel):
     aftertaste: float = Field(..., ge=1, le=5)
     price_quality: float = Field(..., ge=1, le=5)
     from_admin: bool = Field(default=False)
+
+
+class UpdateEnergyDrinkReviewSchema(BaseModel):
+    """Что автор может менять в своём отзыве: оценки и комментарий.
+
+    Напиток, автор и from_admin не меняются, лишние поля в теле игнорируются (#103).
+    """
+
+    comment: str | None = Field(default=None)
+    acidity: float = Field(..., ge=1, le=5)
+    sweetness: float = Field(..., ge=1, le=5)
+    concentration: float = Field(..., ge=1, le=5)
+    carbonation: float = Field(..., ge=1, le=5)
+    aftertaste: float = Field(..., ge=1, le=5)
+    price_quality: float = Field(..., ge=1, le=5)

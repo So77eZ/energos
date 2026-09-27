@@ -69,9 +69,6 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
 
       <input type="hidden" name="drink_id" value={drinkId} />
       {isEdit && <input type="hidden" name="review_id" value={editReview.id} />}
-      {isEdit && editReview.user_id != null && (
-        <input type="hidden" name="user_id" value={editReview.user_id} />
-      )}
 
       <div className="rev-form-progress">
         <div className="rfp-track">
