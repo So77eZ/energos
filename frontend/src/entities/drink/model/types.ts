@@ -8,5 +8,6 @@ export interface Drink {
   updated_at: string | null
 }
 
-export type DrinkCreate = Pick<Drink, 'name' | 'price' | 'no_sugar'> & { image_url?: string | null }
-export type DrinkUpdate = Partial<DrinkCreate>
+// Картинка меняется только через uploadImage, в теле POST/PUT её нет (#104, #114).
+export type DrinkCreate = Pick<Drink, 'name' | 'price' | 'no_sugar'>
+export type DrinkUpdate = DrinkCreate

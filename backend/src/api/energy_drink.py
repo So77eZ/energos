@@ -11,7 +11,7 @@ from fastapi import (
 )
 from datetime import datetime, timezone
 
-from src.schemas.energy_drink import EnergyDrinkSchema
+from src.schemas.energy_drink import EnergyDrinkSchema, EnergyDrinkWriteSchema
 from src.api.auth import get_current_admin
 from src.database import async_session_maker, SupabaseService
 from src.localization import localize_text
@@ -45,11 +45,11 @@ async def upload_image_to_drink(
 
 @router.post("/", response_model=EnergyDrinkSchema, status_code=201)
 async def create_energy_drink(
-    payload: EnergyDrinkSchema, current_user=Depends(get_current_admin)
+    payload: EnergyDrinkWriteSchema, current_user=Depends(get_current_admin)
 ) -> EnergyDrink:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     drink = EnergyDrink(
-        **payload.model_dump(exclude={"id", "created_at", "updated_at"}),
+        **payload.model_dump(),
         created_at=now,
         updated_at=now,
     )
@@ -93,7 +93,7 @@ async def read_all_energy_drinks(
 @router.put("/{id}/", response_model=EnergyDrinkSchema)
 async def update_energy_drink(
     request: Request,
-    payload: EnergyDrinkSchema,
+    payload: EnergyDrinkWriteSchema,
     id: int = Path(ge=1),
     current_user=Depends(get_current_admin),
 ) -> EnergyDrink:
@@ -105,10 +105,8 @@ async def update_energy_drink(
             raise HTTPException(
                 status_code=404, detail=localize_text("drink_not_found", request)
             )
-        update_data = payload.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            if key not in ["id", "created_at", "updated_at"] and value is not None:
-                setattr(row, key, value)
+        for key, value in payload.model_dump().items():
+            setattr(row, key, value)
         row.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await session.commit()
         return row
