@@ -1,4 +1,4 @@
-import { httpRequest, bearerHeaders } from '@shared/api/http'
+import { httpRequest, rawRequest, bearerHeaders } from '@shared/api/http'
 import type { Submission, SubmissionCreate, SubmissionStatus } from '../model/types'
 
 // Map backend 'name' to 'drink_name', provide defaults for 'created_at', 'user_name'
@@ -11,7 +11,9 @@ function mapBackendToFrontend(item: any): Submission {
     comment: item.comment,
     price: item.price,
     no_sugar: !!item.no_sugar,
-    photo: item.status === 'pending' ? `/api/add-requests/${item.id}/image` : null, // Backend clears image on resolve
+    // Картинку отдаёт только автору и админу, поэтому браузер грузит её через
+    // route handler Next, который добавляет токен из cookie (#95). После решения бэк её удаляет.
+    photo: item.status === 'pending' ? `/submission-image/${item.id}` : null,
     status: item.status as SubmissionStatus,
     created_at: item.created_at || new Date().toISOString(),
     reject_reason: item.admin_comment ?? null,
@@ -19,6 +21,10 @@ function mapBackendToFrontend(item: any): Submission {
 }
 
 export const submissionApi = {
+  /** Картинка заявки как есть (Response): 404 — нет картинки или заявка чужая. */
+  image: (id: number, token: string): Promise<Response> =>
+    rawRequest(`/api/add-requests/${id}/image`, { headers: bearerHeaders(token), cache: 'no-store' }),
+
   /** Fetch all submissions (admin gets all, user gets own). */
   list: async (token: string): Promise<Submission[]> => {
     const raw = await httpRequest<any[]>('/api/add-requests/', {

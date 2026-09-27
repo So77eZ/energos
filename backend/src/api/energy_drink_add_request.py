@@ -93,6 +93,7 @@ async def get_requests(
 @router.get("/{id}/image")
 async def get_request_image(
     id: int = Path(...),
+    current_user: User = Depends(get_current_user),
 ):
     async with async_session_maker() as session:
         result = await session.execute(
@@ -100,7 +101,15 @@ async def get_request_image(
         )
         db_request = result.scalar_one_or_none()
 
-        if not db_request or not db_request.image:
+        # Чужую заявку отдаём как несуществующую, чтобы не раскрывать id (#95)
+        if (
+            not db_request
+            or not db_request.image
+            or (
+                db_request.user_id != current_user.id
+                and current_user.role != Role.ADMIN
+            )
+        ):
             raise HTTPException(status_code=404, detail="Image not found")
 
         mime_type = _get_image_mime_type(db_request.image)
