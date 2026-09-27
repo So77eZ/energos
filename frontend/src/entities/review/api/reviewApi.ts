@@ -10,10 +10,10 @@ export const reviewApi = {
   byDrink: (drinkId: number) =>
     httpRequest<Review[]>(`${BASE}/energy-drink/${drinkId}/`, { next: { revalidate: 60, tags: ['reviews'] } }),
 
-  create: (body: ReviewCreate, token: string) =>
+  create: (body: ReviewCreate, token: string, extraHeaders?: Record<string, string>) =>
     httpRequest<Review>(`${BASE}/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
+      headers: { 'Content-Type': 'application/json', ...bearerHeaders(token), ...extraHeaders },
       body: JSON.stringify(body),
     }),
 

@@ -6,6 +6,7 @@ import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
+import { clientIpHeaders } from '@shared/lib/client-ip'
 
 const getNum = (formData: FormData, name: string) => {
   const v = Number(formData.get(name))
@@ -43,6 +44,7 @@ export async function saveReviewAction(
       await reviewApi.create(
         { ...payload, energy_drink_id: drinkId, from_admin: false },
         token,
+        await clientIpHeaders(),
       )
     }
   } catch (e) {

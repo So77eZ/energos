@@ -44,6 +44,7 @@ postgresql+asyncpg://postgres.<project-id>:<пароль>@aws-1-<регион>.p
 |---|---|
 | `DATABASE_URL` | строка из шага 1.4 |
 | `SECRET_KEY` | кнопка **Generate** в Render |
+| `INTERNAL_API_SECRET` | кнопка **Generate** в Render; то же значение нужно на Vercel (шаг 3). Без него лимиты на вход, регистрацию и отзывы общие на весь сайт: все запросы приходят с сервера Vercel |
 | `ALLOWED_ORIGINS` | `https://<имя>.vercel.app` |
 | `PUBLIC_URL` | `https://<имя>.vercel.app` |
 | `DEPLOY_ENV` | `dev` — при `prod` бэк отвечает 403 на запросы без `Origin`/`Referer`, в том числе на открытие адреса бэка в браузере |
@@ -60,12 +61,13 @@ postgresql+asyncpg://postgres.<project-id>:<пароль>@aws-1-<регион>.p
 
 1. **Add New → Project** → импортировать `So77eZ/energos`.
 2. Vercel найдёт в репо и фронт, и бэк и предложит пресет **Services** с `vercel.json`. Это не нужно: **Root Directory → Edit → `frontend`**, после чего пресет станет **Next.js**.
-3. **Environment Variables** задать **до первой сборки**: адрес бэка вшивается в сборку, и после изменения переменных нужен повторный деплой. Vercel сам подтянет десяток переменных из `.env.example` — удалить все, оставить только эти две (без `/` на конце):
+3. **Environment Variables** задать **до первой сборки**: адрес бэка вшивается в сборку, и после изменения переменных нужен повторный деплой. Vercel сам подтянет десяток переменных из `.env.example` — удалить все, оставить только эти три (адреса без `/` на конце):
 
 | Переменная | Значение |
 |---|---|
 | `API_ORIGIN` | `https://<сервис>.onrender.com` |
 | `NEXT_PUBLIC_ORIGIN` | `https://<имя>.vercel.app` |
+| `INTERNAL_API_SECRET` | значение с Render, символ в символ |
 
 4. Deploy. В **Domains** проверить, что выдан ровно `<имя>.vercel.app`; если другой — прописать его в `NEXT_PUBLIC_ORIGIN` здесь и в `ALLOWED_ORIGINS`/`PUBLIC_URL` на Render.
 5. Открыть `https://<имя>.vercel.app`.
@@ -83,7 +85,7 @@ UPDATE users SET role = 'admin' WHERE username = '<логин>';
 
 ## Секреты
 
-Пароль БД и `SECRET_KEY` не должны попадать на скриншоты, в чаты и в репо: поля со значениями в Render и Vercel скрываются кнопкой-глазом. Если секрет засветился — сменить его (пароль: Supabase → **Database → Settings → Reset database password**, затем обновить `DATABASE_URL` на Render; ключ: **Generate** у `SECRET_KEY` на Render).
+Пароль БД, `SECRET_KEY` и `INTERNAL_API_SECRET` не должны попадать на скриншоты, в чаты и в репо: поля со значениями в Render и Vercel скрываются кнопкой-глазом. Если секрет засветился — сменить его (пароль: Supabase → **Database → Settings → Reset database password**, затем обновить `DATABASE_URL` на Render; ключ: **Generate** у `SECRET_KEY` на Render).
 
 ## Обновление
 
