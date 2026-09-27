@@ -92,6 +92,17 @@ async def get_current_user(
         return user
 
 
+async def get_current_admin(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=403, detail=localize_text("not_allowed", request)
+        )
+    return current_user
+
+
 @router.get("/me/", response_model=UserResponse)
 async def read_users_me(
     current_user: User = Depends(get_current_user),
