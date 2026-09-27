@@ -38,8 +38,7 @@ export async function saveReviewAction(
 
   try {
     if (reviewId) {
-      const userId = Number(formData.get('user_id'))
-      await reviewApi.update(reviewId, { ...payload, energy_drink_id: drinkId, user_id: userId }, token)
+      await reviewApi.update(reviewId, payload, token)
     } else {
       await reviewApi.create(
         { ...payload, energy_drink_id: drinkId, from_admin: false },

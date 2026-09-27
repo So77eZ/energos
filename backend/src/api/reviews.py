@@ -3,7 +3,11 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Path, Depends, Request
 from datetime import datetime, timezone
 
-from src.schemas.reviews import EnergyDrinkReviewSchema, CreateEnergyDrinkReviewSchema
+from src.schemas.reviews import (
+    EnergyDrinkReviewSchema,
+    CreateEnergyDrinkReviewSchema,
+    UpdateEnergyDrinkReviewSchema,
+)
 from src.api.auth import get_current_user
 from src.database import async_session_maker
 from src.rate_limiter import limiter
@@ -115,7 +119,7 @@ async def read_review(
 @router.put("/{id}/", response_model=EnergyDrinkReviewSchema)
 async def update_review(
     request: Request,
-    payload: EnergyDrinkReviewSchema,
+    payload: UpdateEnergyDrinkReviewSchema,
     id: int = Path(ge=1),
     current_user=Depends(get_current_user),
 ) -> EnergyDrinkReviewSchema:
@@ -135,13 +139,8 @@ async def update_review(
             raise HTTPException(
                 status_code=403, detail=localize_text("not_allowed", request)
             )
-        update_data = payload.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            if (
-                key not in ["id", "created_at", "updated_at", "username", "from_admin"]
-                and value is not None
-            ):
-                setattr(existing, key, value)
+        for key, value in payload.model_dump().items():
+            setattr(existing, key, value)
         existing.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await session.commit()
         schema = EnergyDrinkReviewSchema.model_validate(existing)

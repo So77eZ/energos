@@ -64,9 +64,7 @@ async function upsertAdminReview(drinkId: number, formData: FormData, token: str
   if (!allFilled) return
 
   const existing = (await reviewApi.byDrink(drinkId).catch(() => [])).find((r) => r.from_admin)
-  const payload = {
-    energy_drink_id: drinkId,
-    from_admin: true,
+  const scores = {
     acidity: metrics.acidity!,
     sweetness: metrics.sweetness!,
     concentration: metrics.concentration!,
@@ -76,9 +74,9 @@ async function upsertAdminReview(drinkId: number, formData: FormData, token: str
     comment: null,
   }
   if (existing) {
-    await reviewApi.update(existing.id, { ...payload, user_id: existing.user_id ?? undefined }, token)
+    await reviewApi.update(existing.id, scores, token)
   } else {
-    await reviewApi.create(payload, token)
+    await reviewApi.create({ ...scores, energy_drink_id: drinkId, from_admin: true }, token)
   }
 }
 

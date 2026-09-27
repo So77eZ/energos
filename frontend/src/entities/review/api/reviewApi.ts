@@ -1,5 +1,5 @@
 import { httpRequest, bearerHeaders } from '@shared/api/http'
-import type { Review, ReviewCreate } from '../model/types'
+import type { Review, ReviewCreate, ReviewUpdate } from '../model/types'
 
 const BASE = '/api/reviews'
 
@@ -17,7 +17,7 @@ export const reviewApi = {
       body: JSON.stringify(body),
     }),
 
-  update: (id: number, body: Partial<ReviewCreate> & { energy_drink_id?: number; user_id?: number }, token: string) =>
+  update: (id: number, body: ReviewUpdate, token: string) =>
     httpRequest<Review>(`${BASE}/${id}/`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
