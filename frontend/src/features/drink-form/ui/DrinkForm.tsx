@@ -145,6 +145,7 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
                 placeholder="Например: ВОЛЬТ ZERO Ледяной арбуз"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                maxLength={200} // лимит бэка, DRINK_NAME_MAX
                 required
               />
             </div>

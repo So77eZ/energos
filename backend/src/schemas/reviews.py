@@ -2,6 +2,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, ConfigDict
 
+# Лимиты длины строк (#115): фронт режет так же через maxLength
+REVIEW_COMMENT_MAX = 2000
+
 
 class EnergyDrinkReviewSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -24,7 +27,7 @@ class EnergyDrinkReviewSchema(BaseModel):
 
 class CreateEnergyDrinkReviewSchema(BaseModel):
     energy_drink_id: int = Field(..., ge=1)
-    comment: str | None = Field(default=None)
+    comment: str | None = Field(default=None, max_length=REVIEW_COMMENT_MAX)
     acidity: float = Field(..., ge=1, le=5)
     sweetness: float = Field(..., ge=1, le=5)
     concentration: float = Field(..., ge=1, le=5)
@@ -40,7 +43,7 @@ class UpdateEnergyDrinkReviewSchema(BaseModel):
     Напиток, автор и from_admin не меняются, лишние поля в теле игнорируются (#103).
     """
 
-    comment: str | None = Field(default=None)
+    comment: str | None = Field(default=None, max_length=REVIEW_COMMENT_MAX)
     acidity: float = Field(..., ge=1, le=5)
     sweetness: float = Field(..., ge=1, le=5)
     concentration: float = Field(..., ge=1, le=5)
