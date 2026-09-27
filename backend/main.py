@@ -31,6 +31,9 @@ class NoDirectAccessMiddleware:
 
 app = FastAPI(
     root_path="/api",
+    docs_url="/docs" if settings.API_DOCS else None,
+    redoc_url="/redoc" if settings.API_DOCS else None,
+    openapi_url="/openapi.json" if settings.API_DOCS else None,
 )
 
 app.state.limiter = limiter
