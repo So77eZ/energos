@@ -1,7 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { revalidateTag } from 'next/cache'
+import { updateTag } from 'next/cache'
 import { drinkApi } from '@entities/drink'
 import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
@@ -50,8 +50,8 @@ export const createDrinkAction = withSessionGuard(async (formData: FormData) => 
   await uploadImageIfPresent(drink.id!, formData, token)
   await upsertAdminReview(drink.id!, formData, token)
 
-  revalidateTag('drinks')
-  revalidateTag('reviews')
+  updateTag('drinks')
+  updateTag('reviews')
   redirect(ROUTES.admin.drinks)
 })
 
@@ -90,8 +90,8 @@ export const updateDrinkAction = withSessionGuard(async (id: number, formData: F
   await uploadImageIfPresent(id, formData, token)
   await upsertAdminReview(id, formData, token)
 
-  revalidateTag('drinks')
-  revalidateTag('reviews')
+  updateTag('drinks')
+  updateTag('reviews')
   redirect(ROUTES.admin.drinks)
 })
 
@@ -100,7 +100,7 @@ export const deleteDrinkAction = withSessionGuard(async (id: number) => {
   requireToken(token)
 
   await drinkApi.remove(id, token)
-  revalidateTag('drinks')
-  revalidateTag('reviews')
+  updateTag('drinks')
+  updateTag('reviews')
   redirect(ROUTES.admin.drinks)
 })
