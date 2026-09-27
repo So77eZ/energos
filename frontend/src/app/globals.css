@@ -4287,7 +4287,10 @@ body::before {
    ENERGOS — Calendar heatmap (профиль, активность отзывов)
    GitHub-style сетка 53 недели, цвет ячейки по числу отзывов/день.
    ═══════════════════════════════════════════════════════════════════ */
-.cal-section { margin-bottom: 20px; }
+/* Секция сжимается до ширины сетки и встаёт по центру; заголовок и легенда
+   выровнены по сетке. Когда сетка шире экрана — max-width 100% и скролл в .cal-scroll
+   (auto-отступы тогда схлопываются в 0, левый край не обрезается, #309). */
+.cal-section { margin: 0 auto 20px; width: max-content; max-width: 100%; }
 .cal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
 .cal-title { font-family: var(--font-title, var(--font-sans)); font-weight: 700; font-size: 14px; color: var(--txt); }
 .cal-legend { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10px; color: var(--txt-quiet); }
@@ -4329,6 +4332,9 @@ body::before {
   content: ''; bottom: calc(100% + 3px); border: 4px solid transparent; border-top-color: var(--line-strong);
 }
 .cal-cell[data-tip]:hover::after, .cal-cell[data-tip]:hover::before { opacity: 1; }
+/* У правых недель тултип раскрывается влево: иначе невидимые тултипы вылезают
+   за край и дают горизонтальный скролл сетке (#309) */
+.cal-week:nth-last-child(-n+12) .cal-cell[data-tip]::after { left: auto; right: 0; transform: none; }
 
 /* ═══════════════════════════════════════════════════════════════════
    ENERGOS — Easter eggs (retro / fireworks / hidden bolt / logo flash)
