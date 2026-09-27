@@ -12,7 +12,7 @@ from fastapi import (
 from datetime import datetime, timezone
 
 from src.schemas.energy_drink import EnergyDrinkSchema
-from src.api.auth import get_current_user
+from src.api.auth import get_current_admin
 from src.database import async_session_maker, SupabaseService
 from src.localization import localize_text
 from src.models.energy_drinks import EnergyDrink
@@ -26,7 +26,7 @@ async def upload_image_to_drink(
     request: Request,
     id: int = Path(ge=1),
     file: UploadFile = File(...),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_admin),
 ) -> EnergyDrink:
     async with async_session_maker() as session:
         drink = await query_energy_drink_by_id(session, id)
@@ -45,7 +45,7 @@ async def upload_image_to_drink(
 
 @router.post("/", response_model=EnergyDrinkSchema, status_code=201)
 async def create_energy_drink(
-    payload: EnergyDrinkSchema, current_user=Depends(get_current_user)
+    payload: EnergyDrinkSchema, current_user=Depends(get_current_admin)
 ) -> EnergyDrink:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     drink = EnergyDrink(
@@ -95,7 +95,7 @@ async def update_energy_drink(
     request: Request,
     payload: EnergyDrinkSchema,
     id: int = Path(ge=1),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_admin),
 ) -> EnergyDrink:
     async with async_session_maker() as session:
         query = select(EnergyDrink).where(EnergyDrink.id == id)
@@ -118,7 +118,7 @@ async def update_energy_drink(
 async def delete_energy_drink(
     request: Request,
     id: int = Path(ge=1),
-    current_user=Depends(get_current_user),
+    current_user=Depends(get_current_admin),
 ) -> EnergyDrink:
     async with async_session_maker() as session:
         query = select(EnergyDrink).where(EnergyDrink.id == id)
