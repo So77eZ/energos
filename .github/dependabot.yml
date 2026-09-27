@@ -12,6 +12,11 @@ updates:
     groups:
       frontend-minor-patch:
         update-types: [minor, patch]
+    ignore:
+      # Мажор @types/node должен совпадать с мажором рантайма Node (CI/Docker),
+      # иначе TypeScript пропускает API, которых в рантайме нет. Поднимать вручную.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   # Backend (FastAPI / pip · pyproject.toml)
   - package-ecosystem: pip
