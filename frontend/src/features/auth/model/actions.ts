@@ -7,10 +7,15 @@ import { setToken, clearToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 import { clientIpHeaders } from '@shared/lib/client-ip'
 
+// username возвращается в состоянии, чтобы форма подставила его обратно:
+// React 19 после server action сбрасывает неуправляемые поля (#299).
+// Пароли не возвращаем — их пользователь вводит заново.
+export type AuthFormState = { error: string; success?: boolean; username?: string } | null
+
 export async function loginAction(
-  _prev: { error: string; success?: boolean } | null,
+  _prev: AuthFormState,
   formData: FormData,
-): Promise<{ error: string; success?: boolean } | null> {
+): Promise<AuthFormState> {
   const username = formData.get('username') as string
   const password = formData.get('password') as string
 
@@ -18,8 +23,8 @@ export async function loginAction(
     const { access_token } = await authApi.login(username, password, await clientIpHeaders())
     await setToken(access_token)
   } catch (e) {
-    if (e instanceof RateLimitError) return { error: e.message }
-    return { error: 'Неверный логин или пароль' }
+    if (e instanceof RateLimitError) return { error: e.message, username }
+    return { error: 'Неверный логин или пароль', username }
   }
 
   // Вместо redirect (который вызывает soft-навигацию),
@@ -28,14 +33,14 @@ export async function loginAction(
 }
 
 export async function registerAction(
-  _prev: { error: string; success?: boolean } | null,
+  _prev: AuthFormState,
   formData: FormData,
-): Promise<{ error: string; success?: boolean } | null> {
+): Promise<AuthFormState> {
   const username = formData.get('username') as string
   const password = formData.get('password') as string
   const confirm = formData.get('confirm') as string
 
-  if (password !== confirm) return { error: 'Пароли не совпадают' }
+  if (password !== confirm) return { error: 'Пароли не совпадают', username }
 
   try {
     const ipHeaders = await clientIpHeaders()
@@ -43,8 +48,8 @@ export async function registerAction(
     const { access_token } = await authApi.login(username, password, ipHeaders)
     await setToken(access_token)
   } catch (e) {
-    if (e instanceof RateLimitError) return { error: e.message }
-    return { error: e instanceof Error ? e.message : 'Ошибка регистрации' }
+    if (e instanceof RateLimitError) return { error: e.message, username }
+    return { error: e instanceof Error ? e.message : 'Ошибка регистрации', username }
   }
 
   return { error: '', success: true }
