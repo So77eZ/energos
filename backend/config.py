@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = Field(...)
     PUBLIC_URL: str = Field(...)
     DEPLOY_ENV: str = Field(...)
+    # Общий секрет с Next: только с ним бэк верит X-Client-IP (rate limit, #106)
+    INTERNAL_API_SECRET: str = ""
 
     @field_validator("SECRET_KEY")
     def validate_secret_key(cls, v: str) -> str:

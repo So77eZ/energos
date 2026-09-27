@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { authApi } from '@entities/user'
 import { setToken, clearToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
+import { clientIpHeaders } from '@shared/lib/client-ip'
 
 export async function loginAction(
   _prev: { error: string; success?: boolean } | null,
@@ -14,7 +15,7 @@ export async function loginAction(
   const password = formData.get('password') as string
 
   try {
-    const { access_token } = await authApi.login(username, password)
+    const { access_token } = await authApi.login(username, password, await clientIpHeaders())
     await setToken(access_token)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message }
@@ -37,8 +38,9 @@ export async function registerAction(
   if (password !== confirm) return { error: 'Пароли не совпадают' }
 
   try {
-    await authApi.register(username, password)
-    const { access_token } = await authApi.login(username, password)
+    const ipHeaders = await clientIpHeaders()
+    await authApi.register(username, password, ipHeaders)
+    const { access_token } = await authApi.login(username, password, ipHeaders)
     await setToken(access_token)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message }
