@@ -26,7 +26,7 @@ export function assertResponseOk(res: Response): void {
   if (res.status === 429) throw new RateLimitError()
 }
 
-async function parseError(res: Response): Promise<string> {
+export async function parseError(res: Response): Promise<string> {
   const text = await res.text()
   try {
     const json = JSON.parse(text)
@@ -34,7 +34,9 @@ async function parseError(res: Response): Promise<string> {
       if (Array.isArray(json.detail)) {
         return json.detail
           .map((d: { msg?: string; ctx?: { error?: unknown } }) => {
-            const raw = (d.ctx?.error != null ? String(d.ctx.error) : d.msg) ?? JSON.stringify(d)
+            // FastAPI кладёт ValueError из валидаторов в ctx.error как `{}` —
+            // строкой берём только настоящую строку, иначе текст из msg.
+            const raw = (typeof d.ctx?.error === 'string' ? d.ctx.error : d.msg) ?? JSON.stringify(d)
             return raw.replace(/^Value error,\s*/i, '')
           })
           .join('; ')
