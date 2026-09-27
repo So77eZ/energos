@@ -17,6 +17,8 @@ from src.api.auth import get_current_user
 from src.models.auth import User
 from src.models.energy_drink_add_request import EnergyDrinkAddRequest
 from src.schemas.energy_drink_add_request import (
+    REQUEST_COMMENT_MAX,
+    REQUEST_NAME_MAX,
     EnergyDrinkAddRequestRead,
     EnergyDrinkAddRequestUpdateStatus,
 )
@@ -39,10 +41,10 @@ def _get_image_mime_type(image_bytes: bytes) -> str:
 
 @router.post("/", response_model=EnergyDrinkAddRequestRead)
 async def create_request(
-    name: str = Form(...),
+    name: str = Form(..., min_length=1, max_length=REQUEST_NAME_MAX),
     price: Optional[float] = Form(None),
     no_sugar: bool = Form(False),
-    comment: Optional[str] = Form(None),
+    comment: Optional[str] = Form(None, max_length=REQUEST_COMMENT_MAX),
     image: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
 ):

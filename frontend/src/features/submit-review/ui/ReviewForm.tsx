@@ -104,6 +104,7 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={3}
+            maxLength={2000} // лимит бэка, REVIEW_COMMENT_MAX
           />
         </div>
 

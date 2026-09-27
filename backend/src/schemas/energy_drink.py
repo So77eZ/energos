@@ -2,6 +2,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# Лимит длины названия (#115). С запасом: у спарсенных напитков названия длинные (#50)
+DRINK_NAME_MAX = 200
+
 
 class EnergyDrinkSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -22,6 +25,6 @@ class EnergyDrinkWriteSchema(BaseModel):
     лишние поля в теле игнорируются (#104, #114).
     """
 
-    name: str = Field(...)
+    name: str = Field(..., min_length=1, max_length=DRINK_NAME_MAX)
     price: float | None = Field(default=None)
     no_sugar: bool = Field(default=False)

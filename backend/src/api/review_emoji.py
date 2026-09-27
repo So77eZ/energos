@@ -36,9 +36,8 @@ async def get_review_emojis(
 async def add_emoji_to_review(
     request: Request,
     review_id: int = Path(..., ge=1),
-    emoji: str = Query(
-        ...,
-    ),
+    # Эмодзи с модификаторами и ZWJ-последовательности занимают до ~10 символов (#115)
+    emoji: str = Query(..., min_length=1, max_length=32),
     current_user=Depends(get_current_user),
 ) -> ReviewEmoji:
     async with async_session_maker() as session:
