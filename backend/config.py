@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     DEPLOY_ENV: str = Field(...)
     # Общий секрет с Next: только с ним бэк верит X-Client-IP (rate limit, #106)
     INTERNAL_API_SECRET: str = ""
+    # Swagger (/docs, /redoc, /openapi.json). По умолчанию выключен, в том числе
+    # на стенде с DEPLOY_ENV=dev; для локальной разработки — API_DOCS=true (#134)
+    API_DOCS: bool = False
 
     @field_validator("SECRET_KEY")
     def validate_secret_key(cls, v: str) -> str:
