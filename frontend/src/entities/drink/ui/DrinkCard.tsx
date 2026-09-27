@@ -83,7 +83,7 @@ export function DrinkCard({ drink, rank = null, brand, isFav = false, onToggleFa
             alt={drink.name}
             loading="lazy"
             decoding="async"
-            className="max-h-[180px] w-auto object-contain"
+            className="card-vis-img"
           />
         ) : (
           <EnergyCan can={drink.can} w={110} h={240} />

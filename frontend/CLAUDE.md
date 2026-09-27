@@ -1,6 +1,6 @@
 # Frontend — заметки для агентов
 
-Стек: Next.js 15 (App Router) + React 19 + TypeScript, Tailwind 3, FSD. Тесты: vitest (unit) + Playwright (e2e). Прод-сборка — docker (запечённый образ).
+Стек: Next.js 15 (App Router) + React 19 + TypeScript, FSD, стили — свой CSS в `src/app/globals.css` (без Tailwind). Тесты: vitest (unit) + Playwright (e2e). Прод-сборка — docker (запечённый образ).
 
 ## Архитектура
 
