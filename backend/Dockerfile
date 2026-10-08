@@ -6,4 +6,4 @@ COPY . .
 
 RUN pip install uv && uv sync
 
-CMD ["sh", "-c", "uv run python -m src.migration_bootstrap && uv run uvicorn main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "uv run alembic upgrade head && uv run uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]

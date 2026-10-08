@@ -1,5 +1,6 @@
 :80 {
-    handle_path /api/* {
+    @api path /api /api/*
+    handle @api {
         reverse_proxy backend:8000
     }
 

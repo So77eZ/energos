@@ -1,5 +1,7 @@
 import asyncio
+import sys
 from logging.config import fileConfig
+from os.path import abspath, dirname
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -7,26 +9,16 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-import sys
-from os.path import dirname, abspath
-
 sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
-from src.database import DATABASE_URL
-from src.models.base import Base
-from src.models.energy_drinks import EnergyDrink  # noqa: F401
-from src.models.auth import User  # noqa: F401
-from src.models.reviews import EnergyDrinkReview  # noqa: F401
-from src.models.review_emoji import ReviewEmoji  # noqa: F401
-from src.models.favorites import UserFavoriteDrinks  # noqa: F401
-from src.models.energy_drink_add_request import EnergyDrinkAddRequest  # noqa: F401
-
+from core.config import settings
+from models import Base, EnergyDrink, Review  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

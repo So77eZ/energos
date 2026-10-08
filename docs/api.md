@@ -1,170 +1,175 @@
-# API Документация проекта Energos
+# API Energos
 
-## Обзор
+Документ описывает API, реализованный в `backend/api`. API построено на
+FastAPI, использует JWT Bearer-аутентификацию и версионируется через префикс
+`/v1`.
 
-Проект Energos предоставляет API для управления энергетиками, отзывами и аутентификацией пользователей. API построено на FastAPI и использует JWT для аутентификации.
+## Базовые URL
 
-> **Префикс пути.** Бэкенд монтирует роутеры от корня (`/auth/…`, `/energy-drinks/…` и т.д.). Снаружи фронт ходит через Caddy с префиксом `/api` (`/api/auth/login/`), который реверс-прокси срезает. Пути ниже даны без `/api`.
+- При прямом обращении к приложению: `http://<host>/v1`
+- Через reverse proxy проекта: `https://<host>/api/v1`
+- Swagger UI: `/api/docs`
+- OpenAPI JSON: `/api/openapi.json`
 
-## Эндпоинты аутентификации (`/auth/`)
+В таблицах ниже используется внешний URL с префиксом `/api/v1`. При прямом
+обращении к приложению префикс `/api` нужно убрать. Маршруты с завершающим `/`
+поддерживаются FastAPI; при его отсутствии FastAPI может вернуть redirect.
 
-- **POST /auth/register/**  
-  Регистрация нового пользователя.  
-  Вход: `UserCreate` (username: str [3–50, `[a-zA-Z0-9_-]`], password: str [≥8 символов, заглавная+строчная+цифра])  
-  Выход: `UserResponse` (id: int, username: str, role: str)  
-  **Rate limit: 5 запросов/минуту с одного IP. При превышении → HTTP 429.**
+## Общие правила
 
-- **POST /auth/login/**  
-  Вход в систему.  
-  Вход: `OAuth2PasswordRequestForm` (username: str, password: str)  
-  Выход: `Token` (access_token: str, token_type: str)  
-  **Rate limit: 10 запросов/минуту с одного IP. При превышении → HTTP 429.**
+### Аутентификация
 
-- **GET /auth/me/**  
-  Получение информации о текущем пользователе.  
-  Вход: JWT токен в заголовке Authorization  
-  Выход: `UserResponse`
+Для защищённых маршрутов передавайте токен из `POST /auth/login`:
 
-- **GET /auth/me/favorites/**  
-  ID избранных напитков текущего пользователя.  
-  Вход: JWT токен  
-  Выход: `list[int]`
+```http
+Authorization: Bearer <access_token>
+```
 
-- **PUT /auth/me/favorites/{energy_drink_id}/**  
-  Добавить напиток в избранное (идемпотентно — повтор не дублирует).  
-  Вход: energy_drink_id (int), JWT токен  
-  Выход: **204 No Content** (404 если напитка нет)
+Регистрация, вход, сброс пароля и подтверждение e-mail используют стандартные
+маршруты и схемы FastAPI Users.
 
-- **DELETE /auth/me/favorites/{energy_drink_id}/**  
-  Убрать напиток из избранного (идемпотентно).  
-  Вход: energy_drink_id (int), JWT токен  
-  Выход: **204 No Content**
+### Ошибки
 
-## Эндпоинты энергетиков (`/energy-drinks/`)
+Ошибки возвращаются в формате:
 
-- **POST /energy-drinks/{id}/upload-image/**  
-  Загрузка изображения для энергетика.  
-  Вход: UploadFile (файл изображения), JWT токен  
-  Выход: `EnergyDrinkSchema`
+```json
+{"detail": "..."}
+```
 
-- **POST /energy-drinks/**  
-  Создание нового энергетика.  
-  Вход: `EnergyDrinkSchema`, JWT токен  
-  Выход: `EnergyDrinkSchema`
+Для ошибок валидации `detail` содержит список ошибок Pydantic. Основные статусы:
 
-- **GET /energy-drinks/{id}/**  
-  Получение энергетика по ID.  
-  Вход: id (int >= 1)  
-  Выход: `EnergyDrinkSchema`
+- `400` — некорректный JSON или бизнес-ошибка;
+- `401` — отсутствует/неверен токен либо неверные учётные данные;
+- `403` — недостаточно прав или пользователь не подтверждён;
+- `404` — объект не найден;
+- `422` — ошибка валидации параметров или тела запроса;
+- `429` — превышен rate limit.
 
-- **GET /energy-drinks/**  
-  Получение всех энергетиков.  
-  Query params: `limit` (int, 1–200, опционально), `offset` (int, по умолчанию 0)  
-  Выход: List[`EnergyDrinkSchema`]
+## Аутентификация (`/auth`)
 
-- **PUT /energy-drinks/{id}/**  
-  Обновление энергетика.  
-  Вход: `EnergyDrinkSchema`, id (int >= 1), JWT токен  
-  Выход: `EnergyDrinkSchema`
+Ко всем auth-маршрутам применяется лимит **10 запросов в минуту**.
 
-- **DELETE /energy-drinks/{id}/**  
-  Удаление энергетика.  
-  Вход: id (int >= 1), JWT токен  
-  Выход: `EnergyDrinkSchema`
+| Метод и путь | Доступ | Тело запроса | Ответ |
+| --- | --- | --- | --- |
+| `POST /auth/register` | публичный | JSON `UserCreate`: `email`, `password` | `201`, `UserRead` |
+| `POST /auth/login` | публичный | `application/x-www-form-urlencoded`: `username`, `password` | `200`, `Token` |
+| `POST /auth/logout` | Bearer | нет | `204` |
+| `GET /auth/me` | Bearer | нет | `200`, `UserRead` |
+| `PATCH /auth/me` | Bearer | JSON `UserUpdate`: `email` и/или `password` | `200`, `UserRead` |
+| `POST /auth/forgot-password` | публичный | JSON `email` | `202` |
+| `POST /auth/reset-password` | публичный | JSON `token`, `password` | `200` |
+| `POST /auth/request-verify-token` | публичный | JSON `email` | `202` |
+| `POST /auth/verify` | публичный | JSON `token` | `200`, `UserRead` |
 
-## Эндпоинты отзывов (`/reviews/`)
+После регистрации приложение отправляет письмо с токеном подтверждения.
+Параметр `username` в форме login — это e-mail, как предусмотрено
+`OAuth2PasswordRequestForm`.
 
-- **POST /reviews/**  
-  Создание нового отзыва.  
-  Вход: `EnergyDrinkReviewSchema`, JWT токен  
-  Выход: `EnergyDrinkReviewSchema`  
-  **Rate limit: 10 запросов/минуту с одного IP. При превышении → HTTP 429.**
+## Энергетические напитки (`/energy-drinks`)
 
-- **GET /reviews/{id}/**  
-  Получение отзыва по ID.  
-  Вход: id (int >= 1)  
-  Выход: `EnergyDrinkReviewSchema`
+### Публичные маршруты
 
-- **GET /reviews/**  
-  Получение всех отзывов.  
-  Вход: нет  
-  Выход: List[`EnergyDrinkReviewSchema`]
+| Метод и путь | Параметры | Ответ |
+| --- | --- | --- |
+| `GET /energy-drinks/` | `limit` (int, по умолчанию `20`), `offset` (int, по умолчанию `0`), `order_by` (по умолчанию `id`) | `200`, `list[EnergyDrinkWithReviewsSchema]` |
+| `GET /energy-drinks/{energy_drink_id}/image` | `energy_drink_id` (int) | `200`, бинарное тело изображения с сохранённым `Content-Type` |
 
-- **GET /reviews/energy-drink/{energy_drink_id}/**  
-  Получение отзывов по ID энергетика.  
-  Вход: energy_drink_id (int >= 1)  
-  Выход: List[`EnergyDrinkReviewSchema`]
+Элемент `EnergyDrinkWithReviewsSchema` содержит:
 
-- **GET /reviews/user/**  
-  Получение отзывов текущего пользователя.  
-  Вход: JWT токен  
-  Выход: List[`EnergyDrinkReviewSchema`]
+```json
+{
+  "id": 1,
+  "name": "Название",
+  "price": 1.99,
+  "no_sugar": false,
+  "reviews": [
+    {
+      "acidity": 3,
+      "sweetness": 4,
+      "concentration": 3,
+      "carbonation": 4,
+      "aftertaste": 3,
+      "price_quality": 4,
+      "overall": 4
+    }
+  ]
+}
+```
 
-- **PUT /reviews/{id}/**  
-  Обновление отзыва.  
-  Вход: `EnergyDrinkReviewSchema`, id (int >= 1), JWT токен  
-  Выход: `EnergyDrinkReviewSchema`
+Если напиток не существует или у него нет изображения, image-маршрут
+возвращает `404`.
 
-- **DELETE /reviews/{id}/**  
-  Удаление отзыва.  
-  Вход: id (int >= 1), JWT токен  
-  Выход: `EnergyDrinkReviewSchema`
+### Маршруты администратора
 
-## Эмодзи-реакции на отзывы (`/reviews/{review_id}/emojis/`)
+Для всех маршрутов этого раздела требуется Bearer-токен пользователя с
+`role=admin`.
 
-- **GET /reviews/{review_id}/emojis/**  
-  Все реакции на отзыв.  
-  Вход: review_id (int >= 1)  
-  Выход: List[`ReviewEmojiSchema`] (404 если отзыва нет)
+| Метод и путь | Тело запроса | Ответ |
+| --- | --- | --- |
+| `POST /energy-drinks/` | JSON `EnergyDrinkCreateSchema` | `201`, `EnergyDrinkSchema` |
+| `PUT /energy-drinks/{energy_drink_id}` | JSON `EnergyDrinkUpdateSchema` | `200`, `EnergyDrinkSchema` |
+| `DELETE /energy-drinks/{energy_drink_id}` | нет | `204` |
+| `POST /energy-drinks/{energy_drink_id}/image` | `multipart/form-data`, поле `image` (файл) | `201`, `EnergyDrinkSchema` |
+| `DELETE /energy-drinks/{energy_drink_id}/image` | нет | `204` |
 
-- **POST /reviews/{review_id}/emojis/**  
-  Поставить реакцию от текущего пользователя.  
-  Вход: review_id (int >= 1), query-параметр `emoji` (str), JWT токен  
-  Выход: `ReviewEmojiSchema` (201). 400 если такая реакция от пользователя уже есть, 404 если отзыва нет.
+Схемы напитка:
 
-- **DELETE /reviews/{review_id}/emojis/**  
-  Снять свою реакцию.  
-  Вход: review_id (int >= 1), query-параметр `emoji` (str), JWT токен  
-  Выход: **204 No Content** (404 если реакции нет)
+- `EnergyDrinkCreateSchema`: `name` (string), `price` (number или `null`),
+  `no_sugar` (boolean, по умолчанию `false`);
+- `EnergyDrinkUpdateSchema`: те же поля, все необязательные;
+- `EnergyDrinkSchema`: поля create-схемы и `id` (integer).
 
-## Заявки на добавление напитка (`/add-requests/`)
+## Отзывы (`/reviews`)
 
-- **POST /add-requests/**  
-  Создать заявку на добавление напитка.  
-  Вход: `multipart/form-data` — `name` (str), `price` (float, опц.), `no_sugar` (bool), `comment` (str, опц.), `image` (файл, опц.); JWT токен  
-  Выход: `EnergyDrinkAddRequestRead`
+| Метод и путь | Доступ | Параметры/тело | Ответ |
+| --- | --- | --- | --- |
+| `GET /reviews/` | публичный | `limit` (int, `20`), `offset` (int, `0`), `order_by` (string, `id`) | `200`, `list[ReviewSchema]` |
+| `POST /reviews/{energy_drink_id}` | Bearer + подтверждённый пользователь | JSON `ReviewCreateSchema` | `201`, `ReviewSchema` |
+| `PUT /reviews/{review_id}` | Bearer + подтверждённый пользователь, только автор отзыва | JSON `ReviewUpdateSchema` | `200`, `ReviewSchema` |
+| `DELETE /reviews/{review_id}` | Bearer + подтверждённый пользователь, только автор отзыва | нет | `204` |
 
-- **GET /add-requests/**  
-  Список заявок. Admin видит все, обычный пользователь — только свои.  
-  Вход: JWT токен  
-  Выход: List[`EnergyDrinkAddRequestRead`]
+Для администратора проверка подтверждения пользователя не требуется.
+Создание, изменение и удаление отзывов ограничены **10 запросами в минуту**.
 
-- **GET /add-requests/{id}/image**  
-  Изображение заявки (бинарно, с реальным MIME по magic-bytes).  
-  Вход: id (int)  
-  Выход: тело изображения (404 если нет)
+`ReviewCreateSchema` содержит обязательные оценки от `0` до `5`:
+`acidity`, `sweetness`, `concentration`, `carbonation`, `aftertaste`,
+`price_quality`, `overall`.
 
-- **PATCH /add-requests/{id}/status**  
-  Модерация заявки (одобрить/отклонить). **Только admin (403 иначе).**  
-  Вход: `EnergyDrinkAddRequestUpdateStatus` (status: str, admin_comment: str опц.), id (int), JWT токен  
-  Выход: `EnergyDrinkAddRequestRead`
+`ReviewUpdateSchema` содержит необязательные поля `comment` (строка до 1000
+символов) и те же оценки от `0` до `5`. Идентификаторы автора и напитка
+нельзя изменить через этот маршрут.
 
-## Модели данных
+`ReviewSchema` — это `ReviewCreateSchema` плюс `id`. При создании отзыв
+привязывается к напитку из `{energy_drink_id}` и текущему пользователю.
+Если напиток или отзыв не найден, возвращается `404`; при попытке изменить или
+удалить чужой отзыв — `403`.
 
-- `UserCreate`: username (str), password (str)
-- `UserResponse`: id (int), username (str), role (str)
-- `Token`: access_token (str), token_type (str)
-- `EnergyDrinkSchema`: (поля энергетика, включая name, description, etc.)
-- `EnergyDrinkReviewSchema`: (поля отзыва, включая rating, comment, etc.)
-- `ReviewEmojiSchema`: id (int), emoji_unicode (str), review_id (int), user_id (int), created_at, updated_at
-- `EnergyDrinkAddRequestRead`: id (int), name (str), price (float?), no_sugar (bool), comment (str?), admin_comment (str?), status (str), user_id (int), user_name (str?)
-- `EnergyDrinkAddRequestUpdateStatus`: status (str), admin_comment (str?)
+## Rate limiting
 
-Для детального описания моделей обратитесь к файлам в `backend/src/schemas/`.
+Ограничения применяются в памяти процесса и сбрасываются после перезапуска:
 
-## Rate Limiting
+- auth: `10/minute` на все маршруты `/auth`;
+- чтение списка напитков и изображений: `100/minute`;
+- создание/изменение/удаление отзывов: `10/minute`.
 
-Реализован через `slowapi` (in-memory, сбрасывается при перезапуске сервера).  
-Ключ — IP-адрес клиента (`X-Forwarded-For` или `REMOTE_ADDR`).  
-При превышении лимита сервер возвращает **HTTP 429 Too Many Requests**.  
-Фронтенд отображает сообщение: «Слишком много запросов. Пожалуйста, подождите немного.»
+При превышении лимита возвращается `429 Too Many Requests`.
+
+## Схемы пользователей
+
+`UserRead` основана на `fastapi-users.schemas.BaseUser`:
+
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "is_active": true,
+  "is_superuser": false,
+  "is_verified": true
+}
+```
+
+`UserCreate` принимает `email` и `password`. Минимальная длина пароля — 8
+символов; дополнительные проверки выполняются менеджером пользователей.
+`UserUpdate` принимает необязательные `email` и `password`.
+
+`Token` имеет поля `access_token` и `token_type` (обычно `bearer`).
