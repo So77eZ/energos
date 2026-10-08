@@ -230,3 +230,5 @@ data/
 BDBackup/
 dumps/
 fromDesign/
+
+.githooks/
