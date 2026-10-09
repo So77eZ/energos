@@ -1,4 +1,5 @@
 import { ROUTES } from '@shared/config/routes'
+import { FEATURES } from '@shared/config/features'
 import type { IconFC } from '@shared/ui/icons'
 import {
   IconGrid, IconMap, IconTrophy, IconScale,
@@ -20,7 +21,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: ROUTES.compare(), label: 'Сравнение', icon: IconScale },
   { href: ROUTES.glossary, label: 'Словарь', icon: IconBook },
   { href: ROUTES.reviews(), label: 'Отзывы', icon: IconMsg },
-  { href: ROUTES.submit, label: 'Предложить', icon: IconPlus },
+  ...(FEATURES.submissions ? [{ href: ROUTES.submit, label: 'Предложить', icon: IconPlus }] : []),
   { href: ROUTES.admin.drinks, label: 'Управление', icon: IconSliders, adminOnly: true },
 ]
 

@@ -18,20 +18,18 @@ export function RegisterForm() {
       {state?.error && <p className="auth-error">{state.error}</p>}
 
       <div className="auth-field">
-        <label htmlFor="register-username">Имя пользователя</label>
+        <label htmlFor="register-username">E-mail</label>
         <input
           id="register-username"
           name="username"
+          type="email"
           defaultValue={state?.username}
-          placeholder="например: neon_drift"
+          placeholder="you@example.com"
           required
-          minLength={3}
-          maxLength={50}
-          pattern="[a-zA-Z0-9_\-]+"
-          title="Только буквы, цифры, _ и -"
-          autoComplete="username"
+          maxLength={254}
+          autoComplete="email"
         />
-        <span className="auth-field-hint">3–50 символов: буквы, цифры, <code>_</code> и <code>-</code></span>
+        <span className="auth-field-hint">На этот адрес придёт письмо для подтверждения аккаунта</span>
       </div>
 
       <div className="auth-field">
@@ -45,7 +43,7 @@ export function RegisterForm() {
           minLength={8}
           autoComplete="new-password"
         />
-        <span className="auth-field-hint">Минимум 8 символов, заглавная и строчная буква, цифра</span>
+        <span className="auth-field-hint">Минимум 8 символов</span>
       </div>
 
       <div className="auth-field">

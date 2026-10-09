@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import type { Drink } from '@entities/drink'
 import type { Review } from '@entities/review'
 import { ROUTES } from '@shared/config/routes'
+import { FEATURES } from '@shared/config/features'
 import { useSubmissions } from '@features/submissions'
 import { Icons } from '@shared/ui/icons'
 import { CatalogTab } from './tabs/CatalogTab'
@@ -13,7 +14,12 @@ import { SubmissionsTab } from './tabs/SubmissionsTab'
 
 type TabId = 'catalog' | 'subs' | 'leaders'
 
-const TAB_IDS: TabId[] = ['catalog', 'subs', 'leaders']
+// «Заявки» и «Лидерборд» зависят от API, которого нет в ветке mvp (флаги в shared/config/features.ts).
+const TAB_IDS: TabId[] = [
+  'catalog',
+  ...(FEATURES.submissions ? ['subs' as const] : []),
+  ...(FEATURES.reviewAuthors ? ['leaders' as const] : []),
+]
 
 interface AdminPageProps {
   drinks: Drink[]
@@ -50,7 +56,7 @@ export function AdminPage({ drinks, reviews }: AdminPageProps) {
           <div className="page-eyebrow">УПРАВЛЕНИЕ · ADMIN</div>
           <h1 className="page-title">Энергопанель</h1>
           <p className="page-blurb">
-            Каталог, заявки от сообщества, рейтинг рецензентов — всё в одном месте.
+            Управление каталогом напитков.
           </p>
         </div>
       </header>
@@ -63,13 +69,15 @@ export function AdminPage({ drinks, reviews }: AdminPageProps) {
           <div className="stat-sub">в каталоге</div>
           <div className="stat-corner" />
         </div>
-        <div className="stat-card stat-amber">
-          <div className="stat-icon"><Icons.plus /></div>
-          <div className="stat-lbl">ЗАЯВКИ В ОЧЕРЕДИ</div>
-          <div className="stat-val">{pendingCount}</div>
-          <div className="stat-sub">из {submissions.length} всего</div>
-          <div className="stat-corner" />
-        </div>
+        {FEATURES.submissions && (
+          <div className="stat-card stat-amber">
+            <div className="stat-icon"><Icons.plus /></div>
+            <div className="stat-lbl">ЗАЯВКИ В ОЧЕРЕДИ</div>
+            <div className="stat-val">{pendingCount}</div>
+            <div className="stat-sub">из {submissions.length} всего</div>
+            <div className="stat-corner" />
+          </div>
+        )}
         <div className="stat-card stat-lime">
           <div className="stat-icon"><Icons.candyOff /></div>
           <div className="stat-lbl">БЕЗ САХАРА</div>
@@ -88,8 +96,8 @@ export function AdminPage({ drinks, reviews }: AdminPageProps) {
 
       <div className="adm-tabs" role="tablist" aria-label="Разделы админки">
         <TabButton id="catalog" label="Каталог"    icon="grid"   active={tab} onSelect={setTab} />
-        <TabButton id="subs"    label="Заявки"     icon="plus"   active={tab} onSelect={setTab} badge={pendingCount > 0 ? pendingCount : undefined} />
-        <TabButton id="leaders" label="Лидерборд"  icon="trophy" active={tab} onSelect={setTab} />
+        {FEATURES.submissions && <TabButton id="subs"    label="Заявки"     icon="plus"   active={tab} onSelect={setTab} badge={pendingCount > 0 ? pendingCount : undefined} />}
+        {FEATURES.reviewAuthors && <TabButton id="leaders" label="Лидерборд"  icon="trophy" active={tab} onSelect={setTab} />}
       </div>
 
       {tab === 'catalog' && <CatalogTab drinks={drinks} />}

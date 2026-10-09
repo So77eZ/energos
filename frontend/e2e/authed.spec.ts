@@ -11,13 +11,17 @@ test.beforeEach(async ({ context }) => {
   })
 })
 
-test('/profile открывается под логином, видны все 5 вкладок', async ({ page }) => {
+// Фичи, которых нет в API ветки mvp, выключены флагами (src/shared/config/features.ts).
+// Спеки читают те же NEXT_PUBLIC_FF_* — запускать с теми же значениями, что и сборку фронта.
+const ff = (name: string) => ['1', 'true'].includes(process.env[`NEXT_PUBLIC_FF_${name}`] ?? '')
+
+test('/profile открывается под логином, видны вкладки включённых фич', async ({ page }) => {
   await page.goto('/profile')
   await expect(page).toHaveURL(/\/profile/)
   await expect(page.locator('.prof-tabs')).toBeVisible()
-  // 5 вкладок: reviews, favorites, submissions, achievements, appearance
-  const tabs = page.locator('.prof-tab')
-  await expect(tabs).toHaveCount(5)
+  // reviews (reviewAuthors), favorites, submissions, achievements — по флагам; appearance всегда.
+  const expected = 1 + ['REVIEW_AUTHORS', 'FAVORITES', 'SUBMISSIONS', 'ACHIEVEMENTS'].filter(ff).length
+  await expect(page.locator('.prof-tab')).toHaveCount(expected)
 })
 
 test('/profile?tab=appearance показывает TweaksBody', async ({ page }) => {
@@ -27,13 +31,21 @@ test('/profile?tab=appearance показывает TweaksBody', async ({ page })
   await expect(page.locator('.prof-appearance .twk-section-title')).toHaveCount(4)
 })
 
+test('/submit без флага submissions → 404', async ({ page }) => {
+  test.skip(ff('SUBMISSIONS'), 'Фича включена — проверяется тестом ниже')
+  const res = await page.goto('/submit')
+  expect(res?.status()).toBe(404)
+})
+
 test('/submit форма заявки видна под логином', async ({ page }) => {
+  test.skip(!ff('SUBMISSIONS'), 'Флаг submissions выключен (нет /add-requests в API)')
   await page.goto('/submit')
   // Видна сама форма (не gate "нужно войти"). Поле названия — по placeholder.
   await expect(page.locator('input[placeholder*="BURN" i]')).toBeVisible()
 })
 
 test('favorites toggle — клик ⚡ на карточке добавляет в избранное', async ({ page }) => {
+  test.skip(!ff('FAVORITES'), 'Флаг favorites выключен (нет избранного в API)')
   await page.goto('/')
   await expect(page.locator('.page-home')).toBeVisible()
 
@@ -62,6 +74,7 @@ test('favorites toggle — клик ⚡ на карточке добавляет
 })
 
 test('emoji-реакция — добавление и удаление через picker', async ({ page }) => {
+  test.skip(!ff('EMOJI_REACTIONS'), 'Флаг emojiReactions выключен (нет реакций в API)')
   // Идём на drink-страницу первого напитка из каталога.
   await page.goto('/')
   const firstCard = page.locator('.grid-regular .card').first()

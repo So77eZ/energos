@@ -12,6 +12,7 @@ import { CanGameProvider } from '@features/can-game'
 import { ConfirmProvider } from '@shared/lib/confirm'
 import { FavoritesProvider } from '@features/favorites'
 import { getToken } from '@shared/lib/session'
+import { FEATURES } from '@shared/config/features'
 import { cookies } from 'next/headers'
 import { FONT_COOKIE, OPTIONAL_FONT_HREFS, fontLinkId, isFontId } from '@shared/lib/fonts'
 import { SubmissionsProvider } from '@features/submissions'
@@ -41,10 +42,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Server-side: токен из httpOnly-куки, оттуда userId + initial favorites.
   // Любая ошибка фетча — null/[] (не валим рендер из-за неавторизованного запроса).
   const token = await getToken()
+  // Избранного в API ветки mvp нет — без флага на бэк не ходим.
   const [user, initialFavorites] = token
     ? await Promise.all([
         authApi.me(token).catch(() => null),
-        favoritesApi.list(token).catch(() => []),
+        FEATURES.favorites ? favoritesApi.list(token).catch(() => []) : Promise.resolve([] as number[]),
       ])
     : [null, [] as number[]]
 

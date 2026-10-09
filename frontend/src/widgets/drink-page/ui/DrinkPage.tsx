@@ -19,7 +19,9 @@ import { BadgeCluster } from '@entities/achievement'
 import { EmojiBar } from '@features/emoji-reactions'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
+import { FEATURES } from '@shared/config/features'
 import { useToast } from '@shared/lib/toast'
+import { VerifyEmailBanner } from '@features/auth/ui/VerifyEmailBanner'
 import { deleteReviewAction } from '@features/submit-review/model/actions'
 import { ReviewForm } from '@features/submit-review/ui/ReviewForm'
 import { DrinkNav } from './DrinkNav'
@@ -197,7 +199,7 @@ export function DrinkPage({
             {adminReview && (
               <AdminReviewCard
                 review={adminReview}
-                reactions={<EmojiBar reviewId={adminReview.id} />}
+                reactions={FEATURES.emojiReactions ? <EmojiBar reviewId={adminReview.id} /> : undefined}
               />
             )}
             {avgMetrics && (
@@ -211,8 +213,10 @@ export function DrinkPage({
         </section>
       )}
 
+      {currentUser && !currentUser.is_verified && <VerifyEmailBanner email={currentUser.email} />}
+
       {currentUser && (
-        formOpen ? (
+        formOpen && currentUser.is_verified ? (
           <div ref={formRef}>
             <ReviewForm
               drinkId={activeDrink.id}
@@ -227,13 +231,15 @@ export function DrinkPage({
               review={myReview}
               onEdit={() => setFormOpen(true)}
               onDelete={handleDelete}
-              reactions={<EmojiBar reviewId={myReview.id} />}
+              reactions={FEATURES.emojiReactions ? <EmojiBar reviewId={myReview.id} /> : undefined}
             />
           </section>
         ) : null
       )}
 
-      {otherReviews.length > 0 && (
+      {/* Без автора, комментария и даты (их нет в выдаче API) лента отзывов — набор анонимных
+          оценок; пока бэк не отдаёт их, показываем только сводку выше (reviewAuthors). */}
+      {FEATURES.reviewAuthors && otherReviews.length > 0 && (
         <section className="other-reviews-section">
           <div className="section-head">
             <h2 className="section-title">
@@ -282,8 +288,8 @@ export function DrinkPage({
                   key={r.id}
                   review={r}
                   avatar={<Avatar username={r.username} seed={r.user_id ?? r.username ?? '?'} size={36} />}
-                  badges={<BadgeCluster ownedIds={r.authorBadges ?? []} clusterBg="var(--bg-card)" />}
-                  reactions={<EmojiBar reviewId={r.id} />}
+                  badges={FEATURES.achievements ? <BadgeCluster ownedIds={r.authorBadges ?? []} clusterBg="var(--bg-card)" /> : undefined}
+                  reactions={FEATURES.emojiReactions ? <EmojiBar reviewId={r.id} /> : undefined}
                 />
               ))}
             </div>

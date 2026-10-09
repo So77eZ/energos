@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { authApi } from '@entities/user'
-import { setToken, clearToken } from '@shared/lib/session'
+import { getToken, setToken, clearToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 import { clientIpHeaders } from '@shared/lib/client-ip'
 
@@ -24,7 +24,7 @@ export async function loginAction(
     await setToken(access_token)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message, username }
-    return { error: 'Неверный логин или пароль', username }
+    return { error: 'Неверный e-mail или пароль', username }
   }
 
   // Вместо redirect (который вызывает soft-навигацию),
@@ -56,6 +56,23 @@ export async function registerAction(
 }
 
 export async function logoutAction(): Promise<{ success: boolean }> {
+  const token = await getToken()
+  // Серверный logout — по возможности: cookie чистим в любом случае.
+  if (token) await authApi.logout(token).catch(() => undefined)
   await clearToken()
   return { success: true }
+}
+
+/** Повторная отправка письма с подтверждением e-mail (POST /auth/request-verify-token). */
+export async function resendVerificationAction(): Promise<{ error: string } | { success: true }> {
+  const token = await getToken()
+  if (!token) return { error: 'Войдите, чтобы запросить письмо' }
+  try {
+    const me = await authApi.me(token)
+    await authApi.requestVerifyToken(me.email)
+    return { success: true }
+  } catch (e) {
+    if (e instanceof RateLimitError) return { error: e.message }
+    return { error: 'Не удалось отправить письмо' }
+  }
 }

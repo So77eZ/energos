@@ -18,18 +18,17 @@ export function LoginForm({ returnTo = '/' }: { returnTo?: string }) {
       {state?.error && <p className="auth-error">{state.error}</p>}
 
       <div className="auth-field">
-        <label htmlFor="login-username">Логин</label>
+        <label htmlFor="login-username">E-mail</label>
+        {/* name="username" оставлен: так поле зовётся в форме логина бэка (OAuth2PasswordRequestForm). */}
         <input
           id="login-username"
           name="username"
+          type="email"
           defaultValue={state?.username}
-          placeholder="например: neon_drift"
+          placeholder="you@example.com"
           required
-          minLength={3}
-          maxLength={50}
-          pattern="[a-zA-Z0-9_\-]+"
-          title="Только буквы, цифры, _ и -"
-          autoComplete="username"
+          maxLength={254}
+          autoComplete="email"
         />
       </div>
 

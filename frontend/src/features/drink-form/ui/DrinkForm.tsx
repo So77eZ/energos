@@ -6,6 +6,7 @@ import { useActionState, useRef, useState, useTransition } from 'react'
 import type { Drink } from '@entities/drink'
 import { METRIC_KEYS, MetricRatingInput, type Review, type ReviewMetrics } from '@entities/review'
 import { ROUTES } from '@shared/config/routes'
+import { FEATURES } from '@shared/config/features'
 import { Icons } from '@shared/ui/icons'
 import { deleteDrinkAction } from '../model/actions'
 
@@ -183,7 +184,7 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
           </div>
 
           {/* Right col — admin review (optional) */}
-          <div className="adm-form-col">
+          {FEATURES.adminReviews && <div className="adm-form-col">
             <div className="adm-form-section">
               <span className="adm-form-label">Оценка администратора (отзыв от лица admin)</span>
               <p className="adm-form-hint">
@@ -202,7 +203,7 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
                 ))}
               </div>
             </div>
-          </div>
+          </div>}
         </div>
 
         <div className="adm-form-foot">

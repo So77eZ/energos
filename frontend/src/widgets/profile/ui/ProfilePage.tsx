@@ -18,6 +18,8 @@ import { notifyUnlocks } from '@entities/achievement'
 import { useFavorites } from '@features/favorites'
 import { useMySubmissions } from '@features/submissions'
 import { Icons } from '@shared/ui/icons'
+import { FEATURES } from '@shared/config/features'
+import { VerifyEmailBanner } from '@features/auth/ui/VerifyEmailBanner'
 import { AchievementsTab } from './tabs/AchievementsTab'
 import { AppearanceTab } from './tabs/AppearanceTab'
 import { FavoritesTab } from './tabs/FavoritesTab'
@@ -26,7 +28,14 @@ import { SubmissionsTab } from './tabs/SubmissionsTab'
 
 type TabId = 'reviews' | 'favorites' | 'submissions' | 'achievements' | 'appearance'
 
-const TAB_IDS: TabId[] = ['reviews', 'favorites', 'submissions', 'achievements', 'appearance']
+// Вкладки фич, которых нет в API ветки mvp, скрыты флагами (shared/config/features.ts).
+const TAB_IDS: TabId[] = [
+  ...(FEATURES.reviewAuthors ? ['reviews' as const] : []),
+  ...(FEATURES.favorites ? ['favorites' as const] : []),
+  ...(FEATURES.submissions ? ['submissions' as const] : []),
+  ...(FEATURES.achievements ? ['achievements' as const] : []),
+  'appearance' as const,
+]
 
 interface ProfilePageProps {
   user: User
@@ -37,7 +46,7 @@ interface ProfilePageProps {
 
 function parseTab(raw: string | null): TabId {
   if (raw && (TAB_IDS as string[]).includes(raw)) return raw as TabId
-  return 'reviews'
+  return TAB_IDS[0]
 }
 
 export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
@@ -58,7 +67,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   // Sync URL ?tab=... when tab changes (scroll: false чтобы не дёргать страницу).
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString())
-    if (tab === 'reviews') params.delete('tab')
+    if (tab === TAB_IDS[0]) params.delete('tab')
     else params.set('tab', tab)
     const qs = params.toString()
     router.replace(qs ? `${ROUTES.profile}?${qs}` : ROUTES.profile, { scroll: false })
@@ -134,6 +143,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   // Тост на новые анлоки (diff vs ach_seen; первый визит — silent seed).
   const { toast } = useToast()
   useEffect(() => {
+    if (!FEATURES.achievements) return
     notifyUnlocks(achievements, { toast, router })
   }, [achievements, toast, router])
 
@@ -156,22 +166,26 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           className="prof-hero-bg"
           style={{ background: `radial-gradient(ellipse at 30% 50%, ${avatarColor}22, transparent 60%)` }}
         />
-        <button
-          type="button"
-          className="prof-avatar-edit"
-          onClick={() => setEditAvatar(true)}
-          aria-label="Изменить аватар"
-        >
-          <Avatar
-            username={user.username}
-            seed={user.id}
-            size={120}
-            avatarKind={av.kind}
-            avatarUrl={av.url}
-            avatarSeed={av.seed}
-          />
-          <span className="prof-avatar-pencil"><Icons.edit w={15} /></span>
-        </button>
+        {FEATURES.avatars ? (
+          <button
+            type="button"
+            className="prof-avatar-edit"
+            onClick={() => setEditAvatar(true)}
+            aria-label="Изменить аватар"
+          >
+            <Avatar
+              username={user.username}
+              seed={user.id}
+              size={120}
+              avatarKind={av.kind}
+              avatarUrl={av.url}
+              avatarSeed={av.seed}
+            />
+            <span className="prof-avatar-pencil"><Icons.edit w={15} /></span>
+          </button>
+        ) : (
+          <Avatar username={user.username} seed={user.id} size={120} />
+        )}
         <div className="prof-info">
           <div className="prof-eyebrow">
             <span className={`prof-role-tag${isAdmin ? '' : ' prof-role-user'}`}>
@@ -180,10 +194,11 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           </div>
           <h1 className="prof-name">{user.username}</h1>
           <div className="prof-meta">
-            <span><Icons.msg w={12} /> {reviews.length} отзывов</span>
-            <span><Icons.bolt w={12} /> {favIds.length} в избранном</span>
-            <span><Icons.beaker w={12} /> {mySubs.length} заявок</span>
-            <span><Icons.award w={12} /> {unlockedCount}/{achievements.length}</span>
+            <span>{user.email}</span>
+            {FEATURES.reviewAuthors && <span><Icons.msg w={12} /> {reviews.length} отзывов</span>}
+            {FEATURES.favorites && <span><Icons.bolt w={12} /> {favIds.length} в избранном</span>}
+            {FEATURES.submissions && <span><Icons.beaker w={12} /> {mySubs.length} заявок</span>}
+            {FEATURES.achievements && <span><Icons.award w={12} /> {unlockedCount}/{achievements.length}</span>}
           </div>
         </div>
         <div className="prof-actions">
@@ -200,42 +215,44 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
         </div>
       </section>
 
+      {!user.is_verified && <VerifyEmailBanner email={user.email} />}
+
       <section className="prof-stats">
-        <div className="stat-card stat-cyan">
+        {FEATURES.reviewAuthors && <div className="stat-card stat-cyan">
           <div className="stat-icon"><Icons.msg /></div>
           <div className="stat-lbl">ОТЗЫВОВ</div>
           <div className="stat-val">{reviews.length}</div>
           <div className="stat-sub">всего</div>
           <div className="stat-corner" />
-        </div>
-        <div className="stat-card stat-amber">
+        </div>}
+        {FEATURES.favorites && <div className="stat-card stat-amber">
           <div className="stat-icon"><Icons.bolt /></div>
           <div className="stat-lbl">ИЗБРАННЫХ</div>
           <div className="stat-val">{favIds.length}</div>
           <div className="stat-sub">из {drinks.length}</div>
           <div className="stat-corner" />
-        </div>
-        <div className="stat-card stat-purple">
+        </div>}
+        {FEATURES.submissions && <div className="stat-card stat-purple">
           <div className="stat-icon"><Icons.beaker /></div>
           <div className="stat-lbl">ЗАЯВКИ</div>
           <div className="stat-val">{mySubs.length}</div>
           <div className="stat-sub">{pendingCount} ждут · {approvedCount} одобрены</div>
           <div className="stat-corner" />
-        </div>
-        <div className="stat-card stat-pink">
+        </div>}
+        {FEATURES.achievements && <div className="stat-card stat-pink">
           <div className="stat-icon"><Icons.trophy /></div>
           <div className="stat-lbl">АЧИВКИ</div>
           <div className="stat-val">{unlockedCount}</div>
           <div className="stat-sub">/{achievements.length}</div>
           <div className="stat-corner" />
-        </div>
+        </div>}
       </section>
 
       <div className="prof-tabs" role="tablist" aria-label="Разделы профиля">
-        <TabButton id="reviews"      label="Отзывы"     icon="msg"     badge={counts.reviews}      active={tab} onSelect={setTab} />
-        <TabButton id="favorites"    label="Избранное"  icon="bolt"    badge={counts.favorites}    active={tab} onSelect={setTab} />
-        <TabButton id="submissions"  label="Мои заявки" icon="beaker"  badge={counts.submissions}  active={tab} onSelect={setTab} />
-        <TabButton id="achievements" label="Достижения" icon="trophy"  badge={counts.achievements} active={tab} onSelect={setTab} />
+        {FEATURES.reviewAuthors && <TabButton id="reviews"      label="Отзывы"     icon="msg"     badge={counts.reviews}      active={tab} onSelect={setTab} />}
+        {FEATURES.favorites     && <TabButton id="favorites"    label="Избранное"  icon="bolt"    badge={counts.favorites}    active={tab} onSelect={setTab} />}
+        {FEATURES.submissions   && <TabButton id="submissions"  label="Мои заявки" icon="beaker"  badge={counts.submissions}  active={tab} onSelect={setTab} />}
+        {FEATURES.achievements  && <TabButton id="achievements" label="Достижения" icon="trophy"  badge={counts.achievements} active={tab} onSelect={setTab} />}
         <TabButton id="appearance"   label="Оформление" icon="sparkle" active={tab} onSelect={setTab} />
       </div>
 
@@ -245,12 +262,14 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       {tab === 'achievements' && <AchievementsTab achievements={achievements} />}
       {tab === 'appearance'   && <AppearanceTab />}
 
-      <AvatarEditorSheet
-        userId={user.id}
-        open={editAvatar}
-        onClose={() => setEditAvatar(false)}
-        onSaved={() => router.refresh()}
-      />
+      {FEATURES.avatars && (
+        <AvatarEditorSheet
+          userId={user.id}
+          open={editAvatar}
+          onClose={() => setEditAvatar(false)}
+          onSaved={() => router.refresh()}
+        />
+      )}
     </div>
   )
 }
