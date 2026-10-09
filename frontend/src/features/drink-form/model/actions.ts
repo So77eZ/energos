@@ -7,6 +7,7 @@ import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { withSessionGuard } from '@shared/lib/auth-guard'
 import { ROUTES } from '@shared/config/routes'
+import { FEATURES } from '@shared/config/features'
 
 function requireToken(token: string | null): asserts token is string {
   if (!token) redirect(ROUTES.auth.login)
@@ -56,6 +57,8 @@ export const createDrinkAction = withSessionGuard(async (formData: FormData) => 
 })
 
 async function upsertAdminReview(drinkId: number, formData: FormData, token: string) {
+  // В API ветки mvp нет признака from_admin — редакторская оценка выключена флагом.
+  if (!FEATURES.adminReviews) return
   const metrics = extractMetrics(formData)
   // Полная запись разрешена только когда выставлены все 6 метрик —
   // частичный admin-ревью не имеет смысла и ломает агрегацию.
@@ -74,9 +77,9 @@ async function upsertAdminReview(drinkId: number, formData: FormData, token: str
     comment: null,
   }
   if (existing) {
-    await reviewApi.update(existing.id, scores, token)
+    await reviewApi.update(existing.id, drinkId, scores, token)
   } else {
-    await reviewApi.create({ ...scores, energy_drink_id: drinkId, from_admin: true }, token)
+    await reviewApi.create(drinkId, scores, token)
   }
 }
 
