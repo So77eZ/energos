@@ -1,4 +1,4 @@
-from fastapi import Depends, File, Response, UploadFile
+from fastapi import Depends, File, Request, Response, UploadFile
 
 from core.auth import get_current_user
 from core.decorators import require_admin
@@ -20,6 +20,7 @@ router = AutoStatusAPIRouter()
 @router.get("/")
 @limiter.limit("100/minute")
 async def get_energy_drinks_with_reviews(
+    request: Request,
     limit: int = 20,
     offset: int = 0,
     order_by: str = "id",
@@ -32,6 +33,7 @@ async def get_energy_drinks_with_reviews(
 @router.get("/{energy_drink_id}/image")
 @limiter.limit("100/minute")
 async def get_energy_drink_image(
+    request: Request,
     energy_drink_id: int,
     energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
 ) -> Response:
