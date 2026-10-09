@@ -6,6 +6,7 @@ import type { CSSProperties, MouseEvent } from 'react'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
 import { MiniMetrics } from '@entities/review/@x/drink'
+import { DrinkImg } from './DrinkImg'
 import { EnergyCan } from './EnergyCan'
 import { TierBadge } from './TierBadge'
 import { cleanDrinkName, splitDrinkBrand } from '../lib/format'
@@ -79,13 +80,13 @@ export function DrinkCard({ drink, rank = null, brand, isFav = false, onToggleFa
         style={{ background: `radial-gradient(ellipse at center 60%, rgba(${blend},0.28), transparent 70%)` }}
       >
         {drink.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <DrinkImg
             src={drink.image_url}
             alt={drink.name}
             loading="lazy"
             decoding="async"
             className="card-vis-img"
+            fallback={<EnergyCan can={drink.can} w={110} h={240} />}
           />
         ) : (
           <EnergyCan can={drink.can} w={110} h={240} />

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useMemo, useTransition } from 'react'
 import {
   cleanDrinkName,
+  DrinkImg,
   EnergyCan,
   enrichDrinks,
   TierBadge,
@@ -102,8 +103,7 @@ function DrinkRow({ drink }: { drink: EnrichedDrink }) {
     >
       <div className="adm-row-can">
         {drink.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={drink.image_url} alt={drink.name} loading="lazy" decoding="async" style={{ maxHeight: 60, width: 'auto', objectFit: 'contain' }} />
+          <DrinkImg src={drink.image_url} alt={drink.name} loading="lazy" decoding="async" style={{ maxHeight: 60, width: 'auto', objectFit: 'contain' }} fallback={<EnergyCan can={drink.can} w={36} h={78} />} />
         ) : (
           <EnergyCan can={drink.can} w={36} h={78} />
         )}

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
-import { cleanDrinkName, EnergyCan, TIER_COLORS } from '@entities/drink'
+import { cleanDrinkName, DrinkImg, EnergyCan, TIER_COLORS } from '@entities/drink'
 import type { EnrichedDrink, Tier } from '@entities/drink'
 
 interface HomeSideRailProps {
@@ -36,8 +36,7 @@ export function HomeSideRail({ drinks }: HomeSideRailProps) {
               <Link key={d.id} href={ROUTES.reviews(d.id)} className="rail-row">
                 <div className="rail-can">
                   {d.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" style={{ width: 32, height: 68, objectFit: 'contain' }} />
+                    <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" style={{ width: 32, height: 68, objectFit: 'contain' }} fallback={<EnergyCan can={d.can} w={32} h={68} />} />
                   ) : (
                     <EnergyCan can={d.can} w={32} h={68} />
                   )}

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { HiddenBolt } from '@features/easter-eggs'
 import {
   cleanDrinkName,
+  DrinkImg,
   EnergyCan,
   splitDrinkBrand,
   TierBadge,
@@ -143,8 +144,7 @@ export function ComparePage({ drinks }: ComparePageProps) {
                   style={{ background: `radial-gradient(circle, rgba(${blend}, 0.4), transparent 70%)` }}
                 />
                 {d.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" />
+                  <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={120} h={260} />} />
                 ) : (
                   <EnergyCan can={d.can} w={120} h={260} />
                 )}
@@ -283,8 +283,7 @@ export function ComparePage({ drinks }: ComparePageProps) {
                 >
                   <div className="cmp-pick-can">
                     {d.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" />
+                      <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={32} h={68} />} />
                     ) : (
                       <EnergyCan can={d.can} w={32} h={68} />
                     )}

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
-import { cleanDrinkName, EnergyCan, type SimilarMatch } from '@entities/drink'
+import { cleanDrinkName, DrinkImg, EnergyCan, type SimilarMatch } from '@entities/drink'
 
 interface SimilarRailProps {
   matches: SimilarMatch[]
@@ -35,13 +35,13 @@ export function SimilarRail({ matches }: SimilarRailProps) {
                 style={{ background: `radial-gradient(ellipse at center, rgba(${blend},0.25), transparent 70%)` }}
               >
                 {drink.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <DrinkImg
                     src={drink.image_url}
                     alt={drink.name}
                     loading="lazy"
                     decoding="async"
                     style={{ maxHeight: 110, width: 'auto', objectFit: 'contain' }}
+                    fallback={<EnergyCan can={drink.can} w={70} h={150} />}
                   />
                 ) : (
                   <EnergyCan can={drink.can} w={70} h={150} />

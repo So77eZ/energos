@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import {
   cleanDrinkName,
+  DrinkImg,
   EnergyCan,
   splitDrinkBrand,
   TIER_COLORS,
@@ -105,8 +106,7 @@ export function TierPage({ drinks }: TierPageProps) {
                           }}
                         >
                           {d.image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={d.image_url} alt={d.name} loading="lazy" decoding="async" />
+                            <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={56} h={120} />} />
                           ) : (
                             <EnergyCan can={d.can} w={56} h={120} />
                           )}
