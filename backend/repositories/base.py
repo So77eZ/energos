@@ -14,9 +14,7 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
         self.model = model
 
     async def get_by_id(self, id: int) -> BaseModelType | None:
-        query = select(self.model).where(self.model.id == id)
-        result = await self.session.execute(query)
-        return result.scalar_one_or_none()
+        return await self.session.get(self.model, id)
 
     async def get_many(self, limit: int = 20, offset: int = 0, order_by: str = "id") -> List[BaseModelType]:
         query = select(self.model).offset(offset).limit(limit).order_by(getattr(self.model, order_by))

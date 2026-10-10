@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import defer, selectinload
 
 from core.database import get_session
+from core.exceptions import ObjectNotFoundException
 from models.energy_drink import EnergyDrink
 from repositories.base import BaseRepository
 from schemas.energy_drink import EnergyDrinkCreateSchema, EnergyDrinkUpdateSchema, ImageData
@@ -40,6 +41,19 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
 
         _, image_data, content_type = energy_drink
         return True, ImageData(data=image_data, content_type=content_type)
+
+    async def get_by_id(self, id: int) -> EnergyDrink | None:
+        query = (
+            select(self.model)
+            .filter(self.model.id == id)
+            .options(defer(self.model.image), defer(self.model.image_content_type))
+        )
+        result = await self.session.execute(query)
+        result = result.scalar_one_or_none()
+        if result is None:
+            raise ObjectNotFoundException(f"Energy drink with id {id} not found")
+
+        return result
 
 
 async def get_energy_drink_repository(session: Annotated[AsyncSession, Depends(get_session)]) -> EnergyDrinkRepository:

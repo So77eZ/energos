@@ -16,10 +16,12 @@ class ReviewService(BaseService[Review, ReviewCreateInternalSchema, ReviewUpdate
         self.energy_drink_repository: EnergyDrinkRepository = energy_drink_repository
 
     async def _check_if_user_is_author(self, review_id: int, user_id: int) -> Review:
-        review = await self._get_or_404(review_id)
-        if review.user_id != user_id:
-            raise ForbiddenException("You are not authorized to perform this action on this review.")
-        return review
+        review_instance: Review = await self.get_by_id(review_id)
+
+        if review_instance.user_id != user_id:
+            raise ForbiddenException("You are not authorized to modify this review")
+
+        return review_instance
 
     async def create(self, data: ReviewCreateInternalSchema) -> Review:
         energy_drink_exists = await self.energy_drink_repository.exists_by_id(data.energy_drink_id)
