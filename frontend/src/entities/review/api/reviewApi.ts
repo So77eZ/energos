@@ -45,9 +45,13 @@ const scores = (m: ReviewMetrics): ApiReviewScores => ({
   overall: calcRating(m),
 })
 
-// Тот же URL и опции, что у drinkApi.list — Next отдаёт один запрос на оба вызова за рендер.
+// Те же URL и опции, что у drinkApi.list (включая счётчик) — Next отдаёт один запрос на оба вызова за рендер.
 const loadAll = () =>
-  fetchAllPages<ApiDrinkWithReviews>(`${API_V1}/energy-drinks/`, { next: { revalidate: 60, tags: ['drinks', 'reviews'] } })
+  fetchAllPages<ApiDrinkWithReviews>(
+    `${API_V1}/energy-drinks/`,
+    { next: { revalidate: 60, tags: ['drinks', 'reviews'] } },
+    `${API_V1}/energy-drinks/count`,
+  )
 
 /** У отзывов из списка напитков нет id. Для React-ключей и расчётов даём уникальный
  *  отрицательный — мутировать по нему нельзя (правка/удаление работают по id из ответа POST). */
