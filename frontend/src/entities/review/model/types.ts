@@ -20,10 +20,11 @@ export interface Review extends ReviewMetrics {
   authorBadges?: string[]
 }
 
-// from_admin включён — нужен при создании admin-отзыва.
-// Общий rating отдельным полем не хранится — считается calcRating(metrics)
-// и на фронте, и (если потребуется) на бэке.
-export type ReviewCreate = Omit<Review, 'id' | 'user_id' | 'username' | 'created_at' | 'updated_at'>
+// Напиток передаётся в пути (POST /reviews/{energy_drink_id}), автор — из токена.
+// `overall` бэк требует в теле; на фронте его даёт calcRating(metrics) (см. reviewApi).
+// comment в ReviewCreateSchema нет — reviewApi шлёт его, только если он непустой
+// (вопрос бэкендеру: docs/mvp-backend-questions.md).
+export type ReviewCreate = ReviewMetrics & { comment?: string | null }
 
 // PUT отзыва меняет только оценки и комментарий: напиток и автора бэк не трогает (#103).
 export type ReviewUpdate = ReviewMetrics & { comment: string | null }

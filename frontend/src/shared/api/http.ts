@@ -5,6 +5,9 @@ const BASE_URL =
     ? (process.env.API_ORIGIN ?? 'http://localhost')
     : ''
 
+/** Префикс версионированного API бэка (docs/api.md): снаружи `/api/v1`. */
+export const API_V1 = '/api/v1'
+
 export class RateLimitError extends Error {
   constructor() {
     super('Слишком много запросов. Пожалуйста, подождите немного.')
@@ -70,5 +73,7 @@ export async function httpRequest<T>(path: string, options?: HttpOptions): Promi
   const res = await rawRequest(path, options)
   assertResponseOk(res) // 401 → SessionExpiredError, 429 → RateLimitError (ДО generic)
   if (!res.ok) throw new Error(await parseError(res))
+  // 204 No Content (DELETE, logout) — тела нет, res.json() бросил бы.
+  if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
 }

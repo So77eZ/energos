@@ -38,13 +38,9 @@ export async function saveReviewAction(
 
   try {
     if (reviewId) {
-      await reviewApi.update(reviewId, payload, token)
+      await reviewApi.update(reviewId, drinkId, payload, token)
     } else {
-      await reviewApi.create(
-        { ...payload, energy_drink_id: drinkId, from_admin: false },
-        token,
-        await clientIpHeaders(),
-      )
+      await reviewApi.create(drinkId, payload, token, await clientIpHeaders())
     }
   } catch (e) {
     await redirectIfSessionExpired(e) // 401 → clear+redirect; иначе вниз

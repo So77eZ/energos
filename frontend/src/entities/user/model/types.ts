@@ -2,7 +2,11 @@ export type UserRole = 'user' | 'admin'
 
 export interface User {
   id: number
+  /** Отображаемое имя: локальная часть e-mail (в API `username` нет, см. authApi.me). */
   username: string
+  email: string
+  /** `false` → бэк отвечает 403 на создание/правку отзывов (docs/api.md, раздел «Отзывы»). */
+  is_verified: boolean
   role: UserRole
   // backend-висячка (бейджи): бэкендер подаст в /auth/me/; до этого undefined → 0
   first_reviewer_count?: number
