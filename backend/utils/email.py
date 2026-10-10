@@ -31,7 +31,9 @@ class EmailClient:
 
     @classmethod
     async def send_verification_email(cls, to_email: str, token: str) -> None:
-        verification_link = f"{settings.PUBLIC_URL}/api/v1/auth/verify?token={token}"
+        # Страница фронта (frontend/src/app/auth/verify): она отправляет токен POST-ом на /api/v1/auth/verify.
+        # Прямая ссылка на API не работает — эндпоинт принимает только POST.
+        verification_link = f"{settings.PUBLIC_URL}/auth/verify?token={token}"
 
         async for smtp_client in cls.get_session():
             client = cls(smtp_client)
