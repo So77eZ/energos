@@ -6,6 +6,7 @@ import { authApi } from '@entities/user'
 import { getToken, setToken, clearToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 import { clientIpHeaders } from '@shared/lib/client-ip'
+import { localizeAuthError } from './auth-errors'
 
 // username возвращается в состоянии, чтобы форма подставила его обратно:
 // React 19 после server action сбрасывает неуправляемые поля (#299).
@@ -49,9 +50,51 @@ export async function registerAction(
     await setToken(access_token)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message, username }
-    return { error: e instanceof Error ? e.message : 'Ошибка регистрации', username }
+    return { error: localizeAuthError(e instanceof Error ? e.message : '', 'Ошибка регистрации'), username }
   }
 
+  return { error: '', success: true }
+}
+
+export type ForgotPasswordState = { error: string; sent?: boolean; email?: string } | null
+
+/** Запрос письма для сброса пароля (POST /auth/forgot-password). Бэк всегда отвечает 202 и не
+ *  раскрывает, есть ли такой e-mail, — поэтому и мы показываем одно и то же сообщение. */
+export async function forgotPasswordAction(
+  _prev: ForgotPasswordState,
+  formData: FormData,
+): Promise<ForgotPasswordState> {
+  const email = ((formData.get('email') as string) ?? '').trim()
+  if (!email) return { error: 'Введите e-mail' }
+  try {
+    await authApi.forgotPassword(email, await clientIpHeaders())
+  } catch (e) {
+    if (e instanceof RateLimitError) return { error: e.message, email }
+    return { error: 'Не удалось отправить запрос. Попробуйте позже.', email }
+  }
+  return { error: '', sent: true, email }
+}
+
+export type ResetPasswordState = { error: string; success?: boolean } | null
+
+/** Установка нового пароля по токену из письма (POST /auth/reset-password). */
+export async function resetPasswordAction(
+  _prev: ResetPasswordState,
+  formData: FormData,
+): Promise<ResetPasswordState> {
+  const token = (formData.get('token') as string) ?? ''
+  const password = (formData.get('password') as string) ?? ''
+  const confirm = (formData.get('confirm') as string) ?? ''
+
+  if (!token) return { error: 'В ссылке нет токена. Откройте ссылку из письма целиком.' }
+  if (password !== confirm) return { error: 'Пароли не совпадают' }
+
+  try {
+    await authApi.resetPassword(token, password, await clientIpHeaders())
+  } catch (e) {
+    if (e instanceof RateLimitError) return { error: e.message }
+    return { error: localizeAuthError(e instanceof Error ? e.message : '', 'Не удалось сменить пароль') }
+  }
   return { error: '', success: true }
 }
 

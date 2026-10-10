@@ -43,7 +43,9 @@ class EmailClient:
 
     @classmethod
     async def send_reset_password_email(cls, to_email: str, token: str) -> None:
-        reset_password_link = f"{settings.PUBLIC_URL}/api/v1/auth/reset-password?token={token}"
+        # Страница фронта (frontend/src/app/auth/reset-password): форма нового пароля, шлёт токен
+        # POST-ом на /api/v1/auth/reset-password. Прямая ссылка на API не работает — только POST.
+        reset_password_link = f"{settings.PUBLIC_URL}/auth/reset-password?token={token}"
 
         async for smtp_client in cls.get_session():
             client = cls(smtp_client)
