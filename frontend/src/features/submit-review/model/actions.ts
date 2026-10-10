@@ -6,7 +6,6 @@ import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
-import { clientIpHeaders } from '@shared/lib/client-ip'
 
 const getNum = (formData: FormData, name: string) => {
   const v = Number(formData.get(name))
@@ -40,7 +39,7 @@ export async function saveReviewAction(
     if (reviewId) {
       await reviewApi.update(reviewId, drinkId, payload, token)
     } else {
-      await reviewApi.create(drinkId, payload, token, await clientIpHeaders())
+      await reviewApi.create(drinkId, payload, token)
     }
   } catch (e) {
     await redirectIfSessionExpired(e) // 401 → clear+redirect; иначе вниз
