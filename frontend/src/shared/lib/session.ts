@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers'
+import { secondsUntilExpiry } from './token-expiry'
 
 const COOKIE_NAME = 'auth_token'
+const FALLBACK_MAX_AGE = 60 * 30
 
 export async function getToken(): Promise<string | null> {
   const store = await cookies()
@@ -16,11 +18,17 @@ export async function setToken(token: string): Promise<void> {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    // Совпадает с JWT exp на бэке (ACCESS_TOKEN_EXPIRE_MINUTES=30): cookie умирает
-    // вместе с токеном — без «зомби»-сессии (7д cookie держала мёртвый токен → API 401
-    // при «залогинен»). Расширится когда бэк добавит refresh (см. docs/backend-contract.md).
-    maxAge: 60 * 30, // 30 минут = JWT exp
+    // Срок cookie берём из `exp` самого токена (TOKEN_LIFETIME_SECONDS на бэке, сейчас 24 ч):
+    // cookie умирает вместе с токеном — без «зомби»-сессии (долгая cookie держала бы мёртвый токен →
+    // API 401 при «залогинен») и без преждевременного выхода (раньше было зашито 30 минут).
+    maxAge: cookieMaxAge(token),
   })
+}
+
+/** Срок жизни cookie в секундах: остаток токена; если токен не разобрать — запасные 30 минут. */
+function cookieMaxAge(token: string): number {
+  const left = secondsUntilExpiry(token)
+  return left === null ? FALLBACK_MAX_AGE : Math.max(left, 0)
 }
 
 export async function clearToken(): Promise<void> {
