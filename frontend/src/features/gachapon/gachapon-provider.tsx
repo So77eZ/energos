@@ -2,11 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { drinkApi, enrichDrinks, type EnrichedDrink } from '@entities/drink'
-import { reviewApi } from '@entities/review'
+import { enrichDrinks, type EnrichedDrink } from '@entities/drink'
 import { ROUTES } from '@shared/config/routes'
 import { useTheme } from '@shared/lib/theme'
 import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
+import { fetchGachaponPool } from './actions'
 import { buildSpin } from './reel'
 import { GachaponMachine, type GachaponPhase } from './GachaponMachine'
 
@@ -55,8 +55,8 @@ export function GachaponProvider({ children }: { children: ReactNode }) {
       return
     }
     setPhase('loading')
-    Promise.all([drinkApi.list(), reviewApi.list()])
-      .then(([drinks, reviews]) => {
+    fetchGachaponPool()
+      .then(({ drinks, reviews }) => {
         if (!openRef.current) return
         const enriched = enrichDrinks(drinks, reviews)
         cacheRef.current = enriched
