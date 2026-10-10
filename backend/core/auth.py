@@ -1,3 +1,4 @@
+from fastapi import Depends, HTTPException, status
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
 
@@ -28,4 +29,27 @@ fastapi_users = FastAPIUsers[User, UserIdType](
     auth_backends=[auth_backend],
 )
 
-get_current_user = fastapi_users.current_user()
+
+get_current_user = fastapi_users.current_user(active=True)
+
+
+async def get_verified_user(
+    user: User = Depends(get_current_user),
+) -> User:
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not verified",
+        )
+    return user
+
+
+async def get_superuser(
+    user: User = Depends(get_current_user),
+) -> User:
+    if not user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+    return user

@@ -1,7 +1,6 @@
 from fastapi import Depends, File, Request, Response, UploadFile
 
-from core.auth import get_current_user
-from core.decorators import require_admin
+from core.auth import get_superuser
 from core.exceptions import ObjectNotFoundException
 from core.rate_limiter import limiter
 from core.router import AutoStatusAPIRouter
@@ -49,10 +48,9 @@ async def get_energy_drink_image(
 
 
 @router.post("/")
-@require_admin
 async def create_energy_drink(
     energy_drink_data: EnergyDrinkCreateSchema,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_superuser),
     energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
 ) -> EnergyDrinkSchema:
     energy_drink = await energy_drink_service.create(energy_drink_data)
@@ -60,34 +58,31 @@ async def create_energy_drink(
 
 
 @router.post("/{energy_drink_id}/image")
-@require_admin
 async def upload_energy_drink_image(
     energy_drink_id: int,
     image: UploadFile = File(...),
     energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_superuser),
 ) -> EnergyDrinkSchema:
     updated_drink = await energy_drink_service.update_image(energy_drink_id, image)
     return EnergyDrinkSchema.model_validate(updated_drink)
 
 
 @router.delete("/{energy_drink_id}/image")
-@require_admin
 async def delete_energy_drink_image(
     energy_drink_id: int,
     energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_superuser),
 ) -> None:
     await energy_drink_service.delete_image(energy_drink_id)
     return None
 
 
 @router.put("/{energy_drink_id}")
-@require_admin
 async def update_energy_drink(
     energy_drink_id: int,
     energy_drink_data: EnergyDrinkUpdateSchema,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_superuser),
     energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
 ) -> EnergyDrinkSchema:
     updated_energy_drink = await energy_drink_service.update(energy_drink_id, energy_drink_data)
@@ -95,10 +90,9 @@ async def update_energy_drink(
 
 
 @router.delete("/{energy_drink_id}")
-@require_admin
 async def delete_energy_drink(
     energy_drink_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_superuser),
     energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
 ) -> None:
     await energy_drink_service.delete_by_id(energy_drink_id)
@@ -106,7 +100,7 @@ async def delete_energy_drink(
 
 
 @router.get("/{energy_drink_id}")
-@limiter.limit("100/minute")
+@limiter.limit("1000/minute")
 async def get_energy_drink_by_id(
     request: Request,
     energy_drink_id: int,
