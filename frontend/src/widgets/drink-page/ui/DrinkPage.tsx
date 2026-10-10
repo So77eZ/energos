@@ -190,7 +190,10 @@ export function DrinkPage({
         drink={enriched}
         loggedIn={!!currentUser}
         hasMyReview={!!myReview}
-        onWriteReview={() => setFormOpen(true)}
+        onWriteReview={() =>
+          currentUser && !currentUser.is_verified
+            ? toast({ msg: 'Подтвердите e-mail, чтобы оставлять отзывы', kind: 'info' })
+            : setFormOpen(true)}
       />
 
       {(adminReview || avgMetrics) && (

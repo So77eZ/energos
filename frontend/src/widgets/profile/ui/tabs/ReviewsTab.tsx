@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import type { Drink, EnrichedDrink } from '@entities/drink'
-import { cleanDrinkName, EnergyCan } from '@entities/drink'
+import { cleanDrinkName, DrinkImg, EnergyCan } from '@entities/drink'
 import type { Review } from '@entities/review'
 import { calcRating, MiniMetrics } from '@entities/review'
 import { Icons } from '@shared/ui/icons'
@@ -61,8 +61,7 @@ export function ReviewsTab({ reviews, drinkMap, enrichedMap }: ReviewsTabProps) 
             >
               <div className="prof-rev-can">
                 {drink?.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={drink.image_url} alt={drink.name} loading="lazy" decoding="async" style={{ maxHeight: 108, width: 'auto', objectFit: 'contain' }} />
+                  <DrinkImg src={drink.image_url} alt={drink.name} loading="lazy" decoding="async" style={{ maxHeight: 108, width: 'auto', objectFit: 'contain' }} fallback={enriched ? <EnergyCan can={enriched.can} w={50} h={108} /> : null} />
                 ) : enriched ? (
                   <EnergyCan can={enriched.can} w={50} h={108} />
                 ) : null}

@@ -63,6 +63,20 @@ export async function logoutAction(): Promise<{ success: boolean }> {
   return { success: true }
 }
 
+/** Подтверждение e-mail по токену из письма (POST /auth/verify). Токен — из ссылки /auth/verify?token=... */
+export async function verifyEmailAction(token: string): Promise<{ error: string } | { success: true }> {
+  try {
+    await authApi.verify(token)
+    return { success: true }
+  } catch (e) {
+    if (e instanceof RateLimitError) return { error: e.message }
+    // fastapi-users: 400 с detail VERIFY_USER_BAD_TOKEN / VERIFY_USER_ALREADY_VERIFIED
+    const msg = e instanceof Error ? e.message : ''
+    if (msg.includes('ALREADY_VERIFIED')) return { success: true }
+    return { error: 'Ссылка недействительна или устарела. Запросите письмо ещё раз в профиле.' }
+  }
+}
+
 /** Повторная отправка письма с подтверждением e-mail (POST /auth/request-verify-token). */
 export async function resendVerificationAction(): Promise<{ error: string } | { success: true }> {
   const token = await getToken()

@@ -5,6 +5,7 @@ import { Icons } from '@shared/ui/icons'
 import {
   TierBadge,
   EnergyCan,
+  DrinkImg,
   cleanDrinkName,
   splitDrinkBrand,
   type EnrichedDrink,
@@ -137,8 +138,7 @@ export function GachaponMachine({
                       style={{ background: `radial-gradient(ellipse at center 60%, rgba(${d.blend},0.30), transparent 70%)` }}
                     />
                     {d.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.image_url} alt={d.name} decoding="async" className="gacha-cell-img" />
+                      <DrinkImg src={d.image_url} alt={d.name} decoding="async" className="gacha-cell-img" fallback={<EnergyCan can={d.can} name={d.name} w={64} h={140} />} />
                     ) : (
                       <EnergyCan can={d.can} name={d.name} w={64} h={140} />
                     )}

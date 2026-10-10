@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 import { HiddenBolt } from '@features/easter-eggs'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
-import { cleanDrinkName, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
+import { cleanDrinkName, DrinkImg, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
 import type { EnrichedDrink } from '@entities/drink'
 import { HexRadar, METRIC_COLOR_VARS, METRIC_KEYS, METRIC_LABELS } from '@entities/review'
 
@@ -38,8 +38,7 @@ export function HomeHero({ drink, rank }: HomeHeroProps) {
               style={{ background: `radial-gradient(circle, rgba(${blend},0.45), transparent 70%)` }}
             />
             {drink.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 400, width: 'auto', position: 'relative', zIndex: 1 }} />
+              <DrinkImg src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 400, width: 'auto', position: 'relative', zIndex: 1 }} fallback={<EnergyCan can={drink.can} w={180} h={400} />} />
             ) : (
               <EnergyCan can={drink.can} w={180} h={400} />
             )}

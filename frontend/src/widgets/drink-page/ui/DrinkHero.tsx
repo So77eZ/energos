@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { CSSProperties } from 'react'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
-import { cleanDrinkName, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
+import { cleanDrinkName, DrinkImg, EnergyCan, splitDrinkBrand, TierBadge } from '@entities/drink'
 import type { EnrichedDrink } from '@entities/drink'
 import { HexRadar } from '@entities/review'
 import { HiddenBolt } from '@features/easter-eggs'
@@ -35,8 +35,7 @@ export function DrinkHero({ drink, loggedIn, hasMyReview, onWriteReview }: Drink
       <HiddenBolt id="drink" />
       <div className="drink-hero-vis">
         {drink.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 480, width: 'auto' }} />
+          <DrinkImg src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 480, width: 'auto' }} fallback={<EnergyCan can={drink.can} w={220} h={500} />} />
         ) : (
           <EnergyCan can={drink.can} w={220} h={500} />
         )}
