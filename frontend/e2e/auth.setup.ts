@@ -4,12 +4,13 @@ import { dirname } from 'node:path'
 
 // Setup-проект: подготавливает авторизованную сессию для authed-spec'ов.
 // 1) Пытаемся залогиниться как E2E_USER. Если нет — регистрируем (через
-//    /api/auth/register), потом логинимся.
-// 2) Из ответа /api/auth/login берём access_token, прокидываем в cookie
+//    /api/v1/auth/register), потом логинимся.
+// 2) Из ответа /api/v1/auth/login берём access_token, прокидываем в cookie
 //    auth_token (так же как session.ts на сервере) → сохраняем storageState.
 // 3) Authed-тесты грузят storageState и работают как залогиненный юзер.
 
-const E2E_USERNAME = process.env.E2E_USERNAME ?? 'playwright_e2e'
+// В API ветки mvp логин — e-mail (поле формы по-прежнему `username`).
+const E2E_USERNAME = process.env.E2E_USERNAME ?? 'playwright_e2e@example.com'
 const E2E_PASSWORD = process.env.E2E_PASSWORD ?? 'PlayE2E_2026'
 const AUTH_FILE = 'e2e/.auth/user.json'
 // Бэк бьём напрямую, а не через Next rewrites — Next dev иногда отдаёт HTML
@@ -24,8 +25,8 @@ setup('authenticate', async ({ request, context, baseURL }) => {
 
   // 2) Если 401 — регистрируем и логинимся заново.
   if (!token) {
-    const regRes = await request.post(`${apiBase}/api/auth/register/`, {
-      data: { username: E2E_USERNAME, password: E2E_PASSWORD },
+    const regRes = await request.post(`${apiBase}/api/v1/auth/register`, {
+      data: { email: E2E_USERNAME, password: E2E_PASSWORD },
       headers: { 'Content-Type': 'application/json' },
       failOnStatusCode: false,
     })
@@ -65,7 +66,7 @@ async function tryLogin(
   const form = new URLSearchParams()
   form.set('username', username)
   form.set('password', password)
-  const res = await request.post(`${apiBase}/api/auth/login/`, {
+  const res = await request.post(`${apiBase}/api/v1/auth/login`, {
     data: form.toString(),
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     failOnStatusCode: false,
@@ -78,7 +79,7 @@ async function tryLogin(
   } catch {
     // Бэк/прокси отдал не-JSON (HTML страницу Next, или ошибку прокси).
     // Печатаем чтобы было видно в логе теста.
-    console.error(`[auth.setup] /api/auth/login/ вернул не-JSON. Status=${res.status()}, body начало:`, text.slice(0, 200))
+    console.error(`[auth.setup] /api/v1/auth/login вернул не-JSON. Status=${res.status()}, body начало:`, text.slice(0, 200))
     return null
   }
 }

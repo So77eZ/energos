@@ -59,16 +59,18 @@ export function DrinkCard({ drink, rank = null, brand, isFav = false, onToggleFa
           {drink.tier && <TierBadge tier={drink.tier} size="xs" />}
           {drink.isNew && <span className="micro-tag micro-amber">NEW</span>}
           {drink.no_sugar && <span className="micro-tag micro-lime">ZERO</span>}
-          <button
-            type="button"
-            className={`card-fav${isFav ? ' is-fav' : ''}`}
-            onClick={onFavClick}
-            aria-label={isFav ? 'Убрать из избранного' : 'Добавить в избранное'}
-            aria-pressed={isFav}
-            title={isFav ? 'Убрать из избранного' : 'Добавить в избранное'}
-          >
-            <Icons.bolt w={14} />
-          </button>
+          {onToggleFav && (
+            <button
+              type="button"
+              className={`card-fav${isFav ? ' is-fav' : ''}`}
+              onClick={onFavClick}
+              aria-label={isFav ? 'Убрать из избранного' : 'Добавить в избранное'}
+              aria-pressed={isFav}
+              title={isFav ? 'Убрать из избранного' : 'Добавить в избранное'}
+            >
+              <Icons.bolt w={14} />
+            </button>
+          )}
         </div>
       </div>
 

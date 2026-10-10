@@ -7,6 +7,7 @@ import { DrinkCard } from '@entities/drink'
 import type { EnrichedDrink, Tier } from '@entities/drink'
 import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
 import { useFavorites } from '@features/favorites'
+import { FEATURES } from '@shared/config/features'
 import { Icons } from '@shared/ui/icons'
 import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
@@ -188,7 +189,7 @@ export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) 
                     drink={drink}
                     rank={i + (heroId != null ? 2 : 1)}
                     isFav={isFavorite(drink.id)}
-                    onToggleFav={() => toggle(drink.id, drink.name)}
+                    onToggleFav={FEATURES.favorites ? () => toggle(drink.id, drink.name) : undefined}
                   />
                 ))}
               </div>

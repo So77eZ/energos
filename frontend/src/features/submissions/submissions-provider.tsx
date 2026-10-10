@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Submission, SubmissionCreate, SubmissionStatus } from '@entities/submission'
+import { FEATURES } from '@shared/config/features'
 import { fetchSubmissionsAction, addSubmissionAction, updateSubmissionStatusAction } from './actions'
 
 interface SubmissionsContextValue {
@@ -29,6 +30,11 @@ export function SubmissionsProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    // Эндпоинтов /add-requests в API ветки mvp нет — без флага не дёргаем бэк на каждой странице.
+    if (!FEATURES.submissions) {
+      setLoading(false)
+      return
+    }
     refresh()
   }, [refresh])
 

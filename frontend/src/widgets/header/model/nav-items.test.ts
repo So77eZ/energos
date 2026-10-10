@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { FEATURES } from '@shared/config/features'
 import { isActive, NAV_ITEMS, MOBILE_TABS, navItemsFor, sheetItemsFor } from './nav-items'
 
 describe('isActive', () => {
@@ -51,8 +52,12 @@ describe('конфиг', () => {
   it('mobile-табов ровно 4', () => {
     expect(MOBILE_TABS).toHaveLength(4)
   })
-  it('NAV_ITEMS: «Предложить» в хвосте перед admin (низкий приоритет)', () => {
+  it('NAV_ITEMS: «Предложить» есть только при включённом флаге submissions, в хвосте (низкий приоритет)', () => {
     const labels = NAV_ITEMS.map((i) => i.label)
-    expect(labels.indexOf('Предложить')).toBeGreaterThan(labels.indexOf('Каталог'))
+    if (FEATURES.submissions) {
+      expect(labels.indexOf('Предложить')).toBeGreaterThan(labels.indexOf('Каталог'))
+    } else {
+      expect(labels).not.toContain('Предложить')
+    }
   })
 })

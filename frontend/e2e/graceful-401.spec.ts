@@ -6,7 +6,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test'
 //
 // Guest-проект (без storageState): тестируем сам логин-флоу.
 
-const E2E_USERNAME = process.env.E2E_USERNAME ?? 'playwright_e2e'
+const E2E_USERNAME = process.env.E2E_USERNAME ?? 'playwright_e2e@example.com'
 const E2E_PASSWORD = process.env.E2E_PASSWORD ?? 'PlayE2E_2026'
 const API_ROOT = process.env.E2E_API_ROOT ?? 'http://localhost'
 
@@ -18,8 +18,8 @@ test.beforeEach(async ({ context }) => {
 
 /** Регистрируем e2e-юзера (идемпотентно: 400/409 если уже есть). */
 async function ensureUser(request: APIRequestContext): Promise<void> {
-  await request.post(`${API_ROOT}/api/auth/register/`, {
-    data: { username: E2E_USERNAME, password: E2E_PASSWORD },
+  await request.post(`${API_ROOT}/api/v1/auth/register`, {
+    data: { email: E2E_USERNAME, password: E2E_PASSWORD },
     headers: { 'Content-Type': 'application/json' },
     failOnStatusCode: false,
   })
