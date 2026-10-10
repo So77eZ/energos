@@ -1,4 +1,4 @@
-import { httpRequest, bearerHeaders, API_V1 } from '@shared/api/http'
+import { httpRequest, rawRequest, bearerHeaders, API_V1 } from '@shared/api/http'
 import { fetchAllPages } from '@shared/api/paginate'
 import type { Drink, DrinkCreate, DrinkUpdate } from '../model/types'
 
@@ -13,9 +13,10 @@ interface ApiDrink {
   no_sugar: boolean
 }
 
-/** Картинка отдаётся отдельным эндпоинтом. Есть ли она у напитка, список не говорит —
- *  при отсутствии бэк вернёт 404 (вопрос бэкендеру: docs/mvp-backend-questions.md). */
-export const drinkImageUrl = (id: number) => `${BASE}/${id}/image`
+/** Картинка отдаётся отдельным эндпоинтом. Есть ли она у напитка, список не говорит.
+ *  Браузер берёт её у фронта (`app/drink-image/[id]/route.ts`), а не у /api напрямую:
+ *  в проде Caddy проксирует /api только при DEPLOY_ENV=dev, и rewrites в Next нет. */
+export const drinkImageUrl = (id: number) => `/drink-image/${id}`
 
 const toDrink = (d: ApiDrink): Drink => ({
   id: d.id,
@@ -32,12 +33,11 @@ export const drinkApi = {
   list: async (): Promise<Drink[]> =>
     (await fetchAllPages<ApiDrink>(`${BASE}/`, { next: { revalidate: 60, tags: ['drinks', 'reviews'] } })).map(toDrink),
 
-  // GET /energy-drinks/{id} в API нет — ищем в общем списке (он кэшируется на 60 с).
-  get: async (id: number): Promise<Drink> => {
-    const found = (await drinkApi.list()).find((d) => d.id === id)
-    if (!found) throw new Error('Напиток не найден')
-    return found
-  },
+  get: async (id: number): Promise<Drink> =>
+    toDrink(await httpRequest<ApiDrink>(`${BASE}/${id}`, { next: { revalidate: 60, tags: ['drinks'] } })),
+
+  /** Сырой ответ бэка с картинкой — для маршрута-прокси `/drink-image/[id]`. */
+  image: (id: number): Promise<Response> => rawRequest(`${BASE}/${id}/image`, { cache: 'no-store' }),
 
   create: async (body: DrinkCreate, token: string): Promise<Drink> =>
     toDrink(await httpRequest<ApiDrink>(`${BASE}/`, {
