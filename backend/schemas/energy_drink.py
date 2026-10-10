@@ -17,6 +17,7 @@ class EnergyDrinkBase(BaseSchema):
 
 class EnergyDrinkSchema(EnergyDrinkBase):
     id: int
+    created_at: str
 
 
 class EnergyDrinkWithReviewsSchema(EnergyDrinkSchema):
