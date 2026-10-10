@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Generic, List, Type, TypeVar
 
-from sqlalchemy import exists, select
+from sqlalchemy import exists, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.base import AssociativeModelType, BaseModelType
@@ -49,9 +49,9 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
         return bool(result.scalar())
 
     async def get_count(self) -> int:
-        query = select(self.model)
-        result = await self.session.execute(query)
-        return len(result.scalars().all())
+        statement = select(func.count()).select_from(self.model)
+        result = await self.session.execute(statement)
+        return result.scalar_one()
 
 
 class AssociativeRepository(ABC, Generic[AssociativeModelType]):
