@@ -53,4 +53,16 @@ describe('parseError', () => {
     const res = new Response(JSON.stringify({ detail: 'Пользователь с таким именем уже существует' }), { status: 400 })
     expect(await parseError(res)).toBe('Пользователь с таким именем уже существует')
   })
+
+  it('detail-объект fastapi-users {code, reason} → reason, а не «[object Object]»', async () => {
+    const res = new Response(JSON.stringify({
+      detail: { code: 'RESET_PASSWORD_INVALID_PASSWORD', reason: 'Password should be at least 8 characters' },
+    }), { status: 400 })
+    expect(await parseError(res)).toBe('Password should be at least 8 characters')
+  })
+
+  it('detail-объект без reason → code', async () => {
+    const res = new Response(JSON.stringify({ detail: { code: 'SOME_CODE' } }), { status: 400 })
+    expect(await parseError(res)).toBe('SOME_CODE')
+  })
 })

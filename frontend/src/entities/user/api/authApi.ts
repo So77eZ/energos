@@ -54,17 +54,17 @@ export const authApi = {
     }),
 
   /** Всегда 202 — бэк не раскрывает, есть ли такой e-mail. */
-  forgotPassword: (email: string) =>
+  forgotPassword: (email: string, extraHeaders?: Record<string, string>) =>
     httpRequest<void>(`${BASE}/forgot-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...extraHeaders },
       body: JSON.stringify({ email }),
     }),
 
-  resetPassword: (token: string, password: string) =>
+  resetPassword: (token: string, password: string, extraHeaders?: Record<string, string>) =>
     httpRequest<void>(`${BASE}/reset-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...extraHeaders },
       body: JSON.stringify({ token, password }),
     }),
 

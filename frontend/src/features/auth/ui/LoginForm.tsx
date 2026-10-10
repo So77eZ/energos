@@ -1,6 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState, useEffect } from 'react'
+import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
 import { loginAction } from '../model/actions'
 
@@ -42,6 +44,9 @@ export function LoginForm({ returnTo = '/' }: { returnTo?: string }) {
           required
           autoComplete="current-password"
         />
+        <Link href={ROUTES.auth.forgotPassword} className="auth-link" style={{ alignSelf: 'flex-end' }}>
+          Забыли пароль?
+        </Link>
       </div>
 
       <button type="submit" className="cta-primary auth-submit" disabled={isPending}>

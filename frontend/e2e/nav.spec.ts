@@ -47,9 +47,11 @@ test.describe('nav: mobile (≤640)', () => {
   test('бургер открывает sheet, Esc закрывает', async ({ page }) => {
     await page.goto('/')
     await page.locator('.hdr-mobile-menu').click()
-    await expect(page.locator('.mob-sheet')).toBeVisible()
+    // Sheet остаётся в DOM и «закрывается» уездом за экран — признак состояния класс `open`.
+    const sheet = page.getByRole('dialog', { name: 'Меню' })
+    await expect(sheet).toHaveClass(/\bopen\b/)
     await page.keyboard.press('Escape')
-    await expect(page.locator('.mob-sheet')).toBeHidden()
+    await expect(sheet).not.toHaveClass(/\bopen\b/)
   })
 
   test('иконка поиска открывает overlay с рабочим input', async ({ page }) => {

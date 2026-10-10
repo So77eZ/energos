@@ -17,8 +17,6 @@ router.include_router(fastapi_users.get_reset_password_router())
 # /verify
 router.include_router(fastapi_users.get_verify_router(UserRead))
 
-# /me — отдельный роутер: на него не вешается лимит 10/минуту, действующий на остальной /auth
-# (см. api/base.py). Фронт зовёт GET /auth/me на каждый рендер страницы, а с сервера Next все
-# запросы приходят с одного IP — с лимитом пользователь «разлогинивается» уже на 8-й странице.
+# /me
 users_router = AutoStatusAPIRouter()
 users_router.include_router(fastapi_users.get_users_router(UserRead, UserUpdate))
