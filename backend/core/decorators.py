@@ -1,5 +1,6 @@
 from functools import wraps
 from typing import Any, Callable
+
 from core.exceptions import ForbiddenException
 from models.user import User
 

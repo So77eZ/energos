@@ -31,13 +31,18 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
             raise InvalidPasswordException(reason="Password should not contain e-mail")
 
     async def on_after_register(self, user: User, request: Request | None = None) -> None:
-        await super().request_verify(user, request)
+        await self.request_verify(user, request)
 
     async def on_after_request_verify(self, user: User, token: str, request: Request | None = None) -> None:
         self.background_tasks.add_task(EmailClient.send_verification_email, to_email=user.email, token=token)
 
     async def on_after_forgot_password(self, user: User, token: str, request: Request | None = None) -> None:
         self.background_tasks.add_task(EmailClient.send_reset_password_email, to_email=user.email, token=token)
+
+    async def on_after_update(self, user: User, update_dict: dict, request: Request | None = None) -> None:
+        if "email" in update_dict:
+            await self.user_db.update(user, {"is_verified": False})
+            await self.request_verify(user, request)
 
 
 async def get_user_manager(

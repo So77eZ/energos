@@ -1,4 +1,4 @@
-from fastapi import Depends, File, Response, UploadFile, Request
+from fastapi import Depends, File, Request, Response, UploadFile
 
 from core.auth import get_current_user
 from core.decorators import require_admin
