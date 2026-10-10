@@ -2,6 +2,7 @@ import type { Achievement, EvaluatedAchievement } from '../model/types'
 import { ACHIEVEMENT_BY_ID } from '../model/achievements'
 import { Medal } from '../ui/Medal'
 import { ROUTES } from '@shared/config/routes'
+import { FEATURES } from '@shared/config/features'
 import type { ToastInput } from '@shared/lib/toast'
 import { planUnlockToasts } from './plan'
 import { readSeen, writeSeen, isSeeded, markSeeded } from './seen'
@@ -11,8 +12,11 @@ interface ToastDeps {
   router: { push: (href: string) => void }
 }
 
-/** Один тост ачивки: медаль + текст + клик «Открыть» → таб достижений. */
+/** Один тост ачивки: медаль + текст + клик «Открыть» → таб достижений.
+ *  Без флага achievements вкладки достижений в профиле нет, и тост вёл бы в никуда. Секретные
+ *  достижения (пасхалки) вызывают его напрямую, поэтому гейт здесь, в одной точке. */
 export function toastAchievement(ach: Pick<Achievement, 'id' | 'tier' | 'name'>, { toast, router }: ToastDeps): void {
+  if (!FEATURES.achievements) return
   toast({
     msg: `Достижение разблокировано: ${ach.name}`,
     kind: 'ok',
