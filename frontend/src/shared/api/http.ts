@@ -44,6 +44,13 @@ export async function parseError(res: Response): Promise<string> {
           })
           .join('; ')
       }
+      // fastapi-users кладёт ошибки пароля объектом {code, reason}; String() дал бы «[object Object]».
+      if (typeof json.detail === 'object') {
+        const d = json.detail as { reason?: unknown; code?: unknown }
+        if (typeof d.reason === 'string') return d.reason
+        if (typeof d.code === 'string') return d.code
+        return JSON.stringify(json.detail)
+      }
       return String(json.detail)
     }
   } catch {

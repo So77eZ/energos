@@ -31,7 +31,7 @@ class EmailClient:
 
     @classmethod
     async def send_verification_email(cls, to_email: str, token: str) -> None:
-        verification_link = f"{settings.PUBLIC_URL}/api/v1/auth/verify?token={token}"
+        verification_link = f"{settings.PUBLIC_URL}/auth/verify?token={token}"
 
         async for smtp_client in cls.get_session():
             client = cls(smtp_client)
@@ -43,7 +43,7 @@ class EmailClient:
 
     @classmethod
     async def send_reset_password_email(cls, to_email: str, token: str) -> None:
-        reset_password_link = f"{settings.PUBLIC_URL}/api/v1/auth/reset-password?token={token}"
+        reset_password_link = f"{settings.PUBLIC_URL}/auth/reset-password?token={token}"
 
         async for smtp_client in cls.get_session():
             client = cls(smtp_client)
