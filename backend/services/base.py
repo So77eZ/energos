@@ -47,6 +47,8 @@ class BaseService(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaType
         await self.repository.delete(model_instance)
         return True
 
+    async def get_count(self) -> int:
+        return await self.repository.get_count()
 
 class AssociativeService(Generic[AssociativeRepoType], ABC):
     def __init__(self, repository: AssociativeRepoType):

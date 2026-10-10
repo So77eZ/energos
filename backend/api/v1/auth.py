@@ -1,8 +1,9 @@
+from fastapi import Depends
+from fastapi_limitex import RateLimiter
+
 from core.auth import auth_backend, fastapi_users
 from core.router import AutoStatusAPIRouter
 from schemas.user import UserCreate, UserRead, UserUpdate
-from fastapi import Depends
-from fastapi_limitex import RateLimiter
 
 router = AutoStatusAPIRouter()
 

@@ -48,6 +48,11 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
         result = await self.session.execute(statement)
         return bool(result.scalar())
 
+    async def get_count(self) -> int:
+        query = select(self.model)
+        result = await self.session.execute(query)
+        return len(result.scalars().all())
+
 
 class AssociativeRepository(ABC, Generic[AssociativeModelType]):
     def __init__(self, session: AsyncSession, model: Type[AssociativeModelType]):
@@ -74,6 +79,11 @@ class AssociativeRepository(ABC, Generic[AssociativeModelType]):
     async def delete(self, model_instance: AssociativeModelType) -> None:
         await self.session.delete(model_instance)
         await self.session.commit()
+
+    async def get_count(self) -> int:
+        query = select(self.model)
+        result = await self.session.execute(query)
+        return len(result.scalars().all())
 
 
 BaseRepoType = TypeVar("BaseRepoType", bound=BaseRepository)
