@@ -60,3 +60,19 @@ async def delete_review(
 ) -> None:
     await review_service.delete_review_by_id(review_id, current_user.id)
     return None
+
+
+@router.get("/me")
+@limiter.limit("100/minute")
+async def get_my_reviews(
+    request: Request,
+    limit: int = 20,
+    offset: int = 0,
+    order_by: str = "id",
+    current_user: User = Depends(get_verified_user),
+    review_service: ReviewService = Depends(get_review_service),
+) -> list[ReviewSchema]:
+    reviews = await review_service.get_many_by_user_id(
+        user_id=current_user.id, limit=limit, offset=offset, order_by=order_by
+    )
+    return [ReviewSchema.model_validate(review) for review in reviews]

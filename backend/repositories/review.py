@@ -27,6 +27,19 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
+    async def get_many_by_user_id(
+        self, user_id: int, limit: int = 20, offset: int = 0, order_by: str = "id"
+    ) -> list[Review]:
+        query = (
+            select(self.model)
+            .where(self.model.user_id == user_id)
+            .offset(offset)
+            .limit(limit)
+            .order_by(getattr(self.model, order_by))
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
 
 async def get_review_repository(session: Annotated[AsyncSession, Depends(get_session)]) -> ReviewRepository:
     return ReviewRepository(session)

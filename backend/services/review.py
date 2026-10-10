@@ -47,6 +47,11 @@ class ReviewService(BaseService[Review, ReviewCreateInternalSchema, ReviewUpdate
         await self.repository.delete(review_instance)
         return True
 
+    async def get_many_by_user_id(
+        self, user_id: int, limit: int = 20, offset: int = 0, order_by: str = "id"
+    ) -> list[Review]:
+        return await self.repository.get_many_by_user_id(user_id=user_id, limit=limit, offset=offset, order_by=order_by)
+
 
 async def get_review_service(
     repository: Annotated[ReviewRepository, Depends(get_review_repository)],
