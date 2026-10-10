@@ -22,7 +22,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
-      API_ORIGIN: http://server
+      API_ORIGIN: http://backend:8000
       NEXT_PUBLIC_ORIGIN: ${PUBLIC_URL}
     depends_on:
       - backend
@@ -47,6 +47,8 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    environment:
+      DEPLOY_ENV: ${DEPLOY_ENV}
     ports:
       - "80:80"
     depends_on:

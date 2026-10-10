@@ -3,11 +3,11 @@ from pydantic_settings import BaseSettings
 
 
 class AccessTokenSettings(BaseSettings):
-    ACCESS_TOKEN_ALGORITHM: str = Field(..., alias="ACCESS_TOKEN_ALGORITHM")
-    ACCESS_TOKEN_SECRET: str = Field(..., alias="ACCESS_TOKEN_SECRET")
-    RESET_PASSWORD_TOKEN_SECRET: str = Field(..., alias="RESET_PASSWORD_TOKEN_SECRET")
-    VERIFICATION_TOKEN_SECRET: str = Field(..., alias="VERIFICATION_TOKEN_SECRET")
-    TOKEN_LIFETIME_SECONDS: int = Field(..., alias="TOKEN_LIFETIME_SECONDS")
+    ACCESS_TOKEN_ALGORITHM: str = Field(...)
+    ACCESS_TOKEN_SECRET: str = Field(...)
+    RESET_PASSWORD_TOKEN_SECRET: str = Field(...)
+    VERIFICATION_TOKEN_SECRET: str = Field(...)
+    TOKEN_LIFETIME_SECONDS: int = Field(...)
 
     @field_validator("ACCESS_TOKEN_SECRET", "RESET_PASSWORD_TOKEN_SECRET", "VERIFICATION_TOKEN_SECRET")
     def validate_secret_keys(cls, v: str) -> str:
@@ -17,12 +17,12 @@ class AccessTokenSettings(BaseSettings):
 
 
 class EmailSettings(BaseSettings):
-    SMTP_HOST: str = Field(..., alias="SMTP_HOST")
-    SMTP_PORT: int = Field(..., alias="SMTP_PORT")
-    SMTP_USERNAME: str = Field(..., alias="SMTP_USERNAME")
-    SMTP_PASSWORD: str = Field(..., alias="SMTP_PASSWORD")
-    SMTP_FROM: str = Field(..., alias="SMTP_FROM")
-    SMTP_USE_TLS: bool = Field(..., alias="SMTP_USE_TLS")
+    SMTP_HOST: str = Field(...)
+    SMTP_PORT: int = Field(...)
+    SMTP_USERNAME: str = Field(...)
+    SMTP_PASSWORD: str = Field(...)
+    SMTP_FROM: str = Field(...)
+    SMTP_USE_TLS: bool = Field(...)
 
 
 class Settings(BaseSettings):
@@ -31,9 +31,10 @@ class Settings(BaseSettings):
     DB_HOST: str = Field(...)
     DB_NAME: str = Field(...)
 
-    ALLOWED_ORIGINS: str = Field(...)
     PUBLIC_URL: str = Field(...)
     DEPLOY_ENV: str = Field(...)
+
+    MAX_ENERGY_DRINK_IMAGE_SIZE: int = Field(...)
 
     @property
     def DATABASE_URL(self) -> str:
