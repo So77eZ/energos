@@ -8,10 +8,12 @@ afterEach(() => vi.unstubAllGlobals())
 
 describe('reviewApi', () => {
   it('list: собирает отзывы из вложенных в напитки, id уникальны и отрицательны', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json([
+    const drinks = [
       { id: 1, reviews: [{ ...scores, overall: 3.5 }, { ...scores, overall: 4 }] },
       { id: 2, reviews: [{ ...scores, overall: 5 }] },
-    ])))
+    ]
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: string) =>
+      String(url).includes('/count') ? json({ count: drinks.length }) : json(drinks)))
 
     const reviews = await reviewApi.list()
 
