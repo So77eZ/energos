@@ -1282,10 +1282,13 @@ body::before {
 /* ── Toggle (checkbox в маске) ── */
 .filt-toggles { gap: 10px; }
 .filt-toggle {
+  position: relative;
   display: flex; align-items: center; gap: 10px;
   cursor: pointer; user-select: none;
 }
-.filt-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+/* Размер нужен: без него input растягивается на ширину контейнера (стили input в формах) и,
+   будучи absolute, выпирает за экран — на /compare это давало горизонтальный скролл ≈490 px. */
+.filt-toggle input { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
 .filt-toggle-track {
   position: relative; width: 32px; height: 18px;
   background: var(--bg-input); border: 1px solid var(--line); border-radius: 999px;
@@ -3937,17 +3940,23 @@ body::before {
   .hdr-inner { display: flex; align-items: center; gap: 10px; }
   .hdr-nav { display: none; }
   .hdr-search { display: none; }
-  .hdr-mobile-crumb { display: flex; align-items: center; gap: 6px; margin-left: 10px; color: var(--txt-dim); font-size: 13px; }
-  .hdr-crumb-label { color: var(--txt); font-weight: 600; }
+  /* Крошка сжимается с многоточием, а не выталкивает кнопки: иначе flex ужимал поиск и меню до
+     18–20 px (область нажатия), а в админке ("Управление") шапка уезжала за экран на 5–20 px. */
+  .hdr-mobile-crumb { display: flex; align-items: center; gap: 6px; margin-left: 10px; color: var(--txt-dim); font-size: 13px; min-width: 0; }
+  .hdr-crumb-label { color: var(--txt); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .hdr-mobile-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 38px; height: 38px; border: 0; background: none;
-    color: var(--txt); cursor: pointer;
+    color: var(--txt); cursor: pointer; flex: none;
   }
   .hdr-mobile-search { margin-left: auto; }
   .hdr-mobile-menu { margin-left: 4px; }
   .burger { display: flex; flex-direction: column; gap: 4px; width: 20px; }
   .burger span { height: 2px; background: currentColor; border-radius: 2px; }
+}
+/* На узких телефонах метка версии в шапке не нужна — место нужно кнопкам. */
+@media (max-width: 420px) {
+  .hdr-inner .logo-meta { display: none; }
 }
 
 /* ─── Mobile bottom tabs ──────────────────────────────────────── */
@@ -4518,3 +4527,20 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
 .ava-preset img { width: 100%; height: 100%; display: block; }
 .ava-actions { display: flex; gap: 10px; margin-top: 18px; }
 .ava-actions .cta-ghost, .ava-actions .cta-primary { flex: 1; justify-content: center; }
+
+/* ─── Мобильные фиксы переполнения (аудит 360–375 px) ─────────────────────
+   У `1fr` минимальная ширина колонки — min-content ячейки, поэтому карточка с nowrap-содержимым
+   раздвигала сетку шире экрана (страница напитка: 390 px при экране 375, сравнение: радар 420 px).
+   `minmax(0, 1fr)` даёт колонке сжиматься. Блок стоит в конце файла — перебивает прежние правила. */
+@media (max-width: 800px) {
+  .rev-grid, .other-rev-grid, .similar-grid, .cmp-slots, .cmp-radar-stage { grid-template-columns: minmax(0, 1fr); }
+  .rev-card { min-width: 0; }
+  .cmp-radar-stage svg { max-width: 100%; height: auto; }
+  /* Подпись «★ — победитель…» переносится под заголовок, а не сжимается в узкую колонку справа. */
+  .cmp-section-head { flex-wrap: wrap; gap: 4px 12px; }
+}
+
+/* Текстовые ссылки без отступов (15–17 px высотой) на тач-экранах: добавляем область нажатия. */
+@media (hover: none) and (pointer: coarse) {
+  .foot-link, .auth-link, .rail-link { display: inline-block; padding: 8px 0; }
+}
