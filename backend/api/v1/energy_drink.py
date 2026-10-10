@@ -99,6 +99,16 @@ async def delete_energy_drink(
     return None
 
 
+@router.get("/count")
+@limiter.limit("1000/minute")
+async def get_energy_drinks_count(
+    request: Request,
+    energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
+) -> dict[str, int]:
+    count = await energy_drink_service.get_count()
+    return {"count": count}
+
+
 @router.get("/{energy_drink_id}")
 @limiter.limit("1000/minute")
 async def get_energy_drink_by_id(
@@ -108,13 +118,3 @@ async def get_energy_drink_by_id(
 ) -> EnergyDrinkSchema:
     energy_drink = await energy_drink_service.get_by_id(energy_drink_id)
     return EnergyDrinkSchema.model_validate(energy_drink)
-
-
-@router.get("/count")
-@limiter.limit("1000/minute")
-async def get_energy_drinks_count(
-    request: Request,
-    energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
-) -> dict[str, int]:
-    count = await energy_drink_service.get_count()
-    return {"count": count}
