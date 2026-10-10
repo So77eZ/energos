@@ -1,3 +1,5 @@
+import { clientIp } from '#client-ip'
+
 // Server Components (Node.js) need an absolute URL — relative paths don't resolve.
 // Browser requests use relative path so Next.js rewrites proxy them to the backend.
 const BASE_URL =
@@ -63,11 +65,27 @@ export const bearerHeaders = (token: string) => ({ Authorization: `Bearer ${toke
 
 type HttpOptions = RequestInit & { next?: { revalidate?: number | false; tags?: string[] } }
 
+/** Реальный IP клиента для бэка (лимиты по IP). Только на сервере Next и только для запросов
+ *  не из Data Cache: заголовки входят в ключ кеша, и с IP в нём каждый клиент получил бы свою
+ *  копию публичного списка вместо общей на 60 с. Эти запросы бэк и так видит редко (раз в
+ *  минуту на маршрут), так что им общий адрес фронта не мешает. */
+async function clientIpHeader(options?: HttpOptions): Promise<Record<string, string>> {
+  if (typeof window !== 'undefined') return {}
+  if (options?.next?.revalidate !== undefined || options?.cache === 'force-cache') return {}
+  try {
+    const ip = await clientIp()
+    return ip ? { 'X-Forwarded-For': ip } : {}
+  } catch {
+    return {}
+  }
+}
+
 /** Запрос к бэку без разбора ответа — для бинарных данных (картинки). */
-export function rawRequest(path: string, options?: HttpOptions): Promise<Response> {
+export async function rawRequest(path: string, options?: HttpOptions): Promise<Response> {
   const headers = {
     ...options?.headers,
     ...(typeof window === 'undefined' ? { 'Origin': process.env.NEXT_PUBLIC_ORIGIN ?? 'http://localhost:3000' } : {}),
+    ...(await clientIpHeader(options)),
   }
   return fetch(`${BASE_URL}${path}`, {
     ...options,

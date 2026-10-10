@@ -2,6 +2,12 @@
   "name": "energos-frontend",
   "version": "0.1.0",
   "private": true,
+  "imports": {
+    "#client-ip": {
+      "react-server": "./src/shared/lib/client-ip.ts",
+      "default": "./src/shared/lib/client-ip.noop.ts"
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

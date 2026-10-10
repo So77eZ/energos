@@ -1,34 +1,40 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { clientIpHeaders } from './client-ip'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { clientIp, pickClientIp } from './client-ip'
 
 const h = vi.hoisted(() => ({ headersGet: vi.fn<(k: string) => string | null>() }))
 
 vi.mock('server-only', () => ({}))
 vi.mock('next/headers', () => ({ headers: async () => ({ get: h.headersGet }) }))
 
-describe('clientIpHeaders', () => {
-  beforeEach(() => {
-    h.headersGet.mockReset()
-    vi.stubEnv('INTERNAL_API_SECRET', 's3cret')
+describe('pickClientIp', () => {
+  it('берёт первый адрес из списка', () => {
+    expect(pickClientIp('203.0.113.7, 10.0.0.1')).toBe('203.0.113.7')
   })
-  afterEach(() => vi.unstubAllEnvs())
 
-  it('берёт первый адрес из X-Forwarded-For и добавляет секрет', async () => {
+  it('принимает IPv6 и IPv4-mapped', () => {
+    expect(pickClientIp('2001:db8::1')).toBe('2001:db8::1')
+    expect(pickClientIp('::ffff:203.0.113.7')).toBe('::ffff:203.0.113.7')
+  })
+
+  it('пусто и мусор → null (в заголовок к бэку ничего не попадает)', () => {
+    expect(pickClientIp(null)).toBeNull()
+    expect(pickClientIp('')).toBeNull()
+    expect(pickClientIp('unknown')).toBeNull()
+    expect(pickClientIp('1.2.3.4\r\nX-Evil: 1')).toBeNull()
+    expect(pickClientIp('<script>')).toBeNull()
+  })
+})
+
+describe('clientIp', () => {
+  beforeEach(() => h.headersGet.mockReset())
+
+  it('читает X-Forwarded-For текущего запроса', async () => {
     h.headersGet.mockImplementation((k) => (k === 'x-forwarded-for' ? '203.0.113.7, 10.0.0.1' : null))
-    await expect(clientIpHeaders()).resolves.toEqual({
-      'X-Client-IP': '203.0.113.7',
-      'X-Internal-Secret': 's3cret',
-    })
+    await expect(clientIp()).resolves.toBe('203.0.113.7')
   })
 
-  it('без секрета — пусто, даже если IP есть', async () => {
-    vi.stubEnv('INTERNAL_API_SECRET', '')
-    h.headersGet.mockReturnValue('203.0.113.7')
-    await expect(clientIpHeaders()).resolves.toEqual({})
-  })
-
-  it('без X-Forwarded-For — пусто', async () => {
+  it('без заголовка → null', async () => {
     h.headersGet.mockReturnValue(null)
-    await expect(clientIpHeaders()).resolves.toEqual({})
+    await expect(clientIp()).resolves.toBeNull()
   })
 })
