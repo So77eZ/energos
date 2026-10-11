@@ -84,3 +84,4 @@ def setup_exception_handlers(app: FastAPI) -> None:
     _add_bad_request_exception_handler(app)
     _add_internal_server_error_exception_handler(app)
     _add_unprocessable_entity_exception_handler(app)
+    _add_conflict_exception_handler(app)
