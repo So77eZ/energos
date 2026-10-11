@@ -13,7 +13,8 @@ test.describe('gachapon выключен флагом (вне MVP)', () => {
   test('в меню «Ещё» нет «Рулетки», в мобильном меню — «Случайного напитка»', async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 })
     await page.goto('/')
-    const more = page.locator('.hdr-more-btn')
+    // button — настоящая кнопка; одноимённый span в .hdr-nav-measure скрыт и нужен для замеров.
+    const more = page.locator('button.hdr-more-btn')
     if (await more.count()) {
       await more.first().click()
       await expect(page.locator('.hdr-more-menu .hdr-more-item', { hasText: 'Рулетка' })).toHaveCount(0)
