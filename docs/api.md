@@ -2,7 +2,7 @@
 
 Документ описывает API, реализованный в `backend/api`. API построено на
 FastAPI, использует JWT Bearer-аутентификацию и версионируется через префикс
-`/v1`. Актуально для ветки `mvp` на коммите `77c2fe1`.
+`/v1`. Актуально для ветки `mvp` на коммите `c2dea93`.
 
 ## Базовые URL
 
@@ -50,8 +50,8 @@ Authorization: Bearer <access_token>
 умолчанию `0`) и `order_by` (по умолчанию `id`). Верхней границы `limit` нет.
 
 `order_by` — имя поля модели (для напитков, например, `id`, `name`, `price`,
-`no_sugar`); сортировка только по возрастанию. Значение не проверяется: имя
-несуществующего поля приведёт к `500`.
+`no_sugar`); сортировка только по возрастанию. Имя несуществующего поля даёт `422` с
+`{"detail": "Invalid order_by field: ..."}`.
 
 ### Ошибки
 
@@ -138,6 +138,7 @@ Authorization: Bearer <access_token>
   "name": "Название",
   "price": 1.99,
   "no_sugar": false,
+  "created_at": "2026-01-15T12:30:00.123456",
   "reviews": [
     {
       "acidity": 3,
@@ -178,7 +179,8 @@ Authorization: Bearer <access_token>
 - `EnergyDrinkCreateSchema`: `name` (string), `price` (number или `null`),
   `no_sugar` (boolean, по умолчанию `false`);
 - `EnergyDrinkUpdateSchema`: те же поля, все необязательные;
-- `EnergyDrinkSchema`: поля create-схемы и `id` (integer).
+- `EnergyDrinkSchema`: поля create-схемы, `id` (integer) и `created_at`
+  (datetime, в JSON — ISO 8601 без часового пояса).
 
 ## Отзывы (`/reviews`)
 
@@ -252,8 +254,5 @@ Authorization: Bearer <access_token>
 
 - `GET /energy-drinks/{id}/image` для напитка без картинки отвечает `200` с
   пустым телом, а не `404`;
-- `GET /energy-drinks/count` в коде объявлен после `GET /energy-drinks/{id}`:
-  при таком порядке путь `/count` может перехватываться маршрутом `/{id}` и
-  отвечать `422`. Нужна проверка;
-- нет `has_image`/`image_url`, `created_at`, автора и `comment` в выдаче
+- нет `has_image`/`image_url`, автора и `comment` в выдаче
   отзывов — подробности и вопросы в `docs/mvp-backend-questions.md`.
