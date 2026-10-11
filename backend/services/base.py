@@ -33,22 +33,20 @@ class BaseService(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaType
         model_instance: BaseModelType = await self.get_by_id(id)
 
         update_data = data.model_dump(exclude_unset=True)
+        if not update_data:
+            return model_instance
 
         for key, value in update_data.items():
             setattr(model_instance, key, value)
 
         return await self.repository.update(model_instance)
 
-    async def delete(self, model_instance: BaseModelType) -> None:
-        return await self.repository.delete(model_instance)
-
     async def delete_by_id(self, id: int) -> bool:
-        model_instance: BaseModelType = await self.get_by_id(id)
-        await self.repository.delete(model_instance)
-        return True
+        return await self.repository.delete_by_id(id)
 
     async def get_count(self) -> int:
         return await self.repository.get_count()
+
 
 class AssociativeService(Generic[AssociativeRepoType], ABC):
     def __init__(self, repository: AssociativeRepoType):

@@ -30,3 +30,9 @@ class UnprocessableEntityException(BaseServiceException):
     def __init__(self, detail: str = "Unprocessable entity"):
         self.detail = detail
         super().__init__(self.detail)
+
+
+class ConflictException(BaseServiceException):
+    def __init__(self, detail: str = "Conflict"):
+        self.detail = detail
+        super().__init__(self.detail)
