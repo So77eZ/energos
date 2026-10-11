@@ -26,6 +26,22 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
         query = select(self.model).where(self.model.user_id == user_id)
         return await self.execute_get_many_query(query, limit=limit, offset=offset, order_by=order_by)
 
+    async def exists_by_user_and_energy_drink(self, user_id: int, energy_drink_id: int) -> bool:
+        stmt = (
+            select(Review.id)
+            .where(
+                Review.user_id == user_id,
+                Review.energy_drink_id == energy_drink_id,
+            )
+            .limit(1)
+        )
+        return (await self.session.execute(stmt)).scalar_one_or_none() is not None
+
+    async def get_author_id(self, review_id: int) -> int | None:
+        stmt = select(Review.user_id).where(Review.id == review_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
 
 async def get_review_repository(session: Annotated[AsyncSession, Depends(get_session)]) -> ReviewRepository:
     return ReviewRepository(session)

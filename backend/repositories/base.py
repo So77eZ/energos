@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Generic, List, Type, TypeVar
 
-from sqlalchemy import Select, exists, func, select
+from sqlalchemy import Select, delete, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exceptions import UnprocessableEntityException
@@ -40,19 +40,21 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
     async def create(self, create_schema: CreateSchemaType) -> BaseModelType:
         model_instance = self.model(**create_schema.model_dump(exclude_unset=True))
         self.session.add(model_instance)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(model_instance)
         return model_instance
 
     async def update(self, model_instance: BaseModelType) -> BaseModelType:
-        await self.session.merge(model_instance)
-        await self.session.commit()
-        await self.session.refresh(model_instance)
-        return model_instance
+        merged = await self.session.merge(model_instance)
+        await self.session.flush()
+        return merged
 
-    async def delete(self, model_instance: BaseModelType) -> None:
-        await self.session.delete(model_instance)
-        await self.session.commit()
+    async def delete_by_id(self, id: int) -> bool:
+        stmt = delete(self.model).where(self.model.id == id).returning(self.model.id)
+        result = await self.session.execute(stmt)
+        deleted_id = result.scalar_one_or_none()
+        await self.session.flush()
+        return deleted_id is not None
 
     async def exists_by_id(self, id: int) -> bool:
         statement = select(exists().where(self.model.id == id))
@@ -86,13 +88,13 @@ class AssociativeRepository(ABC, Generic[AssociativeModelType]):
     async def create(self, **kwargs: dict) -> AssociativeModelType:
         model_instance = self.model(**kwargs)
         self.session.add(model_instance)
-        await self.session.commit()
+        await self.session.flush()
         await self.session.refresh(model_instance)
         return model_instance
 
     async def delete(self, model_instance: AssociativeModelType) -> None:
         await self.session.delete(model_instance)
-        await self.session.commit()
+        await self.session.flush()
 
     async def get_count(self) -> int:
         query = select(self.model)
