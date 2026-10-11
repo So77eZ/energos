@@ -9,6 +9,7 @@ from core.exceptions import (
     ForbiddenException,
     InternalServerErrorException,
     ObjectNotFoundException,
+    UnprocessableEntityException,
 )
 
 
@@ -60,6 +61,14 @@ def _add_internal_server_error_exception_handler(app: FastAPI) -> None:
         return JSONResponse(status_code=500, content={"detail": exc.detail})
 
 
+def _add_unprocessable_entity_exception_handler(app: FastAPI) -> None:
+    @app.exception_handler(UnprocessableEntityException)
+    async def unprocessable_entity_exception_handler(
+        request: Request, exc: UnprocessableEntityException
+    ) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+
 def setup_exception_handlers(app: FastAPI) -> None:
     _add_validation_exception_handler(app)
     _add_bad_credentials_exception_handler(app)
@@ -67,3 +76,4 @@ def setup_exception_handlers(app: FastAPI) -> None:
     _add_forbidden_exception_handler(app)
     _add_bad_request_exception_handler(app)
     _add_internal_server_error_exception_handler(app)
+    _add_unprocessable_entity_exception_handler(app)
