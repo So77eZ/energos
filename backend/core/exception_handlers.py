@@ -6,6 +6,7 @@ from fastapi_users.router.common import ErrorCode
 
 from core.exceptions import (
     BadRequestException,
+    ConflictException,
     ForbiddenException,
     InternalServerErrorException,
     ObjectNotFoundException,
@@ -67,6 +68,12 @@ def _add_unprocessable_entity_exception_handler(app: FastAPI) -> None:
         request: Request, exc: UnprocessableEntityException
     ) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": exc.detail})
+
+
+def _add_conflict_exception_handler(app: FastAPI) -> None:
+    @app.exception_handler(ConflictException)
+    async def conflict_exception_handler(request: Request, exc: ConflictException) -> JSONResponse:
+        return JSONResponse(status_code=409, content={"detail": exc.detail})
 
 
 def setup_exception_handlers(app: FastAPI) -> None:

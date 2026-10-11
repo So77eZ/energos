@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from core.exceptions import ForbiddenException, ObjectNotFoundException
+from core.exceptions import ConflictException, ForbiddenException, ObjectNotFoundException
 from models.review import Review
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from repositories.review import ReviewRepository, get_review_repository
@@ -34,7 +34,7 @@ class ReviewService(BaseService[Review, ReviewCreateInternalSchema, ReviewUpdate
         if await self.repository.exists_by_user_and_energy_drink(
             user_id=data.user_id, energy_drink_id=data.energy_drink_id
         ):
-            raise ForbiddenException("Only one review per user is allowed for each energy drink")
+            raise ConflictException("User has already submitted a review for this energy drink")
 
         return await self.repository.create(data)
 
