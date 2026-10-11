@@ -24,3 +24,9 @@ class InternalServerErrorException(BaseServiceException):
     def __init__(self, detail: str = "Internal server error"):
         self.detail = detail
         super().__init__(self.detail)
+
+
+class UnprocessableEntityException(BaseServiceException):
+    def __init__(self, detail: str = "Unprocessable entity"):
+        self.detail = detail
+        super().__init__(self.detail)

@@ -17,15 +17,9 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         super().__init__(session, EnergyDrink)
 
     async def get_many_with_reviews(self, limit: int = 20, offset: int = 0, order_by: str = "id") -> list[EnergyDrink]:
-        query = (
-            select(self.model)
-            .options(defer(self.model.image), defer(self.model.image_content_type), selectinload(self.model.reviews))
-            .offset(offset)
-            .limit(limit)
-            .order_by(getattr(self.model, order_by))
-        )
-        result = await self.session.execute(query)
-        return list(result.scalars().all())
+        query = select(self.model).options(selectinload(self.model.reviews))
+        result = await self.execute_get_many_query(query, limit=limit, offset=offset, order_by=order_by)
+        return result
 
     async def get_image_by_id(self, energy_drink_id: int) -> tuple[bool, ImageData | None]:
         query = (

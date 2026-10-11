@@ -1,9 +1,10 @@
 from abc import ABC
 from typing import Generic, List, Type, TypeVar
 
-from sqlalchemy import exists, select
+from sqlalchemy import Select, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.exceptions import UnprocessableEntityException
 from models.base import AssociativeModelType, BaseModelType
 from schemas.base import CreateSchemaType, UpdateSchemaType
 
@@ -17,8 +18,18 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
         return await self.session.get(self.model, id)
 
     async def get_many(self, limit: int = 20, offset: int = 0, order_by: str = "id") -> List[BaseModelType]:
-        query = select(self.model).offset(offset).limit(limit).order_by(getattr(self.model, order_by))
+        query = select(self.model)
+        return await self.execute_get_many_query(query, limit=limit, offset=offset, order_by=order_by)
+
+    async def execute_get_many_query(
+        self, query: Select[tuple[BaseModelType]], limit: int = 20, offset: int = 0, order_by: str = "id"
+    ) -> List[BaseModelType]:
+        try:
+            query = query.offset(offset).limit(limit).order_by(getattr(self.model, order_by))
+        except AttributeError as e:
+            raise UnprocessableEntityException(f"Invalid order_by field: {order_by}") from e
         result = await self.session.execute(query)
+
         return list(result.scalars().all())
 
     async def get_all(self) -> List[BaseModelType]:
@@ -49,9 +60,9 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
         return bool(result.scalar())
 
     async def get_count(self) -> int:
-        query = select(self.model)
-        result = await self.session.execute(query)
-        return len(result.scalars().all())
+        statement = select(func.count()).select_from(self.model)
+        result = await self.session.execute(statement)
+        return result.scalar_one()
 
 
 class AssociativeRepository(ABC, Generic[AssociativeModelType]):
@@ -61,7 +72,10 @@ class AssociativeRepository(ABC, Generic[AssociativeModelType]):
 
     async def get_many(self, limit: int = 20, offset: int = 0, order_by: str = "id") -> List[AssociativeModelType]:
         query = select(self.model).offset(offset).limit(limit).order_by(getattr(self.model, order_by))
-        result = await self.session.execute(query)
+        try:
+            result = await self.session.execute(query)
+        except AttributeError as e:
+            raise UnprocessableEntityException(f"Invalid order_by field: {order_by}") from e
         return list(result.scalars().all())
 
     async def get_all(self) -> List[AssociativeModelType]:

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from schemas.base import BaseSchema
@@ -17,6 +18,7 @@ class EnergyDrinkBase(BaseSchema):
 
 class EnergyDrinkSchema(EnergyDrinkBase):
     id: int
+    created_at: datetime
 
 
 class EnergyDrinkWithReviewsSchema(EnergyDrinkSchema):
