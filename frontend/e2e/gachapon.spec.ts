@@ -3,6 +3,30 @@ import { test, expect, type Page, type ConsoleMessage } from '@playwright/test'
 // reduced-motion → быстрый спин (0.35s), тесты не ждут 7s.
 test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
+// Рулетка вне MVP и выключена флагом (src/shared/config/features.ts). Спеки читают тот же
+// NEXT_PUBLIC_FF_GACHAPON — запускать с тем же значением, что и сборку фронта.
+const gachaponOn = ['1', 'true'].includes(process.env.NEXT_PUBLIC_FF_GACHAPON ?? '')
+
+test.describe('gachapon выключен флагом (вне MVP)', () => {
+  test.skip(gachaponOn, 'Флаг включён — работает набор тестов ниже')
+
+  test('в меню «Ещё» нет «Рулетки», в мобильном меню — «Случайного напитка»', async ({ page }) => {
+    await page.setViewportSize({ width: 1400, height: 900 })
+    await page.goto('/')
+    const more = page.locator('.hdr-more-btn')
+    if (await more.count()) {
+      await more.first().click()
+      await expect(page.locator('.hdr-more-menu .hdr-more-item', { hasText: 'Рулетка' })).toHaveCount(0)
+    }
+
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.goto('/')
+    await page.locator('.hdr-mobile-menu').click()
+    await expect(page.getByRole('dialog', { name: 'Меню' })).toHaveClass(/\bopen\b/)
+    await expect(page.getByText('Случайный напиток')).toHaveCount(0)
+  })
+})
+
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
     try { localStorage.setItem('energos_age_verified', 'true') } catch {}
@@ -44,6 +68,8 @@ async function openRoulette(page: Page) {
 }
 
 test.describe('gachapon', () => {
+  test.skip(!gachaponOn, 'Флаг gachapon выключен (рулетка вне MVP)')
+
   test('«Ещё» содержит «Рулетка» (gachapon включён по умолчанию) → открывает оверлей → приземление', async ({ page }) => {
     const errors = trackErrors(page)
     await openRoulette(page)
