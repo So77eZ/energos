@@ -24,21 +24,21 @@ const toUser = (u: ApiUser): User => ({
 
 export const authApi = {
   // OAuth2PasswordRequestForm: поле называется `username`, но в нём e-mail.
-  login: (email: string, password: string, extraHeaders?: Record<string, string>) => {
+  login: (email: string, password: string) => {
     const form = new URLSearchParams()
     form.set('username', email)
     form.set('password', password)
     return httpRequest<AuthToken>(`${BASE}/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...extraHeaders },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: form.toString(),
     })
   },
 
-  register: async (email: string, password: string, extraHeaders?: Record<string, string>): Promise<User> =>
+  register: async (email: string, password: string): Promise<User> =>
     toUser(await httpRequest<ApiUser>(`${BASE}/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...extraHeaders },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     })),
 
@@ -54,17 +54,17 @@ export const authApi = {
     }),
 
   /** Всегда 202 — бэк не раскрывает, есть ли такой e-mail. */
-  forgotPassword: (email: string, extraHeaders?: Record<string, string>) =>
+  forgotPassword: (email: string) =>
     httpRequest<void>(`${BASE}/forgot-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...extraHeaders },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     }),
 
-  resetPassword: (token: string, password: string, extraHeaders?: Record<string, string>) =>
+  resetPassword: (token: string, password: string) =>
     httpRequest<void>(`${BASE}/reset-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...extraHeaders },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
     }),
 
