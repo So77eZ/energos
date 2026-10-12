@@ -21,6 +21,12 @@ Feature-Sliced Design, слои `app → widgets → features → entities → s
 - e2e/скриншоты гонять против `http://localhost` (docker-Caddy), не dev `:3000`
   (там /api-proxy trailing-slash + cold-compile флак). Для light-прохода инжектить
   `localStorage energos_theme={"theme":"light"}`; age-gate глушить `energos_age_verified=true`.
+- Реальный IP клиента бэк берёт из `X-Forwarded-For` (rate limit по IP). Его ставит `rawRequest`
+  (`shared/api/http.ts`) на всех серверных запросах, кроме идущих в Data Cache (`next.revalidate`):
+  заголовки входят в ключ кеша. `next/headers` туда тянуть напрямую нельзя — `http.ts` попадает и в
+  клиентский бандл (через client-компоненты с `drinkApi`/`reviewEmojiApi`), сборка падает.
+  Поэтому импорт `#client-ip` подменяется через `imports` в `package.json`: условие `react-server`
+  → `client-ip.ts` (реальный), иначе `client-ip.noop.ts`. Не заменять на обычный импорт.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

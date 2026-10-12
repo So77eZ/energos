@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { FEATURES } from '@shared/config/features'
 import { ACCENT_MAP, DEFAULT_PREFS, STORAGE_KEY } from './constants'
 import type { Accent, Motion, Theme, ThemePrefs } from './types'
 
@@ -87,6 +88,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const value: ThemeContextValue = {
     ...prefs,
+    // Рулетка вне MVP: без флага её нет в меню независимо от сохранённой настройки пользователя
+    // (в localStorage по-прежнему пишется prefs, значение пользователя не теряется).
+    gachapon: FEATURES.gachapon && prefs.gachapon,
     setTheme: (t) => update({ theme: t }),
     setAccent: (a) => update({ accent: a }),
     setLiquidBg: (v) => update({ liquidBg: v }),

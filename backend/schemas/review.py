@@ -6,6 +6,7 @@ from schemas.base import BaseSchema
 
 
 class ReviewBase(BaseSchema):
+    comment: Optional[str] = Field(default=None, max_length=1000)
     acidity: float = Field(ge=0, le=5)
     sweetness: float = Field(ge=0, le=5)
     concentration: float = Field(ge=0, le=5)

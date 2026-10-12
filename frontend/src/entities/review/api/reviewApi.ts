@@ -65,11 +65,11 @@ export const reviewApi = {
     return drink ? drink.reviews.map((r, i) => fromApi(r, drink.id, syntheticId(drink.id, i))) : []
   },
 
-  create: async (drinkId: number, body: ReviewCreate, token: string, extraHeaders?: Record<string, string>): Promise<Review> => {
+  create: async (drinkId: number, body: ReviewCreate, token: string): Promise<Review> => {
     const comment = body.comment?.trim()
     const created = await httpRequest<ApiReview>(`${BASE}/${drinkId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...bearerHeaders(token), ...extraHeaders },
+      headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
       body: JSON.stringify({ ...scores(body), ...(comment ? { comment } : {}) }),
     })
     return fromApi(created, drinkId, created.id)

@@ -17,15 +17,9 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         super().__init__(session, EnergyDrink)
 
     async def get_many_with_reviews(self, limit: int = 20, offset: int = 0, order_by: str = "id") -> list[EnergyDrink]:
-        query = (
-            select(self.model)
-            .options(defer(self.model.image), defer(self.model.image_content_type), selectinload(self.model.reviews))
-            .offset(offset)
-            .limit(limit)
-            .order_by(getattr(self.model, order_by))
-        )
-        result = await self.session.execute(query)
-        return list(result.scalars().all())
+        query = select(self.model).options(selectinload(self.model.reviews))
+        result = await self.execute_get_many_query(query, limit=limit, offset=offset, order_by=order_by)
+        return result
 
     async def get_image_by_id(self, energy_drink_id: int) -> tuple[bool, ImageData | None]:
         query = (
@@ -42,7 +36,7 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         _, image_data, content_type = energy_drink
         return True, ImageData(data=image_data, content_type=content_type)
 
-    async def get_by_id(self, id: int) -> EnergyDrink | None:
+    async def get_by_id(self, id: int) -> EnergyDrink:
         query = (
             select(self.model)
             .filter(self.model.id == id)
@@ -50,8 +44,8 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         )
         result = await self.session.execute(query)
         result = result.scalar_one_or_none()
-        if result is None:
-            raise ObjectNotFoundException(f"Energy drink with id {id} not found")
+        if not result:
+            raise ObjectNotFoundException(f"{self.model.__verbose_name__} with id {id} not found")
 
         return result
 

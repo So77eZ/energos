@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from core.exceptions import ForbiddenException, ObjectNotFoundException
+from core.exceptions import ConflictException, ForbiddenException
 from models.review import Review
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from repositories.review import ReviewRepository, get_review_repository
@@ -15,37 +15,28 @@ class ReviewService(BaseService[Review, ReviewCreateInternalSchema, ReviewUpdate
         super().__init__(repository)
         self.energy_drink_repository: EnergyDrinkRepository = energy_drink_repository
 
-    async def _check_if_user_is_author(self, review_id: int, user_id: int) -> Review:
-        review_instance: Review = await self.get_by_id(review_id)
-
-        if review_instance.user_id != user_id:
-            raise ForbiddenException("You are not authorized to modify this review")
-
-        return review_instance
+    async def _check_if_user_is_author(self, review_id: int, user_id: int) -> None:
+        author_id = await self.repository.get_author_id(review_id)
+        if author_id != user_id:
+            raise ForbiddenException("You are not the author of this review")
 
     async def create(self, data: ReviewCreateInternalSchema) -> Review:
-        energy_drink_exists = await self.energy_drink_repository.exists_by_id(data.energy_drink_id)
-        if not energy_drink_exists:
-            raise ObjectNotFoundException(
-                f"{self.energy_drink_repository.model.__verbose_name__} with id {data.energy_drink_id} not found"
+        if await self.repository.exists_by_user_and_energy_drink(
+            user_id=data.user_id, energy_drink_id=data.energy_drink_id
+        ):
+            raise ConflictException(
+                f"User has already submitted a review for this {self.energy_drink_repository.model.__verbose_name__}"
             )
 
         return await self.repository.create(data)
 
     async def update_review(self, id: int, data: ReviewUpdateSchema, current_user_id: int) -> Review:
-        review_instance = await self._check_if_user_is_author(review_id=id, user_id=current_user_id)
-
-        update_data = data.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(review_instance, key, value)
-
-        return await self.repository.update(review_instance)
+        await self._check_if_user_is_author(review_id=id, user_id=current_user_id)
+        return await self.update(id, data)
 
     async def delete_review_by_id(self, id: int, current_user_id: int) -> bool:
-        review_instance = await self._check_if_user_is_author(review_id=id, user_id=current_user_id)
-
-        await self.repository.delete(review_instance)
-        return True
+        await self._check_if_user_is_author(review_id=id, user_id=current_user_id)
+        return await self.repository.delete_by_id(id)
 
     async def get_many_by_user_id(
         self, user_id: int, limit: int = 20, offset: int = 0, order_by: str = "id"
