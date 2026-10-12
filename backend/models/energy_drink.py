@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class EnergyDrink(Base):
     __tablename__ = "energy_drinks"
-    __verbose_name__ = "Energy drink"
+    __verbose_name__ = "Energy Drink"
 
     name: Mapped[str]
     price: Mapped[float | None]

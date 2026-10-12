@@ -36,7 +36,7 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         _, image_data, content_type = energy_drink
         return True, ImageData(data=image_data, content_type=content_type)
 
-    async def get_by_id(self, id: int) -> EnergyDrink | None:
+    async def get_by_id(self, id: int) -> EnergyDrink:
         query = (
             select(self.model)
             .filter(self.model.id == id)
@@ -44,8 +44,8 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         )
         result = await self.session.execute(query)
         result = result.scalar_one_or_none()
-        if result is None:
-            raise ObjectNotFoundException(f"Energy drink with id {id} not found")
+        if not result:
+            raise ObjectNotFoundException(f"{self.model.__verbose_name__} with id {id} not found")
 
         return result
 

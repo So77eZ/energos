@@ -1,3 +1,5 @@
+import { clientIp } from '#client-ip'
+
 // Server Components (Node.js) need an absolute URL — relative paths don't resolve.
 // Browser requests use relative path so Next.js rewrites proxy them to the backend.
 const BASE_URL =
@@ -19,6 +21,15 @@ export class SessionExpiredError extends Error {
   constructor() {
     super('Сессия истекла, войдите снова.')
     this.name = 'SessionExpiredError'
+  }
+}
+
+/** Прочая ошибка бэка: сообщение — `detail` как есть (на английском), `status` — HTTP-код.
+ *  Локализовать надо по `status` (и коду, если бэк его когда-нибудь отдаст), а не по тексту. */
+export class ApiError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
   }
 }
 
@@ -63,11 +74,27 @@ export const bearerHeaders = (token: string) => ({ Authorization: `Bearer ${toke
 
 type HttpOptions = RequestInit & { next?: { revalidate?: number | false; tags?: string[] } }
 
+/** Реальный IP клиента для бэка (лимиты по IP). Только на сервере Next и только для запросов
+ *  не из Data Cache: заголовки входят в ключ кеша, и с IP в нём каждый клиент получил бы свою
+ *  копию публичного списка вместо общей на 60 с. Эти запросы бэк и так видит редко (раз в
+ *  минуту на маршрут), так что им общий адрес фронта не мешает. */
+async function clientIpHeader(options?: HttpOptions): Promise<Record<string, string>> {
+  if (typeof window !== 'undefined') return {}
+  if (options?.next?.revalidate !== undefined || options?.cache === 'force-cache') return {}
+  try {
+    const ip = await clientIp()
+    return ip ? { 'X-Forwarded-For': ip } : {}
+  } catch {
+    return {}
+  }
+}
+
 /** Запрос к бэку без разбора ответа — для бинарных данных (картинки). */
-export function rawRequest(path: string, options?: HttpOptions): Promise<Response> {
+export async function rawRequest(path: string, options?: HttpOptions): Promise<Response> {
   const headers = {
     ...options?.headers,
     ...(typeof window === 'undefined' ? { 'Origin': process.env.NEXT_PUBLIC_ORIGIN ?? 'http://localhost:3000' } : {}),
+    ...(await clientIpHeader(options)),
   }
   return fetch(`${BASE_URL}${path}`, {
     ...options,
@@ -79,7 +106,7 @@ export function rawRequest(path: string, options?: HttpOptions): Promise<Respons
 export async function httpRequest<T>(path: string, options?: HttpOptions): Promise<T> {
   const res = await rawRequest(path, options)
   assertResponseOk(res) // 401 → SessionExpiredError, 429 → RateLimitError (ДО generic)
-  if (!res.ok) throw new Error(await parseError(res))
+  if (!res.ok) throw new ApiError(res.status, await parseError(res))
   // 204 No Content (DELETE, logout) — тела нет, res.json() бросил бы.
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>

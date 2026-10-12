@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_session
+from core.exceptions import ObjectNotFoundException
 from models.review import Review
 from repositories.base import BaseRepository
 from schemas.review import ReviewCreateSchema, ReviewUpdateSchema
@@ -37,10 +38,13 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
         )
         return (await self.session.execute(stmt)).scalar_one_or_none() is not None
 
-    async def get_author_id(self, review_id: int) -> int | None:
+    async def get_author_id(self, review_id: int) -> int:
         stmt = select(Review.user_id).where(Review.id == review_id)
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        author_id = result.scalar_one_or_none()
+        if author_id is None:
+            raise ObjectNotFoundException(f"{self.model.__verbose_name__} with id {review_id} not found")
+        return author_id
 
 
 async def get_review_repository(session: Annotated[AsyncSession, Depends(get_session)]) -> ReviewRepository:

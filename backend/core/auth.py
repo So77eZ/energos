@@ -1,9 +1,10 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
 
 from core.config import settings
 from core.constants import UserIdType
+from core.exceptions import ForbiddenException
 from models import User
 from services.user_manager import get_user_manager
 
@@ -37,10 +38,7 @@ async def get_verified_user(
     user: User = Depends(get_current_user),
 ) -> User:
     if not user.is_verified:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User is not verified",
-        )
+        raise ForbiddenException("User account is not verified")
     return user
 
 
@@ -48,8 +46,5 @@ async def get_superuser(
     user: User = Depends(get_current_user),
 ) -> User:
     if not user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges required",
-        )
+        raise ForbiddenException("Admin privileges required")
     return user

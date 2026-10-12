@@ -5,7 +5,6 @@ import { revalidatePath } from 'next/cache'
 import { authApi } from '@entities/user'
 import { getToken, setToken, clearToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
-import { clientIpHeaders } from '@shared/lib/client-ip'
 import { localizeAuthError } from './auth-errors'
 
 // username возвращается в состоянии, чтобы форма подставила его обратно:
@@ -21,7 +20,7 @@ export async function loginAction(
   const password = formData.get('password') as string
 
   try {
-    const { access_token } = await authApi.login(username, password, await clientIpHeaders())
+    const { access_token } = await authApi.login(username, password)
     await setToken(access_token)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message, username }
@@ -44,9 +43,8 @@ export async function registerAction(
   if (password !== confirm) return { error: 'Пароли не совпадают', username }
 
   try {
-    const ipHeaders = await clientIpHeaders()
-    await authApi.register(username, password, ipHeaders)
-    const { access_token } = await authApi.login(username, password, ipHeaders)
+    await authApi.register(username, password)
+    const { access_token } = await authApi.login(username, password)
     await setToken(access_token)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message, username }
@@ -67,7 +65,7 @@ export async function forgotPasswordAction(
   const email = ((formData.get('email') as string) ?? '').trim()
   if (!email) return { error: 'Введите e-mail' }
   try {
-    await authApi.forgotPassword(email, await clientIpHeaders())
+    await authApi.forgotPassword(email)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message, email }
     return { error: 'Не удалось отправить запрос. Попробуйте позже.', email }
@@ -90,7 +88,7 @@ export async function resetPasswordAction(
   if (password !== confirm) return { error: 'Пароли не совпадают' }
 
   try {
-    await authApi.resetPassword(token, password, await clientIpHeaders())
+    await authApi.resetPassword(token, password)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message }
     return { error: localizeAuthError(e instanceof Error ? e.message : '', 'Не удалось сменить пароль') }

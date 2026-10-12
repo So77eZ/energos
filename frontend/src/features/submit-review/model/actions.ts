@@ -6,7 +6,6 @@ import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
-import { clientIpHeaders } from '@shared/lib/client-ip'
 import { localizeReviewError } from './review-errors'
 
 const getNum = (formData: FormData, name: string) => {
@@ -41,12 +40,12 @@ export async function saveReviewAction(
     if (reviewId) {
       await reviewApi.update(reviewId, drinkId, payload, token)
     } else {
-      await reviewApi.create(drinkId, payload, token, await clientIpHeaders())
+      await reviewApi.create(drinkId, payload, token)
     }
   } catch (e) {
     await redirectIfSessionExpired(e) // 401 → clear+redirect; иначе вниз
     if (e instanceof RateLimitError) return { error: e.message }
-    return { error: localizeReviewError(e instanceof Error ? e.message : '', 'Ошибка сохранения') }
+    return { error: localizeReviewError(e, 'Ошибка сохранения') }
   }
 
   updateTag('reviews')
