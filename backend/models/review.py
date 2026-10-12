@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class Review(Base):
     __tablename__ = "reviews"
+    __verbose_name__ = "Review"
 
     comment: Mapped[str | None]
     acidity: Mapped[float]
