@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TypeVar
+from typing import ClassVar, TypeVar
 
 from sqlalchemy import func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -19,10 +19,12 @@ class MetadataMixin:
 
 class Base(AbstractBase, MetadataMixin):
     __abstract__ = True
+    __verbose_name__: ClassVar[str]
 
 
 class AssociativeBase(AbstractBase):
     __abstract__ = True
+    __verbose_name__: ClassVar[str]
 
 
 BaseModelType = TypeVar("BaseModelType", bound=Base)
