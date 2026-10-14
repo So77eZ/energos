@@ -22,6 +22,7 @@ class Review(Base):
     aftertaste: Mapped[float]
     price_quality: Mapped[float]
     overall: Mapped[float]
+    author_role: Mapped[str]
 
     energy_drink_id: Mapped[int] = mapped_column(ForeignKey("energy_drinks.id"))
     energy_drink: Mapped[EnergyDrink] = relationship(back_populates="reviews")

@@ -6,4 +6,9 @@ class DeployEnv(StrEnum):
     PROD = "prod"
 
 
+class Role(StrEnum):
+    USER = "user"
+    ADMIN = "admin"
+
+
 UserIdType = int

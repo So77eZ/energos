@@ -18,6 +18,7 @@ class ReviewBase(BaseSchema):
 
 class ReviewSchema(ReviewBase):
     id: int
+    author_role: str
 
 
 class ReviewForUserSchema(BaseSchema):
@@ -37,6 +38,7 @@ class ReviewCreateSchema(ReviewBase):
 class ReviewCreateInternalSchema(ReviewCreateSchema):
     energy_drink_id: int
     user_id: int
+    author_role: str
 
 
 class ReviewUpdateSchema(BaseSchema):

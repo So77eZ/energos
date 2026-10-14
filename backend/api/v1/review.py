@@ -4,7 +4,7 @@ from core.auth import get_verified_user
 from core.rate_limiter import limiter
 from core.router import AutoStatusAPIRouter
 from models import User
-from schemas.review import ReviewCreateInternalSchema, ReviewCreateSchema, ReviewSchema, ReviewUpdateSchema
+from schemas.review import ReviewCreateSchema, ReviewSchema, ReviewUpdateSchema
 from services.review import ReviewService, get_review_service
 
 router = AutoStatusAPIRouter()
@@ -30,10 +30,7 @@ async def create_review(
     current_user: User = Depends(get_verified_user),
     review_service: ReviewService = Depends(get_review_service),
 ) -> ReviewSchema:
-    review_data = ReviewCreateInternalSchema(
-        **review_data.model_dump(), user_id=current_user.id, energy_drink_id=energy_drink_id
-    )
-    review = await review_service.create(review_data)
+    review = await review_service.create_review(review_data, user_id=current_user.id, energy_drink_id=energy_drink_id)
     return ReviewSchema.model_validate(review)
 
 

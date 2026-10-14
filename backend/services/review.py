@@ -2,33 +2,49 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from core.exceptions import ConflictException, ForbiddenException
+from core.constants import Role
+from core.exceptions import ConflictException, ForbiddenException, ObjectNotFoundException
 from models.review import Review
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from repositories.review import ReviewRepository, get_review_repository
-from schemas.review import ReviewCreateInternalSchema, ReviewUpdateSchema
+from repositories.user import UserRepository, get_user_repository
+from schemas.review import ReviewCreateInternalSchema, ReviewCreateSchema, ReviewUpdateSchema
 from services.base import BaseService
 
 
 class ReviewService(BaseService[Review, ReviewCreateInternalSchema, ReviewUpdateSchema, ReviewRepository]):
-    def __init__(self, repository: ReviewRepository, energy_drink_repository: EnergyDrinkRepository):
+    def __init__(
+        self,
+        repository: ReviewRepository,
+        energy_drink_repository: EnergyDrinkRepository,
+        user_repository: UserRepository,
+    ):
         super().__init__(repository)
         self.energy_drink_repository: EnergyDrinkRepository = energy_drink_repository
+        self.user_repository: UserRepository = user_repository
 
     async def _check_if_user_is_author(self, review_id: int, user_id: int) -> None:
         author_id = await self.repository.get_author_id(review_id)
         if author_id != user_id:
             raise ForbiddenException("You are not the author of this review")
 
-    async def create(self, data: ReviewCreateInternalSchema) -> Review:
-        if await self.repository.exists_by_user_and_energy_drink(
-            user_id=data.user_id, energy_drink_id=data.energy_drink_id
-        ):
+    async def create_review(self, review_data: ReviewCreateSchema, user_id: int, energy_drink_id: int) -> Review:
+        if await self.repository.exists_by_user_and_energy_drink(user_id=user_id, energy_drink_id=energy_drink_id):
             raise ConflictException(
                 f"User has already submitted a review for this {self.energy_drink_repository.model.__verbose_name__}"
             )
 
-        return await self.repository.create(data)
+        user = await self.user_repository.get(user_id)
+        if user is None:
+            raise ObjectNotFoundException(f"User with id {user_id} not found")
+
+        internal = ReviewCreateInternalSchema(
+            **review_data.model_dump(),
+            user_id=user.id,
+            energy_drink_id=energy_drink_id,
+            author_role=Role.ADMIN.value if user.is_superuser else Role.USER.value,
+        )
+        return await self.repository.create(internal)
 
     async def update_review(self, id: int, data: ReviewUpdateSchema, current_user_id: int) -> Review:
         await self._check_if_user_is_author(review_id=id, user_id=current_user_id)
@@ -47,5 +63,6 @@ class ReviewService(BaseService[Review, ReviewCreateInternalSchema, ReviewUpdate
 async def get_review_service(
     repository: Annotated[ReviewRepository, Depends(get_review_repository)],
     energy_drink_repository: Annotated[EnergyDrinkRepository, Depends(get_energy_drink_repository)],
+    user_repository: Annotated[UserRepository, Depends(get_user_repository)],
 ) -> ReviewService:
-    return ReviewService(repository, energy_drink_repository)
+    return ReviewService(repository, energy_drink_repository, user_repository)
