@@ -12,6 +12,7 @@ router = AutoStatusAPIRouter()
 
 
 @router.get("/")
+@limiter.limit("1000/minute")
 async def get_reviews_by_energy_drink(
     request: Request,
     energy_drink_id: int,

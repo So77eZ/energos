@@ -17,7 +17,7 @@ router = AutoStatusAPIRouter()
 
 
 @router.get("/")
-@limiter.limit("100/minute")
+@limiter.limit("1000/minute")
 async def get_energy_drinks(
     request: Request,
     limit: int = 20,
@@ -42,7 +42,7 @@ async def get_energy_drinks_count(
 
 
 @router.get("/{energy_drink_id}/image")
-@limiter.limit("100/minute")
+@limiter.limit("1000/minute")
 async def get_energy_drink_image(
     request: Request,
     energy_drink_id: int,
