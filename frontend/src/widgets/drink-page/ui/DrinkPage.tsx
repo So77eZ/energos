@@ -9,10 +9,8 @@ import {
   AvgReviewCard,
   calcRating,
   MyReviewCard,
-  METRIC_KEYS,
   UserReviewCard,
   type Review,
-  type ReviewMetrics,
 } from '@entities/review'
 import { Avatar, type User } from '@entities/user'
 import { BadgeCluster } from '@entities/achievement'
@@ -32,9 +30,6 @@ interface DrinkPageProps {
   drinks: Drink[]
   activeDrink: Drink
   initialReviews: Review[]
-  /** All reviews across the catalog — used to enrich every drink for the
-   *  SimilarRail. Falls back to initialReviews if not provided. */
-  allReviews?: Review[]
   currentUser: User | null
   myReview: Review | null
   autoOpenReview?: boolean
@@ -91,20 +86,6 @@ function filterReviews(reviews: Review[], rating: RatingFilter, period: ReviewPe
   return arr
 }
 
-function averageMetrics(reviews: Review[]): ReviewMetrics | null {
-  if (reviews.length === 0) return null
-  const sum = METRIC_KEYS.reduce<Record<string, number>>((acc, k) => ({ ...acc, [k]: 0 }), {})
-  for (const r of reviews) {
-    for (const k of METRIC_KEYS) sum[k] += r[k]
-  }
-  return Object.fromEntries(METRIC_KEYS.map((k) => [k, sum[k] / reviews.length])) as unknown as ReviewMetrics
-}
-
-function averageRating(reviews: Review[]): number {
-  if (reviews.length === 0) return 0
-  return reviews.reduce((s, r) => s + calcRating(r), 0) / reviews.length
-}
-
 function sortedReviews(reviews: Review[], sort: ReviewSort): Review[] {
   const arr = [...reviews]
   switch (sort) {
@@ -128,7 +109,6 @@ export function DrinkPage({
   drinks,
   activeDrink,
   initialReviews,
-  allReviews,
   currentUser,
   myReview,
   autoOpenReview = false,
@@ -155,12 +135,11 @@ export function DrinkPage({
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [formOpen])
 
-  const enriched = useMemo(() => enrichDrink(activeDrink, initialReviews), [activeDrink, initialReviews])
+  const enriched = useMemo(() => enrichDrink(activeDrink), [activeDrink])
   const similar = useMemo(() => {
     if (!enriched.metrics) return []
-    const pool = enrichDrinks(drinks, allReviews ?? initialReviews)
-    return findSimilarDrinks(enriched, pool, 4)
-  }, [enriched, drinks, allReviews, initialReviews])
+    return findSimilarDrinks(enriched, enrichDrinks(drinks), 4)
+  }, [enriched, drinks])
 
   const adminReview = useMemo(() => initialReviews.find((r) => r.from_admin) ?? null, [initialReviews])
   const userReviews = useMemo(() => initialReviews.filter((r) => !r.from_admin), [initialReviews])
@@ -168,8 +147,9 @@ export function DrinkPage({
     () => userReviews.filter((r) => r.id !== myReview?.id),
     [userReviews, myReview],
   )
-  const avgMetrics = useMemo(() => averageMetrics(userReviews), [userReviews])
-  const avgRating = useMemo(() => averageRating(userReviews), [userReviews])
+  // Сводка по отзывам — с бэка (`drink.stats`), как и в каталоге: цифры не расходятся.
+  const avgMetrics = enriched.metrics
+  const avgRating = enriched.rating ?? 0
   const visibleOthers = useMemo(
     () => sortedReviews(filterReviews(otherReviews, ratingFilter, period), sort),
     [otherReviews, ratingFilter, period, sort],
@@ -208,7 +188,7 @@ export function DrinkPage({
             {avgMetrics && (
               <AvgReviewCard
                 metrics={avgMetrics}
-                count={userReviews.length}
+                count={enriched.reviewCount}
                 rating={avgRating}
               />
             )}

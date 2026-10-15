@@ -19,7 +19,7 @@ test.beforeEach(async ({ context }) => {
 /** Регистрируем e2e-юзера (идемпотентно: 400/409 если уже есть). */
 async function ensureUser(request: APIRequestContext): Promise<void> {
   await request.post(`${API_ROOT}/api/v1/auth/register`, {
-    data: { email: E2E_USERNAME, password: E2E_PASSWORD },
+    data: { email: E2E_USERNAME, password: E2E_PASSWORD, username: 'playwright_e2e' },
     headers: { 'Content-Type': 'application/json' },
     failOnStatusCode: false,
   })

@@ -33,6 +33,22 @@ export function RegisterForm() {
       </div>
 
       <div className="auth-field">
+        <label htmlFor="register-nickname">Имя</label>
+        <input
+          id="register-nickname"
+          name="nickname"
+          type="text"
+          defaultValue={state?.nickname}
+          placeholder="Как вас показывать в отзывах"
+          required
+          minLength={2}
+          maxLength={32}
+          autoComplete="nickname"
+        />
+        <span className="auth-field-hint">Увидят другие пользователи рядом с вашими отзывами</span>
+      </div>
+
+      <div className="auth-field">
         <label htmlFor="register-password">Пароль</label>
         <input
           id="register-password"

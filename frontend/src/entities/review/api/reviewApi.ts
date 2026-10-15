@@ -4,21 +4,17 @@ import { calcRating, type Review, type ReviewCreate, type ReviewMetrics, type Re
 
 const BASE = `${API_V1}/reviews`
 
-// Что отдаёт бэк (docs/api.md): ReviewSchema = оценки + overall + id (после create/update);
-// внутри GET /energy-drinks/ отзывы приходят без id и без привязки к автору.
-interface ApiReviewScores extends ReviewMetrics {
-  overall: number
-}
-interface ApiReview extends ApiReviewScores {
+// Что отдаёт бэк: ReviewReadSchema = оценки (целые 1–5) + rating + comment + id + автор.
+// Привязки к напитку (`energy_drink_id`) и дат в ответе нет — напиток известен из запроса.
+interface ApiReview extends ReviewMetrics {
   id: number
-}
-interface ApiDrinkWithReviews {
-  id: number
-  reviews: ApiReviewScores[]
+  rating: number
+  comment: string | null
+  user: { id: number; username: string; role: string }
 }
 
-const fromApi = (r: ApiReviewScores & { id?: number }, drinkId: number, id: number): Review => ({
-  id,
+const fromApi = (r: ApiReview, drinkId: number): Review => ({
+  id: r.id,
   energy_drink_id: drinkId,
   acidity: r.acidity,
   sweetness: r.sweetness,
@@ -26,44 +22,33 @@ const fromApi = (r: ApiReviewScores & { id?: number }, drinkId: number, id: numb
   concentration: r.concentration,
   aftertaste: r.aftertaste,
   price_quality: r.price_quality,
-  // Автора, комментария, дат и признака «админский» в выдаче нет (флаги reviewAuthors/adminReviews).
-  user_id: null,
-  username: null,
-  comment: null,
+  rating: r.rating,
+  user_id: r.user.id,
+  username: r.user.username,
+  comment: r.comment,
+  // Роль в отзыве (`user.role`) бэкендер собирается переделать вместе с username — на неё не опираемся.
   from_admin: false,
   created_at: null,
   updated_at: null,
 })
 
-const scores = (m: ReviewMetrics): ApiReviewScores => ({
+/** Оценки в теле запроса — целые 1–5. `rating` — общая оценка: среднее шести метрик, округлённое. */
+const scores = (m: ReviewMetrics) => ({
   acidity: m.acidity,
   sweetness: m.sweetness,
   carbonation: m.carbonation,
   concentration: m.concentration,
   aftertaste: m.aftertaste,
   price_quality: m.price_quality,
-  overall: calcRating(m),
+  rating: Math.min(5, Math.max(1, Math.round(calcRating(m)))),
 })
 
-// Тот же URL и опции, что у drinkApi.list — Next отдаёт один запрос на оба вызова за рендер.
-const loadAll = () =>
-  fetchAllPages<ApiDrinkWithReviews>(`${API_V1}/energy-drinks/`, { next: { revalidate: 60, tags: ['drinks', 'reviews'] } })
-
-/** У отзывов из списка напитков нет id. Для React-ключей и расчётов даём уникальный
- *  отрицательный — мутировать по нему нельзя (правка/удаление работают по id из ответа POST). */
-const syntheticId = (drinkId: number, index: number) => -(drinkId * 10_000 + index + 1)
-
 export const reviewApi = {
-  /** Все отзывы (оценки) — собираются из GET /energy-drinks/, где они вложены в напиток. */
-  list: async (): Promise<Review[]> => {
-    const drinks = await loadAll()
-    return drinks.flatMap((d) => d.reviews.map((r, i) => fromApi(r, d.id, syntheticId(d.id, i))))
-  },
-
-  byDrink: async (drinkId: number): Promise<Review[]> => {
-    const drink = (await loadAll()).find((d) => d.id === drinkId)
-    return drink ? drink.reviews.map((r, i) => fromApi(r, drink.id, syntheticId(drink.id, i))) : []
-  },
+  /** Все отзывы напитка (бэк пагинирует — собираем страницы). Рейтинг и число отзывов
+   *  считает бэк (`drink.stats`), эта выдача нужна для списка отзывов и «моего отзыва». */
+  byDrink: async (drinkId: number): Promise<Review[]> =>
+    (await fetchAllPages<ApiReview>(`${BASE}/?energy_drink_id=${drinkId}`, { cache: 'no-store' }))
+      .map((r) => fromApi(r, drinkId)),
 
   create: async (drinkId: number, body: ReviewCreate, token: string): Promise<Review> => {
     const comment = body.comment?.trim()
@@ -72,7 +57,7 @@ export const reviewApi = {
       headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
       body: JSON.stringify({ ...scores(body), ...(comment ? { comment } : {}) }),
     })
-    return fromApi(created, drinkId, created.id)
+    return fromApi(created, drinkId)
   },
 
   update: async (id: number, drinkId: number, body: ReviewUpdate, token: string): Promise<Review> => {
@@ -81,7 +66,7 @@ export const reviewApi = {
       headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
       body: JSON.stringify({ ...scores(body), comment: body.comment }),
     })
-    return fromApi(updated, drinkId, updated.id)
+    return fromApi(updated, drinkId)
   },
 
   remove: (id: number, token: string) =>
@@ -90,6 +75,7 @@ export const reviewApi = {
       headers: bearerHeaders(token),
     }),
 
-  /** «Мои отзывы»: эндпоинта нет, а в выдаче нет user_id — см. флаг reviewAuthors. */
+  /** «Мои отзывы»: `GET /reviews/me` не отдаёт, к какому напитку относится отзыв, — вкладку
+   *  не наполнить (флаг reviewAuthors, docs/mvp-backend-questions.md). */
   myReviews: async (_token: string): Promise<Review[]> => [],
 }

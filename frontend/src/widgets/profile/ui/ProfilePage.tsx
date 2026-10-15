@@ -75,7 +75,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   }, [tab])
 
   const drinkMap = useMemo(() => new Map(drinks.map((d) => [d.id, d])), [drinks])
-  const enrichedAll = useMemo(() => enrichDrinks(drinks, []), [drinks])
+  const enrichedAll = useMemo(() => enrichDrinks(drinks), [drinks])
   const enrichedMap = useMemo(() => new Map(enrichedAll.map((d) => [d.id, d])), [enrichedAll])
 
   const { favorites: favIds } = useFavorites()

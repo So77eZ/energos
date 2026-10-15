@@ -2,7 +2,7 @@ export type UserRole = 'user' | 'admin'
 
 export interface User {
   id: number
-  /** Отображаемое имя: локальная часть e-mail (в API `username` нет, см. authApi.me). */
+  /** Публичное имя (`username` из API); запасной вариант — локальная часть e-mail. */
   username: string
   email: string
   /** `false` → бэк отвечает 403 на создание/правку отзывов (docs/api.md, раздел «Отзывы»). */

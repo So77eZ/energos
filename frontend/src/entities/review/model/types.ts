@@ -10,6 +10,8 @@ export interface ReviewMetrics {
 export interface Review extends ReviewMetrics {
   id: number
   energy_drink_id: number
+  /** Общая оценка отзыва (1–5, целое), как её отправил автор. */
+  rating: number
   user_id: number | null
   username: string | null
   comment: string | null
@@ -21,9 +23,8 @@ export interface Review extends ReviewMetrics {
 }
 
 // Напиток передаётся в пути (POST /reviews/{energy_drink_id}), автор — из токена.
-// `overall` бэк требует в теле; на фронте его даёт calcRating(metrics) (см. reviewApi).
-// comment в ReviewCreateSchema нет — reviewApi шлёт его, только если он непустой
-// (вопрос бэкендеру: docs/mvp-backend-questions.md).
+// `rating` бэк требует в теле (целое 1–5); на фронте его даёт среднее метрик (см. reviewApi).
+// `comment` reviewApi шлёт, только если он непустой.
 export type ReviewCreate = ReviewMetrics & { comment?: string | null }
 
 // PUT отзыва меняет только оценки и комментарий: напиток и автора бэк не трогает (#103).
