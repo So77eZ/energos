@@ -1,4 +1,5 @@
-FROM python:3.15-slim
+FROM mirror.gcr.io/library/python:3.15-slim
+# FROM python:3.15-slim
 
 WORKDIR /src
 
