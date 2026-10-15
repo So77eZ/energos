@@ -16,7 +16,10 @@ from models.review import Review
 
 def _avg(model: Any, column: InstrumentedAttribute[Any]) -> Any:  # noqa: ANN401
     return column_property(
-        select(func.avg(column)).where(Review.energy_drink_id == model.id).correlate_except(Review).scalar_subquery()
+        select(func.round(func.avg(column), 1))
+        .where(Review.energy_drink_id == model.id)
+        .correlate_except(Review)
+        .scalar_subquery()
     )
 
 
