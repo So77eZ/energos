@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react'
 import { Icons } from '@shared/ui/icons'
-import { calcRating, type Review } from '../model/types'
+import type { Review } from '../model/types'
 import { MiniMetrics } from './MiniMetrics'
 
 interface UserReviewCardProps {
@@ -37,7 +37,7 @@ export function UserReviewCard({ review, avatar, badges, reactions }: UserReview
           </div>
         </div>
         <div className="rev-rating">
-          <Icons.star w={16} /> <span>{calcRating(review).toFixed(1)}</span>
+          <Icons.star w={16} /> <span>{review.rating.toFixed(1)}</span>
         </div>
       </header>
       <MiniMetrics metrics={review} />

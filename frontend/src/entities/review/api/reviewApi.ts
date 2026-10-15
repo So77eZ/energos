@@ -1,6 +1,6 @@
 import { httpRequest, bearerHeaders, API_V1 } from '@shared/api/http'
 import { fetchAllPages } from '@shared/api/paginate'
-import { calcRating, type Review, type ReviewCreate, type ReviewMetrics, type ReviewUpdate } from '../model/types'
+import type { Review, ReviewCreate, ReviewMetrics, ReviewUpdate } from '../model/types'
 
 const BASE = `${API_V1}/reviews`
 
@@ -26,21 +26,21 @@ const fromApi = (r: ApiReview, drinkId: number): Review => ({
   user_id: r.user.id,
   username: r.user.username,
   comment: r.comment,
-  // Роль в отзыве (`user.role`) бэкендер собирается переделать вместе с username — на неё не опираемся.
-  from_admin: false,
+  // Отзыв админа показываем отдельно (карточка «редакции» вверху страницы напитка).
+  from_admin: r.user.role === 'admin',
   created_at: null,
   updated_at: null,
 })
 
-/** Оценки в теле запроса — целые 1–5. `rating` — общая оценка: среднее шести метрик, округлённое. */
-const scores = (m: ReviewMetrics) => ({
+/** Оценки в теле запроса — целые 1–5. `rating` выбирает пользователь отдельно от метрик. */
+const scores = (m: ReviewMetrics & { rating: number }) => ({
   acidity: m.acidity,
   sweetness: m.sweetness,
   carbonation: m.carbonation,
   concentration: m.concentration,
   aftertaste: m.aftertaste,
   price_quality: m.price_quality,
-  rating: Math.min(5, Math.max(1, Math.round(calcRating(m)))),
+  rating: Math.min(5, Math.max(1, Math.round(m.rating))),
 })
 
 export const reviewApi = {

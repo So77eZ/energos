@@ -25,55 +25,65 @@ describe('reviewApi', () => {
     expect(reviews[1]).toMatchObject({ user_id: 10, username: 'Other', comment: null })
   })
 
-  it('create: POST /reviews/{drink_id}, rating — целое среднее шести оценок, пустой comment не шлётся', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(json({ id: 42, ...scores, rating: 4, comment: null, user }, 201))
+  it('byDrink: отзыв автора с ролью admin помечается from_admin', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json([
+      { id: 1, ...scores, rating: 5, comment: null, user: { id: 1, username: 'Editor', role: 'admin' } },
+      { id: 2, ...scores, rating: 3, comment: null, user },
+    ])))
+
+    const reviews = await reviewApi.byDrink(7)
+
+    expect(reviews.map((r) => r.from_admin)).toEqual([true, false])
+  })
+
+  it('create: POST /reviews/{drink_id}, rating — выбор пользователя (не среднее метрик), пустой comment не шлётся', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json({ id: 42, ...scores, rating: 5, comment: null, user }, 201))
     vi.stubGlobal('fetch', fetchMock)
 
-    const created = await reviewApi.create(7, { ...scores, comment: '  ' }, 'tok')
+    const created = await reviewApi.create(7, { ...scores, rating: 5, comment: '  ' }, 'tok')
 
     const [url, init] = fetchMock.mock.calls[0]
     expect(url).toContain('/api/v1/reviews/7')
     expect(init.method).toBe('POST')
     expect(init.headers.Authorization).toBe('Bearer tok')
-    // (3+4+5+2+3+4)/6 = 3.5 → 4
-    expect(JSON.parse(init.body)).toEqual({ ...scores, rating: 4 })
-    expect(created).toMatchObject({ id: 42, energy_drink_id: 7, rating: 4, user_id: 9 })
+    // метрики в среднем дают 3.5, но rating — то, что выбрал пользователь
+    expect(JSON.parse(init.body)).toEqual({ ...scores, rating: 5 })
+    expect(created).toMatchObject({ id: 42, energy_drink_id: 7, rating: 5, user_id: 9 })
   })
 
-  it('create: rating всегда в диапазоне 1–5', async () => {
+  it('create: rating всегда целое в диапазоне 1–5', async () => {
     // Новый Response на каждый вызов: тело читается один раз.
     const fetchMock = vi.fn().mockImplementation(async () => json({ id: 1, ...scores, rating: 1, comment: null, user }, 201))
     vi.stubGlobal('fetch', fetchMock)
-    const ones = { acidity: 1, sweetness: 1, carbonation: 1, concentration: 1, aftertaste: 1, price_quality: 1 }
-    const fives = { acidity: 5, sweetness: 5, carbonation: 5, concentration: 5, aftertaste: 5, price_quality: 5 }
 
-    await reviewApi.create(1, ones, 'tok')
-    await reviewApi.create(1, fives, 'tok')
+    await reviewApi.create(1, { ...scores, rating: 0 }, 'tok')
+    await reviewApi.create(1, { ...scores, rating: 9 }, 'tok')
+    await reviewApi.create(1, { ...scores, rating: 3.6 }, 'tok')
 
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body).rating).toBe(1)
-    expect(JSON.parse(fetchMock.mock.calls[1][1].body).rating).toBe(5)
+    const sent = fetchMock.mock.calls.map((c) => JSON.parse(c[1].body).rating)
+    expect(sent).toEqual([1, 5, 4])
   })
 
   it('create: непустой comment уходит в тело', async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ id: 1, ...scores, rating: 4, comment: 'огонь', user }, 201))
     vi.stubGlobal('fetch', fetchMock)
 
-    await reviewApi.create(1, { ...scores, comment: 'огонь' }, 'tok')
+    await reviewApi.create(1, { ...scores, rating: 4, comment: 'огонь' }, 'tok')
 
     expect(JSON.parse(fetchMock.mock.calls[0][1].body).comment).toBe('огонь')
   })
 
   it('update: PUT /reviews/{id} с rating и comment', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(json({ id: 5, ...scores, rating: 4, comment: 'ок', user }))
+    const fetchMock = vi.fn().mockResolvedValue(json({ id: 5, ...scores, rating: 2, comment: 'ок', user }))
     vi.stubGlobal('fetch', fetchMock)
 
-    const updated = await reviewApi.update(5, 7, { ...scores, comment: 'ок' }, 'tok')
+    const updated = await reviewApi.update(5, 7, { ...scores, rating: 2, comment: 'ок' }, 'tok')
 
     const [url, init] = fetchMock.mock.calls[0]
     expect(url).toContain('/api/v1/reviews/5')
     expect(init.method).toBe('PUT')
-    expect(JSON.parse(init.body)).toEqual({ ...scores, rating: 4, comment: 'ок' })
-    expect(updated).toMatchObject({ id: 5, energy_drink_id: 7 })
+    expect(JSON.parse(init.body)).toEqual({ ...scores, rating: 2, comment: 'ок' })
+    expect(updated).toMatchObject({ id: 5, energy_drink_id: 7, rating: 2 })
   })
 
   it('remove: 204 без тела не падает', async () => {
