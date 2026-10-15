@@ -24,10 +24,4 @@ class Base(AbstractBase, MetadataMixin):
     __verbose_name__: ClassVar[str]
 
 
-class AssociativeBase(AbstractBase):
-    __abstract__ = True
-    __verbose_name__: ClassVar[str]
-
-
 BaseModelType = TypeVar("BaseModelType", bound=Base)
-AssociativeModelType = TypeVar("AssociativeModelType", bound=AssociativeBase)

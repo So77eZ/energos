@@ -14,15 +14,14 @@ class Review(Base):
     __tablename__ = "reviews"
     __verbose_name__ = "Review"
 
+    rating: Mapped[int]
     comment: Mapped[str | None]
-    acidity: Mapped[float]
-    sweetness: Mapped[float]
-    concentration: Mapped[float]
-    carbonation: Mapped[float]
-    aftertaste: Mapped[float]
-    price_quality: Mapped[float]
-    overall: Mapped[float]
-    author_role: Mapped[str]
+    acidity: Mapped[int]
+    sweetness: Mapped[int]
+    concentration: Mapped[int]
+    carbonation: Mapped[int]
+    aftertaste: Mapped[int]
+    price_quality: Mapped[int]
 
     energy_drink_id: Mapped[int] = mapped_column(ForeignKey("energy_drinks.id"))
     energy_drink: Mapped[EnergyDrink] = relationship(back_populates="reviews")
