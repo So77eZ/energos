@@ -1,8 +1,6 @@
 from datetime import datetime
-from typing import Optional
 
 from schemas.base import BaseSchema
-from schemas.review import ReviewForUserSchema
 
 
 class ImageData(BaseSchema):
@@ -10,26 +8,37 @@ class ImageData(BaseSchema):
     content_type: str | None
 
 
-class EnergyDrinkBase(BaseSchema):
+class EnergyDrinkMetricsSchema(BaseSchema):
+    avg_rating: float | None = None
+    reviews_count: int = 0
+    avg_acidity: float | None = None
+    avg_sweetness: float | None = None
+    avg_concentration: float | None = None
+    avg_carbonation: float | None = None
+    avg_aftertaste: float | None = None
+    avg_price_quality: float | None = None
+
+
+class EnergyDrinkBaseSchema(BaseSchema):
     name: str
-    price: Optional[float] = None
+    price: float | None = None
     no_sugar: bool = False
 
 
-class EnergyDrinkSchema(EnergyDrinkBase):
-    id: int
-    created_at: datetime
-
-
-class EnergyDrinkWithReviewsSchema(EnergyDrinkSchema):
-    reviews: list[ReviewForUserSchema] = []
-
-
-class EnergyDrinkCreateSchema(EnergyDrinkBase):
+class EnergyDrinkCreateSchema(EnergyDrinkBaseSchema):
     pass
 
 
 class EnergyDrinkUpdateSchema(BaseSchema):
-    name: Optional[str] = None
-    price: Optional[float] = None
-    no_sugar: Optional[bool] = None
+    name: str | None = None
+    price: float | None = None
+    no_sugar: bool | None = None
+
+
+class EnergyDrinkReadSchema(EnergyDrinkBaseSchema):
+    id: int
+    created_at: datetime
+
+
+class EnergyDrinkWithMetricsReadSchema(EnergyDrinkReadSchema, EnergyDrinkMetricsSchema):
+    pass
