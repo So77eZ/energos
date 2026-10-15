@@ -1,12 +1,9 @@
-from typing import Annotated
-
-from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from core.constants import OrderDirection
-from core.database import get_session
+from core.database import SessionDep
 from core.exceptions import ObjectNotFoundException
 from models.review import Review
 from repositories.base import BaseRepository
@@ -65,5 +62,5 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
         return author_id
 
 
-async def get_review_repository(session: Annotated[AsyncSession, Depends(get_session)]) -> ReviewRepository:
+async def get_review_repository(session: SessionDep) -> ReviewRepository:
     return ReviewRepository(session)
