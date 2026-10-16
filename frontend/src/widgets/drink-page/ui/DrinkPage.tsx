@@ -7,7 +7,6 @@ import { enrichDrink, enrichDrinks, findSimilarDrinks } from '@entities/drink'
 import {
   AdminReviewCard,
   AvgReviewCard,
-  calcRating,
   MyReviewCard,
   UserReviewCard,
   type Review,
@@ -74,7 +73,7 @@ function filterReviews(reviews: Review[], rating: RatingFilter, period: ReviewPe
   let arr = reviews
   if (rating !== 'all') {
     const min = Number(rating)
-    arr = arr.filter((r) => Math.round(calcRating(r)) >= min)
+    arr = arr.filter((r) => r.rating >= min)
   }
   if (period !== 'all') {
     const cutoff = Date.now() - PERIOD_MS[period]
@@ -96,10 +95,10 @@ function sortedReviews(reviews: Review[], sort: ReviewSort): Review[] {
       arr.sort((a, b) => (Date.parse(a.created_at ?? '') || 0) - (Date.parse(b.created_at ?? '') || 0))
       break
     case 'rating_desc':
-      arr.sort((a, b) => calcRating(b) - calcRating(a))
+      arr.sort((a, b) => b.rating - a.rating)
       break
     case 'rating_asc':
-      arr.sort((a, b) => calcRating(a) - calcRating(b))
+      arr.sort((a, b) => a.rating - b.rating)
       break
   }
   return arr

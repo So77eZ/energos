@@ -125,7 +125,7 @@ export function DrinkHero({ drink, loggedIn, hasMyReview, onWriteReview }: Drink
           <div className="radar-header">
             <span className="radar-title">ВКУСОВОЙ ПРОФИЛЬ</span>
           </div>
-          <HexRadar metrics={drink.metrics} size={260} />
+          <HexRadar metrics={drink.metrics} rating={drink.rating} size={260} />
         </div>
       )}
     </section>

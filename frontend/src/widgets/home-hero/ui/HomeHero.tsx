@@ -116,7 +116,7 @@ export function HomeHero({ drink, rank }: HomeHeroProps) {
             <div className="radar-header">
               <span className="radar-title">ВКУСОВОЙ ПРОФИЛЬ</span>
             </div>
-            <HexRadar metrics={drink.metrics} size={240} />
+            <HexRadar metrics={drink.metrics} rating={drink.rating} size={240} />
             <div className="radar-legend">
               {METRIC_KEYS.map((k) => (
                 <div key={k} className="radar-leg">
