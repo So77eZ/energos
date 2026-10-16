@@ -16,12 +16,13 @@
 
 ## 1. Блокеры
 
-### 🔴 `POST /energy-drinks/` отвечает `500`
-- **Проверено на `f14c044`:** в логе `AttributeError: 'EnergyDrinkService' object has no attribute
-  'read_schema'` (`services/base.py:36`, `create`). `BaseService.__init__` принимает `read_schema`,
-  но `EnergyDrinkService` его не задаёт. Админка не может создать напиток; `PUT`/`DELETE`
-  и загрузку картинки через `update_image` стоит проверить тем же способом.
-- **Нужно:** передать `read_schema` (`EnergyDrinkReadSchema`) при создании сервиса.
+### 🔴 `created_at: str` в `ReviewReadSchema` (`820a4f2`) — ответы с отзывами падают
+- **Воспроизведено на `pydantic 2.13.3` из `backend/.venv`** (в docker на `820a4f2` ещё не
+  запускал): `datetime` в поле `str` даёт `ValidationError: Input should be a valid string`.
+  Колонка `created_at` — `DateTime(timezone=True)`, так что `GET /reviews/…`, `GET /reviews/me` и
+  ответы `POST`/`PUT` отзывов должны отвечать `500`. Та же ошибка уже была у напитка в `a11bb72`
+  (исправлена в `a756494`).
+- **Нужно:** `created_at: datetime` (как в `EnergyDrinkReadSchema`).
 
 Найденные ранее `created_at: str` (`500` на ответах со схемой напитка) и `/count` (`422`,
 перехватывался `/{id}`) исправлены в `a756494` и `0f1594d` — см. раздел «Уже сделано».
@@ -102,6 +103,7 @@
 | `created_at` в схеме напитка | Добавлен в `a11bb72` как `str` → `500` на списке, напитке по id и создании; исправлено на `datetime` в `a756494` |
 | Часовой пояс у `created_at`/`updated_at` | `a4562e6`: колонки `DateTime(timezone=True)`, дата приходит с зоной. Фронт справляется с обоими вариантами (`toUtcIso` добавляет `Z` только к датам без зоны) |
 | Редакторская (админская) оценка (D1) | **Временно, бэкендер планирует переделать вместе с `username` (14.10.2026) — фронт на роль не опирается.** В `a4562e6` у отзыва было поле `author_role` (`user`/`admin`), проставляемое только на бэке; в `8c3eebe` его заменила роль автора `user.role` в `ReviewReadSchema` (`GET /reviews/`, `/reviews/me`, ответы `POST`/`PUT`). Фронт читает отзывы с автором, но признак «редакторская оценка» из роли не выводит, поэтому флаг `adminReviews` выключен. Решение по роли ждём от бэкендера |
+| `POST /energy-drinks/` отвечал `500` | `AttributeError: 'EnergyDrinkService' object has no attribute 'read_schema'` (проверено в docker на `f14c044`); исправлено в `4fd854c` (`super().__init__(repository, EnergyDrinkReadSchema)`), по коду. На живом стеке после правки не проверял |
 | `get_count` грузил все строки | `select(func.count())` в `5e47788` |
 | Маршруты `/auth/{id}` (`GET`/`PATCH`/`DELETE`, только superuser) | Решено в ревью #327: оставляем («вырезать их сложнее, чем добавить»); фронт их не использует, пока не понадобятся |
 | Реальный IP клиента для rate limit | Решено в ревью #327: бэк берёт левое значение `X-Forwarded-For` (`get_ip_from_header()`), а проставляет его фронт. Сделано (F7, #328): заголовок ставится на всех серверных запросах, кроме идущих в Data Cache (`next.revalidate`) — заголовки входят в ключ кеша; их бэк видит редко (≈1 раз в минуту на маршрут), общий адрес фронта лимиту не мешает. Проверено по `X-Ratelimit-Remaining`: клиенты с разными IP получают отдельные счётчики |
