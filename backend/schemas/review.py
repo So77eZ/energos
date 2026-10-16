@@ -40,6 +40,7 @@ class ReviewUpdateSchema(BaseSchema):
 class ReviewReadSchema(ReviewBase):
     id: int
     user: SimpleUserSchema
+    created_at: str
 
 
 class ReviewForUserSchema(ReviewBase):
