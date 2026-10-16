@@ -22,7 +22,7 @@ class EnergyDrinkService(
     ]
 ):
     def __init__(self, repository: EnergyDrinkRepository):
-        self.repository = repository
+        super().__init__(repository, EnergyDrinkReadSchema)
 
     async def update_image(self, energy_drink_id: int, image_file: UploadFile) -> EnergyDrinkReadSchema:
         energy_drink = await self.repository.get_by_id(energy_drink_id)
