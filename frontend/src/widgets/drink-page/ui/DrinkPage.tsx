@@ -219,9 +219,8 @@ export function DrinkPage({
         ) : null
       )}
 
-      {/* Без автора, комментария и даты (их нет в выдаче API) лента отзывов — набор анонимных
-          оценок; пока бэк не отдаёт их, показываем только сводку выше (reviewAuthors). */}
-      {FEATURES.reviewAuthors && otherReviews.length > 0 && (
+      {/* Лента отзывов сообщества: автор, комментарий и дата приходят в `GET /reviews/?energy_drink_id=…`. */}
+      {otherReviews.length > 0 && (
         <section className="other-reviews-section">
           <div className="section-head">
             <h2 className="section-title">
