@@ -2,16 +2,19 @@ import { httpRequest, rawRequest, bearerHeaders, API_V1 } from '@shared/api/http
 import { fetchAllPages } from '@shared/api/paginate'
 import type { ReviewMetrics } from '@entities/review/@x/drink'
 import type { Drink, DrinkCreate, DrinkUpdate, DrinkStats } from '../model/types'
+import { toUtcIso } from '../lib/api-date'
 
 const BASE = `${API_V1}/energy-drinks`
 
 // Что отдаёт бэк: EnergyDrinkWithMetricsReadSchema (список) / EnergyDrinkReadSchema (create,
-// update, image — без метрик). image_url и updated_at в API нет — достраиваем в toDrink.
+// update, image — без метрик). image_url и updated_at в API нет — достраиваем в toDrink;
+// created_at приходит с часовым поясом (`…Z`), но `toUtcIso` страхует от дат без зоны.
 interface ApiDrink {
   id: number
   name: string
   price: number | null
   no_sugar: boolean
+  created_at?: string | null
   avg_rating?: number | null
   reviews_count?: number
   avg_acidity?: number | null
@@ -51,15 +54,19 @@ const toDrink = (d: ApiDrink): Drink => ({
   price: d.price ?? null,
   no_sugar: d.no_sugar,
   image_url: drinkImageUrl(d.id),
-  created_at: null, // F1: берёт created_at из API (#329)
+  created_at: toUtcIso(d.created_at),
   updated_at: null,
   stats: toStats(d),
 })
 
 export const drinkApi = {
-  /** Все напитки (бэк пагинирует — собираем страницы). */
+  /** Все напитки: число страниц считается по `GET /energy-drinks/count`, страницы грузятся параллельно. */
   list: async (): Promise<Drink[]> =>
-    (await fetchAllPages<ApiDrink>(`${BASE}/`, { next: { revalidate: 60, tags: ['drinks', 'reviews'] } })).map(toDrink),
+    (await fetchAllPages<ApiDrink>(
+      `${BASE}/`,
+      { next: { revalidate: 60, tags: ['drinks', 'reviews'] } },
+      `${BASE}/count`,
+    )).map(toDrink),
 
   get: async (id: number): Promise<Drink> =>
     toDrink(await httpRequest<ApiDrink>(`${BASE}/${id}`, { next: { revalidate: 60, tags: ['drinks'] } })),
