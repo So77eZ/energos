@@ -5,6 +5,7 @@ export {
   METRIC_COLOR_VARS,
   METRIC_KEYS,
   calcRating,
+  ratingFromMetrics,
 } from './model/types'
 export type { ReviewEmoji, EmojiAggregate } from './model/emoji-types'
 export { aggregateEmojis } from './model/emoji-types'
@@ -16,6 +17,7 @@ export { MiniMetrics } from './ui/MiniMetrics'
 export { HexRadar } from './ui/HexRadar'
 export { MetricDotRow } from './ui/MetricDotRow'
 export { MetricRatingInput } from './ui/MetricRatingInput'
+export { OverallRatingInput } from './ui/OverallRatingInput'
 export { MetricShapes } from './ui/MetricShapes'
 export { AdminReviewCard } from './ui/AdminReviewCard'
 export { AvgReviewCard } from './ui/AvgReviewCard'
