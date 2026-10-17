@@ -3,12 +3,15 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useActionState, useRef, useState, useTransition } from 'react'
-import type { Drink } from '@entities/drink'
+import { DrinkImg, type Drink } from '@entities/drink'
 import { METRIC_KEYS, MetricRatingInput, type Review, type ReviewMetrics } from '@entities/review'
 import { ROUTES } from '@shared/config/routes'
 import { FEATURES } from '@shared/config/features'
 import { Icons } from '@shared/ui/icons'
 import { deleteDrinkAction } from '../model/actions'
+
+// Должен совпадать с MAX_ENERGY_DRINK_IMAGE_SIZE на бэке (.env, сейчас 1 МБ).
+const MAX_IMAGE_BYTES = Number(process.env.NEXT_PUBLIC_MAX_IMAGE_BYTES ?? 1_048_576)
 
 interface DrinkFormProps {
   mode: 'create' | 'edit'
@@ -51,6 +54,7 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
   const [price, setPrice] = useState<string>(drink?.price?.toString() ?? '')
   const [noSugar, setNoSugar] = useState(drink?.no_sugar ?? false)
   const [isDeletePending, startDelete] = useTransition()
+  const [fileError, setFileError] = useState('')
 
   const isCreate = mode === 'create'
 
@@ -60,7 +64,16 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (file) setPreview(URL.createObjectURL(file))
+    if (!file) return
+    // Бэк режет тело запроса по MAX_ENERGY_DRINK_IMAGE_SIZE (413); на сервере форма
+    // ошибок не показывает и роняла страницу — проверяем заранее.
+    if (file.size > MAX_IMAGE_BYTES) {
+      setFileError(`Файл ${(file.size / 1048576).toFixed(1)} МБ — максимум ${(MAX_IMAGE_BYTES / 1048576).toFixed(0)} МБ. Сожмите фото.`)
+      e.target.value = ''
+      return
+    }
+    setFileError('')
+    setPreview(URL.createObjectURL(file))
   }
 
   function clearFile() {
@@ -103,8 +116,12 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
               <div className="adm-upload">
                 {preview ? (
                   <div className="adm-upload-preview">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={preview} alt="" style={{ maxHeight: 170, width: 'auto', objectFit: 'contain' }} />
+                    <DrinkImg
+                      src={preview}
+                      alt=""
+                      style={{ maxHeight: 170, width: 'auto', objectFit: 'contain' }}
+                      fallback={<div className="adm-upload-empty"><Icons.upload w={32} /><span>Изображение ещё не загружено</span></div>}
+                    />
                     {preview !== drink?.image_url && (
                       <button
                         type="button"
@@ -134,6 +151,7 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
                   style={{ display: 'none' }}
                   onChange={handleFile}
                 />
+                {fileError && <p className="auth-error" role="alert">{fileError}</p>}
               </div>
             </div>
 

@@ -6,6 +6,7 @@ import { reviewApi } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
+import { localizeReviewError } from './review-errors'
 
 const getNum = (formData: FormData, name: string) => {
   const v = Number(formData.get(name))
@@ -45,7 +46,7 @@ export async function saveReviewAction(
   } catch (e) {
     await redirectIfSessionExpired(e) // 401 → clear+redirect; иначе вниз
     if (e instanceof RateLimitError) return { error: e.message }
-    return { error: e instanceof Error ? e.message : 'Ошибка сохранения' }
+    return { error: localizeReviewError(e, 'Ошибка сохранения') }
   }
 
   updateTag('reviews')
