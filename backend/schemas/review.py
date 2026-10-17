@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import Field
@@ -40,7 +41,7 @@ class ReviewUpdateSchema(BaseSchema):
 class ReviewReadSchema(ReviewBase):
     id: int
     user: SimpleUserSchema
-    created_at: str
+    created_at: datetime
 
 
 class ReviewForUserSchema(ReviewBase):
