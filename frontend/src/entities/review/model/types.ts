@@ -10,6 +10,8 @@ export interface ReviewMetrics {
 export interface Review extends ReviewMetrics {
   id: number
   energy_drink_id: number
+  /** Общая оценка отзыва (1–5, целое), как её отправил автор. */
+  rating: number
   user_id: number | null
   username: string | null
   comment: string | null
@@ -21,13 +23,12 @@ export interface Review extends ReviewMetrics {
 }
 
 // Напиток передаётся в пути (POST /reviews/{energy_drink_id}), автор — из токена.
-// `overall` бэк требует в теле; на фронте его даёт calcRating(metrics) (см. reviewApi).
-// comment в ReviewCreateSchema нет — reviewApi шлёт его, только если он непустой
-// (вопрос бэкендеру: docs/mvp-backend-questions.md).
-export type ReviewCreate = ReviewMetrics & { comment?: string | null }
+// `rating` — отдельная оценка «насколько понравился напиток» (целое 1–5), её ставит пользователь;
+// это не среднее метрик. `comment` reviewApi шлёт, только если он непустой.
+export type ReviewCreate = ReviewMetrics & { rating: number; comment?: string | null }
 
 // PUT отзыва меняет только оценки и комментарий: напиток и автора бэк не трогает (#103).
-export type ReviewUpdate = ReviewMetrics & { comment: string | null }
+export type ReviewUpdate = ReviewMetrics & { rating: number; comment: string | null }
 
 export const METRIC_LABELS: Record<keyof ReviewMetrics, string> = {
   acidity: 'Кислотность',
@@ -59,6 +60,12 @@ export const METRIC_COLOR_VARS: Record<keyof ReviewMetrics, string> = {
 }
 
 export const METRIC_KEYS = Object.keys(METRIC_LABELS) as Array<keyof ReviewMetrics>
+
+/** Целая оценка 1–5 по среднему метрик — только там, где пользователь её не выбирает сам
+ *  (редакторская оценка из админской формы напитка). */
+export function ratingFromMetrics(metrics: ReviewMetrics): number {
+  return Math.min(5, Math.max(1, Math.round(calcRating(metrics))))
+}
 
 export function calcRating(metrics: ReviewMetrics): number {
   const sum = METRIC_KEYS.reduce((acc, k) => acc + metrics[k], 0)

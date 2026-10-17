@@ -2,7 +2,13 @@
 
 import { useActionState, useState } from 'react'
 import { Icons } from '@shared/ui/icons'
-import { METRIC_KEYS, MetricRatingInput, type Review, type ReviewMetrics } from '@entities/review'
+import {
+  METRIC_KEYS,
+  MetricRatingInput,
+  OverallRatingInput,
+  type Review,
+  type ReviewMetrics,
+} from '@entities/review'
 import { saveReviewAction } from '../model/actions'
 
 interface ReviewFormProps {
@@ -36,6 +42,7 @@ function pickInitialMetrics(review: Review | null | undefined): ReviewMetrics {
 export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFormProps) {
   const [state, formAction, isPending] = useActionState(saveReviewAction, null)
   const [metrics, setMetrics] = useState<ReviewMetrics>(() => pickInitialMetrics(editReview))
+  const [rating, setRating] = useState(editReview?.rating ?? 0)
   const [comment, setComment] = useState(editReview?.comment ?? '')
 
   const isEdit = !!editReview
@@ -43,7 +50,7 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
   const filled = METRIC_KEYS.filter((k) => metrics[k] > 0).length
   const sum = METRIC_KEYS.reduce((s, k) => s + metrics[k], 0)
   const avg = filled > 0 ? sum / filled : 0
-  const canSubmit = filled === 6 && !isPending
+  const canSubmit = filled === 6 && rating > 0 && !isPending
 
   const setM = (k: keyof ReviewMetrics, v: number) => {
     setMetrics((m) => ({ ...m, [k]: v }))
@@ -81,6 +88,8 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
 
       <div className="rev-form-body">
         {state?.error && <p className="rev-form-error">{state.error}</p>}
+
+        <OverallRatingInput value={rating} onChange={setRating} name="rating" />
 
         {METRIC_KEYS.map((k) => (
           <MetricRatingInput
