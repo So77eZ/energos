@@ -24,6 +24,15 @@ export class SessionExpiredError extends Error {
   }
 }
 
+/** Прочая ошибка бэка: сообщение — `detail` как есть (на английском), `status` — HTTP-код.
+ *  Локализовать надо по `status` (и коду, если бэк его когда-нибудь отдаст), а не по тексту. */
+export class ApiError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
 /** Единая точка маппинга статусов ответа в типизированные ошибки.
  *  Любой authed-запрос (с телом и без) обязан пройти через неё. */
 export function assertResponseOk(res: Response): void {
@@ -97,7 +106,7 @@ export async function rawRequest(path: string, options?: HttpOptions): Promise<R
 export async function httpRequest<T>(path: string, options?: HttpOptions): Promise<T> {
   const res = await rawRequest(path, options)
   assertResponseOk(res) // 401 → SessionExpiredError, 429 → RateLimitError (ДО generic)
-  if (!res.ok) throw new Error(await parseError(res))
+  if (!res.ok) throw new ApiError(res.status, await parseError(res))
   // 204 No Content (DELETE, logout) — тела нет, res.json() бросил бы.
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
