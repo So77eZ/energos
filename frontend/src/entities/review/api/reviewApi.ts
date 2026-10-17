@@ -5,11 +5,12 @@ import type { Review, ReviewCreate, ReviewMetrics, ReviewUpdate } from '../model
 const BASE = `${API_V1}/reviews`
 
 // Что отдаёт бэк: ReviewReadSchema = оценки (целые 1–5) + rating + comment + id + автор.
-// Привязки к напитку (`energy_drink_id`) и дат в ответе нет — напиток известен из запроса.
+// Привязки к напитку (`energy_drink_id`) в ответе нет — напиток известен из запроса.
 interface ApiReview extends ReviewMetrics {
   id: number
   rating: number
   comment: string | null
+  created_at?: string
   user: { id: number; username: string; role: string }
 }
 
@@ -28,7 +29,7 @@ const fromApi = (r: ApiReview, drinkId: number): Review => ({
   comment: r.comment,
   // Отзыв админа показываем отдельно (карточка «редакции» вверху страницы напитка).
   from_admin: r.user.role === 'admin',
-  created_at: null,
+  created_at: r.created_at ?? null, // бэк отдаёт ISO с часовым поясом (`…Z`)
   updated_at: null,
 })
 

@@ -10,7 +10,7 @@ afterEach(() => vi.unstubAllGlobals())
 describe('reviewApi', () => {
   it('byDrink: GET /reviews/?energy_drink_id=…, автор и комментарий берутся из ответа', async () => {
     const fetchMock = vi.fn().mockResolvedValue(json([
-      { id: 1, ...scores, rating: 4, comment: 'огонь', user },
+      { id: 1, ...scores, rating: 4, comment: 'огонь', user, created_at: '2026-10-17T12:50:45.178703Z' },
       { id: 2, ...scores, rating: 3, comment: null, user: { ...user, id: 10, username: 'Other' } },
     ]))
     vi.stubGlobal('fetch', fetchMock)
@@ -23,6 +23,9 @@ describe('reviewApi', () => {
     expect(reviews.map((r) => r.energy_drink_id)).toEqual([7, 7])
     expect(reviews[0]).toMatchObject({ id: 1, rating: 4, comment: 'огонь', user_id: 9, username: 'NeonFox', from_admin: false })
     expect(reviews[1]).toMatchObject({ user_id: 10, username: 'Other', comment: null })
+    // дата — как пришла с бэка (ISO с зоной); если её нет в ответе — null
+    expect(reviews[0].created_at).toBe('2026-10-17T12:50:45.178703Z')
+    expect(reviews[1].created_at).toBeNull()
   })
 
   it('byDrink: отзыв автора с ролью admin помечается from_admin', async () => {
