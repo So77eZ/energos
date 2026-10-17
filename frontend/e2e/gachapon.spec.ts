@@ -3,6 +3,31 @@ import { test, expect, type Page, type ConsoleMessage } from '@playwright/test'
 // reduced-motion → быстрый спин (0.35s), тесты не ждут 7s.
 test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
+// Рулетка вне MVP и выключена флагом (src/shared/config/features.ts). Спеки читают тот же
+// NEXT_PUBLIC_FF_GACHAPON — запускать с тем же значением, что и сборку фронта.
+const gachaponOn = ['1', 'true'].includes(process.env.NEXT_PUBLIC_FF_GACHAPON ?? '')
+
+test.describe('gachapon выключен флагом (вне MVP)', () => {
+  test.skip(gachaponOn, 'Флаг включён — работает набор тестов ниже')
+
+  test('в меню «Ещё» нет «Рулетки», в мобильном меню — «Случайного напитка»', async ({ page }) => {
+    await page.setViewportSize({ width: 1400, height: 900 })
+    await page.goto('/')
+    // button — настоящая кнопка; одноимённый span в .hdr-nav-measure скрыт и нужен для замеров.
+    const more = page.locator('button.hdr-more-btn')
+    if (await more.count()) {
+      await more.first().click()
+      await expect(page.locator('.hdr-more-menu .hdr-more-item', { hasText: 'Рулетка' })).toHaveCount(0)
+    }
+
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.goto('/')
+    await page.locator('.hdr-mobile-menu').click()
+    await expect(page.getByRole('dialog', { name: 'Меню' })).toHaveClass(/\bopen\b/)
+    await expect(page.getByText('Случайный напиток')).toHaveCount(0)
+  })
+})
+
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
     try { localStorage.setItem('energos_age_verified', 'true') } catch {}
@@ -18,32 +43,29 @@ function trackErrors(page: Page): string[] {
   return errors
 }
 
-// Открыть оверлёй гачапона и дождаться загрузки пула.
-// Гачапон фетчит /api клиентом. Дефолтный dev-сервер (npm run dev на :3000)
-// проксирует client-фетчи на /api/.../ через Caddy `handle_path /api/*`, который
-// срезает префикс — FastAPI redirect_slashes отдаёт Location без /api, и фетч
-// падает в error-стейт. Прод (Caddy :80) бьёт /api напрямую и работает.
-// Поэтому: запускать против поднятого docker-стека → E2E_BASE_URL=http://localhost.
-// В окружении без рабочего client-proxy тест помечается skipped, а не падает.
+// Открыть оверлёй гачапона и дождаться загрузки пула. Пул грузит server action на сервере Next
+// (features/gachapon/actions.ts), браузеру /api не нужен.
 async function openRoulette(page: Page) {
   await page.setViewportSize({ width: 1400, height: 900 })
   await page.goto('/')
   await page.locator('.hdr-more-btn').first().click()
   await page.locator('.hdr-more-menu .hdr-more-item', { hasText: 'Рулетка' }).click()
   await expect(page.locator('.gacha-machine')).toBeVisible()
-
-  const outcome = await Promise.race([
-    page.getByText('Не удалось загрузить напитки').waitFor({ state: 'visible', timeout: 9000 }).then(() => 'error' as const),
-    page.locator('.gacha-window').waitFor({ state: 'visible', timeout: 9000 }).then(() => 'ok' as const),
-  ]).catch(() => 'ok' as const)
-
-  test.skip(
-    outcome === 'error',
-    'gachapon client /api недоступен в этом окружении — запускать против docker-стека (E2E_BASE_URL=http://localhost)',
-  )
+  await expect(page.getByText('Не удалось загрузить напитки')).toBeHidden()
+  await expect(page.locator('.gacha-window')).toBeVisible({ timeout: 9000 })
 }
 
 test.describe('gachapon', () => {
+  test.skip(!gachaponOn, 'Флаг gachapon выключен (рулетка вне MVP)')
+
+  // В проде Caddy проксирует /api только при DEPLOY_ENV=dev, и браузер до API не достаёт.
+  // Раньше пул грузился из браузера и в проде падал в «Не удалось загрузить напитки».
+  test('рулетка работает, когда браузеру недоступен /api (как в проде)', async ({ page }) => {
+    await page.route(/\/api\/v1\//, (route) => route.abort())
+    await openRoulette(page)
+    await expect(page.locator('.gacha-won-name')).toBeVisible({ timeout: 8000 })
+  })
+
   test('«Ещё» содержит «Рулетка» (gachapon включён по умолчанию) → открывает оверлей → приземление', async ({ page }) => {
     const errors = trackErrors(page)
     await openRoulette(page)

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { evaluateAchievements } from '@entities/achievement'
 import type { Drink } from '@entities/drink'
 import { enrichDrinks, tierFromRating } from '@entities/drink'
-import { calcRating, type Review } from '@entities/review'
+import type { Review } from '@entities/review'
 import { Avatar, pickAvatarColor, type User } from '@entities/user'
 import { logoutAction } from '@features/auth/model/actions'
 import { AvatarEditorSheet, resolveAvatar, readAvatarDemo, type ResolvedAvatar } from '@features/avatar-editor'
@@ -75,7 +75,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   }, [tab])
 
   const drinkMap = useMemo(() => new Map(drinks.map((d) => [d.id, d])), [drinks])
-  const enrichedAll = useMemo(() => enrichDrinks(drinks, []), [drinks])
+  const enrichedAll = useMemo(() => enrichDrinks(drinks), [drinks])
   const enrichedMap = useMemo(() => new Map(enrichedAll.map((d) => [d.id, d])), [enrichedAll])
 
   const { favorites: favIds } = useFavorites()
@@ -117,7 +117,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
     // Тир по СОБСТВЕННОЙ оценке юзера (глобальный тир напитка требует всех отзывов,
     // которых на клиенте нет). «Универсал» = отзывы во всех тирах по своим оценкам.
     const tiersCovered = new Set(
-      reviews.map((r) => tierFromRating(calcRating(r))).filter(Boolean),
+      reviews.map((r) => tierFromRating(r.rating)).filter(Boolean),
     ).size
     return evaluateAchievements({
       reviewsCount: reviews.length,

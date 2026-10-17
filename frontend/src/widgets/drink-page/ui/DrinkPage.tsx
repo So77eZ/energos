@@ -7,12 +7,9 @@ import { enrichDrink, enrichDrinks, findSimilarDrinks } from '@entities/drink'
 import {
   AdminReviewCard,
   AvgReviewCard,
-  calcRating,
   MyReviewCard,
-  METRIC_KEYS,
   UserReviewCard,
   type Review,
-  type ReviewMetrics,
 } from '@entities/review'
 import { Avatar, type User } from '@entities/user'
 import { BadgeCluster } from '@entities/achievement'
@@ -32,9 +29,6 @@ interface DrinkPageProps {
   drinks: Drink[]
   activeDrink: Drink
   initialReviews: Review[]
-  /** All reviews across the catalog — used to enrich every drink for the
-   *  SimilarRail. Falls back to initialReviews if not provided. */
-  allReviews?: Review[]
   currentUser: User | null
   myReview: Review | null
   autoOpenReview?: boolean
@@ -79,7 +73,7 @@ function filterReviews(reviews: Review[], rating: RatingFilter, period: ReviewPe
   let arr = reviews
   if (rating !== 'all') {
     const min = Number(rating)
-    arr = arr.filter((r) => Math.round(calcRating(r)) >= min)
+    arr = arr.filter((r) => r.rating >= min)
   }
   if (period !== 'all') {
     const cutoff = Date.now() - PERIOD_MS[period]
@@ -89,20 +83,6 @@ function filterReviews(reviews: Review[], rating: RatingFilter, period: ReviewPe
     })
   }
   return arr
-}
-
-function averageMetrics(reviews: Review[]): ReviewMetrics | null {
-  if (reviews.length === 0) return null
-  const sum = METRIC_KEYS.reduce<Record<string, number>>((acc, k) => ({ ...acc, [k]: 0 }), {})
-  for (const r of reviews) {
-    for (const k of METRIC_KEYS) sum[k] += r[k]
-  }
-  return Object.fromEntries(METRIC_KEYS.map((k) => [k, sum[k] / reviews.length])) as unknown as ReviewMetrics
-}
-
-function averageRating(reviews: Review[]): number {
-  if (reviews.length === 0) return 0
-  return reviews.reduce((s, r) => s + calcRating(r), 0) / reviews.length
 }
 
 function sortedReviews(reviews: Review[], sort: ReviewSort): Review[] {
@@ -115,10 +95,10 @@ function sortedReviews(reviews: Review[], sort: ReviewSort): Review[] {
       arr.sort((a, b) => (Date.parse(a.created_at ?? '') || 0) - (Date.parse(b.created_at ?? '') || 0))
       break
     case 'rating_desc':
-      arr.sort((a, b) => calcRating(b) - calcRating(a))
+      arr.sort((a, b) => b.rating - a.rating)
       break
     case 'rating_asc':
-      arr.sort((a, b) => calcRating(a) - calcRating(b))
+      arr.sort((a, b) => a.rating - b.rating)
       break
   }
   return arr
@@ -128,7 +108,6 @@ export function DrinkPage({
   drinks,
   activeDrink,
   initialReviews,
-  allReviews,
   currentUser,
   myReview,
   autoOpenReview = false,
@@ -155,12 +134,11 @@ export function DrinkPage({
     el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [formOpen])
 
-  const enriched = useMemo(() => enrichDrink(activeDrink, initialReviews), [activeDrink, initialReviews])
+  const enriched = useMemo(() => enrichDrink(activeDrink), [activeDrink])
   const similar = useMemo(() => {
     if (!enriched.metrics) return []
-    const pool = enrichDrinks(drinks, allReviews ?? initialReviews)
-    return findSimilarDrinks(enriched, pool, 4)
-  }, [enriched, drinks, allReviews, initialReviews])
+    return findSimilarDrinks(enriched, enrichDrinks(drinks), 4)
+  }, [enriched, drinks])
 
   const adminReview = useMemo(() => initialReviews.find((r) => r.from_admin) ?? null, [initialReviews])
   const userReviews = useMemo(() => initialReviews.filter((r) => !r.from_admin), [initialReviews])
@@ -168,8 +146,9 @@ export function DrinkPage({
     () => userReviews.filter((r) => r.id !== myReview?.id),
     [userReviews, myReview],
   )
-  const avgMetrics = useMemo(() => averageMetrics(userReviews), [userReviews])
-  const avgRating = useMemo(() => averageRating(userReviews), [userReviews])
+  // Сводка по отзывам — с бэка (`drink.stats`), как и в каталоге: цифры не расходятся.
+  const avgMetrics = enriched.metrics
+  const avgRating = enriched.rating ?? 0
   const visibleOthers = useMemo(
     () => sortedReviews(filterReviews(otherReviews, ratingFilter, period), sort),
     [otherReviews, ratingFilter, period, sort],
@@ -208,7 +187,7 @@ export function DrinkPage({
             {avgMetrics && (
               <AvgReviewCard
                 metrics={avgMetrics}
-                count={userReviews.length}
+                count={enriched.reviewCount}
                 rating={avgRating}
               />
             )}
@@ -240,9 +219,8 @@ export function DrinkPage({
         ) : null
       )}
 
-      {/* Без автора, комментария и даты (их нет в выдаче API) лента отзывов — набор анонимных
-          оценок; пока бэк не отдаёт их, показываем только сводку выше (reviewAuthors). */}
-      {FEATURES.reviewAuthors && otherReviews.length > 0 && (
+      {/* Лента отзывов сообщества: автор, комментарий и дата приходят в `GET /reviews/?energy_drink_id=…`. */}
+      {otherReviews.length > 0 && (
         <section className="other-reviews-section">
           <div className="section-head">
             <h2 className="section-title">

@@ -8,12 +8,14 @@ const MAX_PAGES = 50 // предохранитель от бесконечног
 
 type FetchOpts = Parameters<typeof httpRequest>[1]
 
-/** Собирает все страницы списка. Одинаковые вызовы в одном рендере Next дедуплицирует. */
+/** Собирает все страницы списка. Одинаковые вызовы в одном рендере Next дедуплицирует.
+ *  В `path` уже может быть строка запроса (`/reviews/?energy_drink_id=1`). */
 export async function fetchAllPages<T>(path: string, options?: FetchOpts): Promise<T[]> {
   const all: T[] = []
+  const sep = path.includes('?') ? '&' : '?'
   for (let page = 0; page < MAX_PAGES; page++) {
     const chunk = await httpRequest<T[]>(
-      `${path}?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`,
+      `${path}${sep}limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`,
       options,
     )
     all.push(...chunk)

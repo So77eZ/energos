@@ -4,6 +4,7 @@
 // TweaksPanel (fab внизу справа), и в профиле пользователя (вкладка
 // «Оформление»). Если изменишь секции тут — оба места обновятся.
 
+import { FEATURES } from '@shared/config/features'
 import { ACCENT_MAP, useTheme, type Accent } from '@shared/lib/theme'
 import { FONTS, useUserPreferences, type FontId } from '@shared/lib/user-preferences'
 import { Icons } from '@shared/ui/icons'
@@ -103,15 +104,17 @@ export function TweaksBody() {
           />
           <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
         </label>
-        <label className="twk-toggle">
-          <span className="twk-toggle-label">Кнопка Гачапон</span>
-          <input
-            type="checkbox"
-            checked={theme.gachapon}
-            onChange={(e) => theme.setGachapon(e.target.checked)}
-          />
-          <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
-        </label>
+        {FEATURES.gachapon && (
+          <label className="twk-toggle">
+            <span className="twk-toggle-label">Кнопка Гачапон</span>
+            <input
+              type="checkbox"
+              checked={theme.gachapon}
+              onChange={(e) => theme.setGachapon(e.target.checked)}
+            />
+            <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
+          </label>
+        )}
       </section>
 
       <section className="twk-section">

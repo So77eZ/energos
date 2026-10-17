@@ -15,11 +15,14 @@ interface HexRadarProps {
   /** Optional second set drawn dashed for comparison. */
   compareMetrics?: ReviewMetrics | null
   compareColor?: string
+  /** Общий рейтинг в центре (`avg_rating` с бэка — отдельная оценка, не среднее шести метрик).
+   *  Без него в центре среднее метрик. */
+  rating?: number | null
 }
 
 const RING_LEVELS = [1, 2, 3, 4, 5] as const
 
-export function HexRadar({ metrics, size = 220, compareMetrics = null, compareColor = 'var(--c-pink)' }: HexRadarProps) {
+export function HexRadar({ metrics, size = 220, compareMetrics = null, compareColor = 'var(--c-pink)', rating }: HexRadarProps) {
   const cx = size / 2
   const cy = size / 2
   const R = size / 2 - 28
@@ -84,10 +87,10 @@ export function HexRadar({ metrics, size = 220, compareMetrics = null, compareCo
         )
       })}
       <text x={cx} y={cy - 5} textAnchor="middle" fontFamily="'Russo One', sans-serif" fontWeight={700} fontSize={22} fill="var(--txt)">
-        {calcRating(metrics).toFixed(1)}
+        {(rating ?? calcRating(metrics)).toFixed(1)}
       </text>
       <text x={cx} y={cy + 10} textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize={8} fill="var(--txt-dim)" letterSpacing={1}>
-        СРЕДНИЙ
+        {rating != null ? 'РЕЙТИНГ' : 'СРЕДНИЙ'}
       </text>
     </svg>
   )
