@@ -2,7 +2,7 @@
 
 Документ описывает API, реализованный в `backend/api`. API построено на
 FastAPI, использует JWT Bearer-аутентификацию и версионируется через префикс
-`/v1`. Актуально для ветки `mvp` на коммите `f14c044`.
+`/v1`. Актуально для ветки `mvp` на коммите `7d09bbb`.
 
 ## Базовые URL
 
@@ -167,7 +167,7 @@ Authorization: Bearer <access_token>
 
 | Метод и путь | Тело запроса | Ответ |
 | --- | --- | --- |
-| `POST /energy-drinks/` | JSON `EnergyDrinkCreateSchema` | `201`, `EnergyDrinkReadSchema` (на `f14c044` отвечает `500`, см. «Известные расхождения») |
+| `POST /energy-drinks/` | JSON `EnergyDrinkCreateSchema` | `201`, `EnergyDrinkReadSchema` |
 | `PUT /energy-drinks/{energy_drink_id}` | JSON `EnergyDrinkUpdateSchema` | `200`, `EnergyDrinkReadSchema` |
 | `DELETE /energy-drinks/{energy_drink_id}` | нет | `204` |
 | `POST /energy-drinks/{energy_drink_id}/image` | `multipart/form-data`, поле `image` (файл) | `201`, `EnergyDrinkReadSchema` |
@@ -209,15 +209,16 @@ Authorization: Bearer <access_token>
 обновление). Идентификаторы автора и напитка нельзя изменить через этот
 маршрут.
 
-`ReviewReadSchema` — это `ReviewCreateSchema` плюс `id` и автор
-`user: {id, username, role}`. `energy_drink_id` и дат в ответе нет. При создании
+`ReviewReadSchema` — это `ReviewCreateSchema` плюс `id`, автор
+`user: {id, username, role}` и `created_at` (datetime, ISO 8601 с часовым поясом,
+`Z`). `energy_drink_id` и `updated_at` в ответе нет. При создании
 отзыв привязывается к напитку из `{energy_drink_id}` и текущему пользователю.
 Если напиток или отзыв не найден, возвращается `404`; при попытке изменить
 или удалить чужой отзыв — `403`.
 
 Один пользователь может оставить на напиток только один отзыв: повторное
 создание возвращает `409` с `{"detail": "User has already submitted a review
-for this energy drink"}`.
+for this Energy Drink"}`.
 
 ## Rate limiting
 
@@ -263,8 +264,7 @@ for this energy drink"}`.
 
 Найдено при проверке `mvp` в docker; пока не исправлено:
 
-- `POST /energy-drinks/` отвечает `500` (`'EnergyDrinkService' object has no
-  attribute 'read_schema'`): сервис напитка не задаёт `read_schema`;
-- нет `has_image`/`image_url` у напитка, а в отзывах — `energy_drink_id` и дат;
+- нет `has_image`/`image_url` у напитка, а в отзывах — `energy_drink_id`;
+  `GET /reviews/me` не говорит, к какому напитку относится отзыв, а
   `GET /reviews/` без `energy_drink_id` отвечает `422`, поэтому общей ленты отзывов
   нет — подробности и вопросы в `docs/mvp-backend-questions.md`.
