@@ -2,7 +2,7 @@
 
 Документ описывает API, реализованный в `backend/api`. API построено на
 FastAPI, использует JWT Bearer-аутентификацию и версионируется через префикс
-`/v1`.
+`/v1`. Актуально для ветки `mvp` на коммите `7d09bbb`.
 
 ## Базовые URL
 
@@ -15,6 +15,12 @@ FastAPI, использует JWT Bearer-аутентификацию и вер�
 обращении к приложению префикс `/api` нужно убрать. Маршруты с завершающим `/`
 поддерживаются FastAPI; при его отсутствии FastAPI может вернуть redirect.
 
+Caddy (`server/Caddyfile`) проксирует `/api` на бэкенд только при
+`DEPLOY_ENV=dev`. В остальных окружениях браузер до API не достаёт: фронт
+(Next.js) ходит на бэкенд сам, по адресу из `API_ORIGIN`
+(`http://backend:8000`), а картинки напитков отдаёт собственным маршрутом
+`/drink-image/{id}`.
+
 ## Общие правила
 
 ### Аутентификация
@@ -26,7 +32,28 @@ Authorization: Bearer <access_token>
 ```
 
 Регистрация, вход, сброс пароля и подтверждение e-mail используют стандартные
-маршруты и схемы FastAPI Users.
+маршруты и схемы FastAPI Users. Время жизни токена — `TOKEN_LIFETIME_SECONDS`.
+В самом токене только `sub`, `aud` и `exp`: e-mail, признак администратора и
+подтверждения e-mail нужно получать через `GET /auth/me`.
+
+Права проверяются так:
+
+- **подтверждённый пользователь** — активный пользователь с
+  `is_verified=true`, иначе `403` с `detail: "User is not verified"`;
+- **администратор** — активный пользователь с `is_superuser=true`, иначе `403`
+  с `detail: "Admin privileges required"`. Поля `role` у пользователя больше
+  нет. Администратор не освобождается от проверки подтверждения e-mail.
+
+### Пагинация и сортировка
+
+Списковые маршруты принимают `limit` (по умолчанию `20`), `offset` (по
+умолчанию `0`) и `order_by` (по умолчанию `id`). Верхней границы `limit` нет.
+Напитки и отзывы напитка принимают ещё `order_direction` (`asc` по умолчанию или `desc`).
+
+`order_by` — имя поля модели (для напитков, например, `id`, `name`, `price`,
+`no_sugar`, `created_at`, а также метрики `avg_rating`, `reviews_count`,
+`avg_acidity` …). Имя несуществующего поля даёт `422` с
+`{"detail": "Invalid order_by field: ..."}`.
 
 ### Ошибки
 
@@ -36,45 +63,78 @@ Authorization: Bearer <access_token>
 {"detail": "..."}
 ```
 
-Для ошибок валидации `detail` содержит список ошибок Pydantic. Основные статусы:
+Значение `detail` бывает трёх видов:
 
-- `400` — некорректный JSON или бизнес-ошибка;
+- строка — текст или код: `"Energy drink with id 999 not found"`,
+  `"User is not verified"`, `"RESET_PASSWORD_BAD_TOKEN"`,
+  `"REGISTER_USER_ALREADY_EXISTS"`, `"LOGIN_BAD_CREDENTIALS"`;
+- объект `{"code": "...", "reason": "..."}` — ошибка пароля при регистрации и
+  сбросе (`reason`: `Password should be at least 8 characters`,
+  `Password should not contain e-mail`);
+- список ошибок Pydantic — при ошибках валидации (`422`).
+
+Основные статусы:
+
+- `400` — некорректный JSON, битый токен подтверждения/сброса, неверный пароль;
 - `401` — отсутствует/неверен токен либо неверные учётные данные;
-- `403` — недостаточно прав или пользователь не подтверждён;
+- `403` — недостаточно прав, пользователь не подтверждён, чужой отзыв;
 - `404` — объект не найден;
+- `409` — конфликт: повторный отзыв того же пользователя на напиток;
+- `413` — тело запроса больше `MAX_ENERGY_DRINK_IMAGE_SIZE` (ответ — обычный
+  текст `Content Too Large`, не JSON; ограничение действует на все запросы);
 - `422` — ошибка валидации параметров или тела запроса;
 - `429` — превышен rate limit.
 
 ## Аутентификация (`/auth`)
 
-Ко всем auth-маршрутам применяется лимит **10 запросов в минуту**.
-
 | Метод и путь | Доступ | Тело запроса | Ответ |
 | --- | --- | --- | --- |
-| `POST /auth/register` | публичный | JSON `UserCreate`: `email`, `password` | `201`, `UserRead` |
+| `POST /auth/register` | публичный | JSON `UserCreate`: `email`, `password`, `username` (обязателен, без него `422`) | `201`, `UserRead` |
 | `POST /auth/login` | публичный | `application/x-www-form-urlencoded`: `username`, `password` | `200`, `Token` |
 | `POST /auth/logout` | Bearer | нет | `204` |
 | `GET /auth/me` | Bearer | нет | `200`, `UserRead` |
-| `PATCH /auth/me` | Bearer | JSON `UserUpdate`: `email` и/или `password` | `200`, `UserRead` |
+| `PATCH /auth/me` | Bearer | JSON `UserUpdate`: `email`, `password` и/или `username` | `200`, `UserRead` |
 | `POST /auth/forgot-password` | публичный | JSON `email` | `202` |
 | `POST /auth/reset-password` | публичный | JSON `token`, `password` | `200` |
 | `POST /auth/request-verify-token` | публичный | JSON `email` | `202` |
 | `POST /auth/verify` | публичный | JSON `token` | `200`, `UserRead` |
 
-После регистрации приложение отправляет письмо с токеном подтверждения.
+Лимиты: маршруты входа, регистрации, сброса пароля и подтверждения e-mail —
+**10 запросов в минуту**, `/auth/me` — **100 запросов в минуту**.
+
+Дополнительно FastAPI Users публикует `GET`, `PATCH` и `DELETE /auth/{id}` для
+суперпользователя.
+
 Параметр `username` в форме login — это e-mail, как предусмотрено
 `OAuth2PasswordRequestForm`.
+
+### Письма
+
+После регистрации, по `request-verify-token` и при смене e-mail приложение
+отправляет письмо с токеном подтверждения, а по `forgot-password` — письмо
+сброса пароля. Ссылки в письмах ведут на страницы фронта, а не на API
+(эндпоинты принимают только `POST`):
+
+- подтверждение: `{PUBLIC_URL}/auth/verify?token=<token>`;
+- сброс пароля: `{PUBLIC_URL}/auth/reset-password?token=<token>`.
+
+Страница фронта сама отправляет токен `POST`-ом на `/auth/verify` или
+`/auth/reset-password`. При смене e-mail через `PATCH /auth/me` признак
+`is_verified` сбрасывается и отправляется новое письмо подтверждения.
 
 ## Энергетические напитки (`/energy-drinks`)
 
 ### Публичные маршруты
 
-| Метод и путь | Параметры | Ответ |
-| --- | --- | --- |
-| `GET /energy-drinks/` | `limit` (int, по умолчанию `20`), `offset` (int, по умолчанию `0`), `order_by` (по умолчанию `id`) | `200`, `list[EnergyDrinkWithReviewsSchema]` |
-| `GET /energy-drinks/{energy_drink_id}/image` | `energy_drink_id` (int) | `200`, бинарное тело изображения с сохранённым `Content-Type` |
+| Метод и путь | Параметры | Лимит | Ответ |
+| --- | --- | --- | --- |
+| `GET /energy-drinks/` | `limit`, `offset`, `order_by`, `order_direction` | 1000/мин | `200`, `list[EnergyDrinkWithMetricsReadSchema]` |
+| `GET /energy-drinks/count` | нет | 1000/мин | `200`, `{"count": <int>}` |
+| `GET /energy-drinks/{energy_drink_id}` | `energy_drink_id` (int) | 1000/мин | `200`, `EnergyDrinkWithMetricsReadSchema`; `404`, если не найден |
+| `GET /energy-drinks/{energy_drink_id}/image` | `energy_drink_id` (int) | 1000/мин | `200`, бинарное тело изображения с сохранённым `Content-Type`; `404`, если напитка или картинки нет |
 
-Элемент `EnergyDrinkWithReviewsSchema` содержит:
+Элемент `EnergyDrinkWithMetricsReadSchema` содержит поля напитка и готовую
+сводку по отзывам; самих отзывов в нём **нет**:
 
 ```json
 {
@@ -82,75 +142,99 @@ Authorization: Bearer <access_token>
   "name": "Название",
   "price": 1.99,
   "no_sugar": false,
-  "reviews": [
-    {
-      "acidity": 3,
-      "sweetness": 4,
-      "concentration": 3,
-      "carbonation": 4,
-      "aftertaste": 3,
-      "price_quality": 4,
-      "overall": 4
-    }
-  ]
+  "created_at": "2026-01-15T12:30:00.123456Z",
+  "avg_rating": 4.0,
+  "reviews_count": 3,
+  "avg_acidity": 3.7,
+  "avg_sweetness": 4.0,
+  "avg_concentration": 3.3,
+  "avg_carbonation": 4.3,
+  "avg_aftertaste": 3.0,
+  "avg_price_quality": 4.0
 }
 ```
 
-Если напиток не существует или у него нет изображения, image-маршрут
-возвращает `404`.
+Средние округляются до одного знака. Пока отзывов нет, `reviews_count` равен
+`0`, а все `avg_*` — `null`. Отзывы напитка читаются отдельно:
+`GET /reviews/?energy_drink_id=…`.
+
+Заголовков кеша (`Cache-Control`, `ETag`) image-маршрут не ставит.
 
 ### Маршруты администратора
 
 Для всех маршрутов этого раздела требуется Bearer-токен пользователя с
-`role=admin`.
+`is_superuser=true`.
 
 | Метод и путь | Тело запроса | Ответ |
 | --- | --- | --- |
-| `POST /energy-drinks/` | JSON `EnergyDrinkCreateSchema` | `201`, `EnergyDrinkSchema` |
-| `PUT /energy-drinks/{energy_drink_id}` | JSON `EnergyDrinkUpdateSchema` | `200`, `EnergyDrinkSchema` |
+| `POST /energy-drinks/` | JSON `EnergyDrinkCreateSchema` | `201`, `EnergyDrinkReadSchema` |
+| `PUT /energy-drinks/{energy_drink_id}` | JSON `EnergyDrinkUpdateSchema` | `200`, `EnergyDrinkReadSchema` |
 | `DELETE /energy-drinks/{energy_drink_id}` | нет | `204` |
-| `POST /energy-drinks/{energy_drink_id}/image` | `multipart/form-data`, поле `image` (файл) | `201`, `EnergyDrinkSchema` |
+| `POST /energy-drinks/{energy_drink_id}/image` | `multipart/form-data`, поле `image` (файл) | `201`, `EnergyDrinkReadSchema` |
 | `DELETE /energy-drinks/{energy_drink_id}/image` | нет | `204` |
+
+Размер загружаемой картинки ограничен `MAX_ENERGY_DRINK_IMAGE_SIZE` (в `.env`,
+сейчас 1 МБ): большие запросы получают `413`.
 
 Схемы напитка:
 
 - `EnergyDrinkCreateSchema`: `name` (string), `price` (number или `null`),
   `no_sugar` (boolean, по умолчанию `false`);
 - `EnergyDrinkUpdateSchema`: те же поля, все необязательные;
-- `EnergyDrinkSchema`: поля create-схемы и `id` (integer).
+- `EnergyDrinkReadSchema`: поля create-схемы, `id` (integer) и `created_at`
+  (datetime, в JSON — ISO 8601 с часовым поясом, `Z`);
+- `EnergyDrinkWithMetricsReadSchema`: `EnergyDrinkReadSchema` плюс `avg_rating`,
+  `reviews_count`, `avg_acidity`, `avg_sweetness`, `avg_concentration`,
+  `avg_carbonation`, `avg_aftertaste`, `avg_price_quality`.
 
 ## Отзывы (`/reviews`)
 
 | Метод и путь | Доступ | Параметры/тело | Ответ |
 | --- | --- | --- | --- |
-| `GET /reviews/` | публичный | `limit` (int, `20`), `offset` (int, `0`), `order_by` (string, `id`) | `200`, `list[ReviewSchema]` |
-| `POST /reviews/{energy_drink_id}` | Bearer + подтверждённый пользователь | JSON `ReviewCreateSchema` | `201`, `ReviewSchema` |
-| `PUT /reviews/{review_id}` | Bearer + подтверждённый пользователь, только автор отзыва | JSON `ReviewUpdateSchema` | `200`, `ReviewSchema` |
+| `GET /reviews/` | публичный | `energy_drink_id` (**обязателен**, без него `422`), `limit`, `offset`, `order_by`, `order_direction` | `200`, `list[ReviewReadSchema]` — отзывы одного напитка |
+| `GET /reviews/me` | Bearer + подтверждённый пользователь | `limit`, `offset`, `order_by` | `200`, `list[ReviewReadSchema]` — отзывы текущего пользователя |
+| `POST /reviews/{energy_drink_id}` | Bearer + подтверждённый пользователь | JSON `ReviewCreateSchema` | `201`, `ReviewReadSchema` |
+| `PUT /reviews/{review_id}` | Bearer + подтверждённый пользователь, только автор отзыва | JSON `ReviewUpdateSchema` | `200`, `ReviewReadSchema` |
 | `DELETE /reviews/{review_id}` | Bearer + подтверждённый пользователь, только автор отзыва | нет | `204` |
 
-Для администратора проверка подтверждения пользователя не требуется.
-Создание, изменение и удаление отзывов ограничены **10 запросами в минуту**.
+Лимиты: `GET /reviews/` — 1000/мин, `GET /reviews/me` — 100/мин; создание,
+изменение и удаление отзывов — **10 запросов в минуту**.
 
-`ReviewCreateSchema` содержит обязательные оценки от `0` до `5`:
-`acidity`, `sweetness`, `concentration`, `carbonation`, `aftertaste`,
-`price_quality`, `overall`.
+`ReviewCreateSchema` содержит обязательные **целые** оценки от `1` до `5`:
+`rating` (общая оценка), `acidity`, `sweetness`, `concentration`,
+`carbonation`, `aftertaste`, `price_quality`, и необязательное `comment`
+(строка до 1000 символов). Поля `overall` больше нет.
 
-`ReviewUpdateSchema` содержит необязательные поля `comment` (строка до 1000
-символов) и те же оценки от `0` до `5`. Идентификаторы автора и напитка
-нельзя изменить через этот маршрут.
+`ReviewUpdateSchema` содержит те же поля, все необязательные (частичное
+обновление). Идентификаторы автора и напитка нельзя изменить через этот
+маршрут.
 
-`ReviewSchema` — это `ReviewCreateSchema` плюс `id`. При создании отзыв
-привязывается к напитку из `{energy_drink_id}` и текущему пользователю.
-Если напиток или отзыв не найден, возвращается `404`; при попытке изменить или
-удалить чужой отзыв — `403`.
+`ReviewReadSchema` — это `ReviewCreateSchema` плюс `id`, автор
+`user: {id, username, role}` и `created_at` (datetime, ISO 8601 с часовым поясом,
+`Z`). `energy_drink_id` и `updated_at` в ответе нет. При создании
+отзыв привязывается к напитку из `{energy_drink_id}` и текущему пользователю.
+Если напиток или отзыв не найден, возвращается `404`; при попытке изменить
+или удалить чужой отзыв — `403`.
+
+Один пользователь может оставить на напиток только один отзыв: повторное
+создание возвращает `409` с `{"detail": "User has already submitted a review
+for this Energy Drink"}`.
 
 ## Rate limiting
 
-Ограничения применяются в памяти процесса и сбрасываются после перезапуска:
+Ограничения применяются в памяти процесса и сбрасываются после перезапуска.
+Ключ лимита — IP клиента из первого значения `X-Forwarded-For` (иначе адрес
+соединения). Запросы фронта идут с сервера Next, поэтому для них ключом служит
+адрес контейнера фронта и лимиты общие для всех пользователей сайта.
 
-- auth: `10/minute` на все маршруты `/auth`;
-- чтение списка напитков и изображений: `100/minute`;
-- создание/изменение/удаление отзывов: `10/minute`.
+| Маршруты | Лимит |
+| --- | --- |
+| `/auth/*` (вход, регистрация, сброс пароля, подтверждение e-mail) | 10/мин |
+| `/auth/me` | 100/мин |
+| `GET /energy-drinks/`, `GET /energy-drinks/{id}`, `GET /energy-drinks/{id}/image`, `GET /energy-drinks/count` | 1000/мин |
+| `GET /reviews/` | 1000/мин |
+| `GET /reviews/me` | 100/мин |
+| `POST`/`PUT`/`DELETE /reviews/*` | 10/мин |
 
 При превышении лимита возвращается `429 Too Many Requests`.
 
@@ -164,12 +248,23 @@ Authorization: Bearer <access_token>
   "email": "user@example.com",
   "is_active": true,
   "is_superuser": false,
-  "is_verified": true
+  "is_verified": true,
+  "username": "NeonFox"
 }
 ```
 
-`UserCreate` принимает `email` и `password`. Минимальная длина пароля — 8
-символов; дополнительные проверки выполняются менеджером пользователей.
-`UserUpdate` принимает необязательные `email` и `password`.
+`UserCreate` принимает `email`, `password` и обязательное `username`.
+Минимальная длина пароля — 8 символов, пароль не должен содержать e-mail
+пользователя. `UserUpdate` принимает необязательные `email`, `password` и
+`username`.
 
 `Token` имеет поля `access_token` и `token_type` (обычно `bearer`).
+
+## Известные расхождения
+
+Найдено при проверке `mvp` в docker; пока не исправлено:
+
+- нет `has_image`/`image_url` у напитка, а в отзывах — `energy_drink_id`;
+  `GET /reviews/me` не говорит, к какому напитку относится отзыв, а
+  `GET /reviews/` без `energy_drink_id` отвечает `422`, поэтому общей ленты отзывов
+  нет — подробности и вопросы в `docs/mvp-backend-questions.md`.
