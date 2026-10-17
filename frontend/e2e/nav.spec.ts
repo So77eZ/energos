@@ -26,9 +26,12 @@ test.describe('nav: desktop priority+', () => {
   })
 
   test('узкий экран — часть пунктов уходит в «Ещё»', async ({ page }) => {
-    await page.setViewportSize({ width: 820, height: 900 })
+    // 660 — ещё десктопная шапка (мобильная ≤640), но пунктам уже тесно. На 820 без рулетки
+    // (она вне MVP, флаг gachapon) меню целиком влезает и «Ещё» не появляется.
+    await page.setViewportSize({ width: 660, height: 900 })
     await page.goto('/')
-    const more = page.locator('.hdr-more-btn').first()
+    // button — настоящая кнопка; одноимённый span в .hdr-nav-measure скрыт и нужен для замеров.
+    const more = page.locator('button.hdr-more-btn')
     await expect(more).toBeVisible()
     await more.click()
     await expect(page.locator('.hdr-more-menu .hdr-more-item').first()).toBeVisible()
@@ -47,9 +50,11 @@ test.describe('nav: mobile (≤640)', () => {
   test('бургер открывает sheet, Esc закрывает', async ({ page }) => {
     await page.goto('/')
     await page.locator('.hdr-mobile-menu').click()
-    await expect(page.locator('.mob-sheet')).toBeVisible()
+    // Sheet остаётся в DOM и «закрывается» уездом за экран — признак состояния класс `open`.
+    const sheet = page.getByRole('dialog', { name: 'Меню' })
+    await expect(sheet).toHaveClass(/\bopen\b/)
     await page.keyboard.press('Escape')
-    await expect(page.locator('.mob-sheet')).toBeHidden()
+    await expect(sheet).not.toHaveClass(/\bopen\b/)
   })
 
   test('иконка поиска открывает overlay с рабочим input', async ({ page }) => {

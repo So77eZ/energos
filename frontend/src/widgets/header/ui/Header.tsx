@@ -3,9 +3,6 @@ import { Suspense } from 'react'
 import { ROUTES } from '@shared/config/routes'
 import { getToken } from '@shared/lib/session'
 import { authApi } from '@entities/user'
-import { reviewApi, calcRating } from '@entities/review'
-import { timeAgo } from '@shared/lib/time-ago'
-import { drinkApi } from '@entities/drink'
 import { HeaderSearchBar } from './HeaderSearchBar'
 import { LogoLink } from './LogoLink'
 import { HeaderNav } from './HeaderNav'
@@ -13,30 +10,14 @@ import { HeaderAvatar } from './HeaderAvatar'
 import { MobileNav } from './MobileNav'
 import { HeaderTicker, type TickerItem } from './HeaderTicker'
 
-const TICKER_LIMIT = 8
-
 export async function Header() {
   const token = await getToken()
   const currentUser = token ? await authApi.me(token).catch(() => null) : null
   const isAdmin = currentUser?.role === 'admin'
 
-  // Тикер: последние отзывы + имена напитков. Любая ошибка → пустой тикер.
-  const [reviews, drinks] = await Promise.all([
-    reviewApi.list().catch(() => []),
-    drinkApi.list().catch(() => []),
-  ])
-  const nameById = new Map(drinks.map((d) => [d.id, d.name]))
-  const tickerItems: TickerItem[] = reviews
-    .filter((r) => r.created_at && nameById.has(r.energy_drink_id))
-    .sort((a, b) => (b.created_at! > a.created_at! ? 1 : b.created_at! < a.created_at! ? -1 : 0))
-    .slice(0, TICKER_LIMIT)
-    .map((r) => ({
-      id: r.id,
-      who: r.username ?? 'Гость',
-      drinkName: nameById.get(r.energy_drink_id)!,
-      score: calcRating(r),
-      ago: timeAgo(r.created_at!),
-    }))
+  // Тикер «последние отзывы» пуст: `GET /reviews/` отдаёт отзывы только по одному напитку и без
+  // даты создания, ленты отзывов по всему каталогу в API нет (docs/mvp-backend-questions.md).
+  const tickerItems: TickerItem[] = []
 
   return (
     <header className="hdr">

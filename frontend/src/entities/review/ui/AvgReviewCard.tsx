@@ -26,7 +26,7 @@ export function AvgReviewCard({ metrics, count, rating }: AvgReviewCardProps) {
       <header className="rev-head">
         <div className="rev-head-l">
           <span className="rev-badge rev-badge-avg">
-            <Icons.pulse w={10} /> СРЕДНЯЯ ОЦЕНКА ПОЛЬЗОВАТЕЛЕЙ
+            <Icons.pulse w={10} /> СРЕДНЯЯ ОЦЕНКА
           </span>
           <span className="rev-meta-author">{pluralizeReviews(count)}</span>
         </div>

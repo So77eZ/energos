@@ -27,14 +27,17 @@ test('/profile открывается под логином, видны вкла
 test('/profile?tab=appearance показывает TweaksBody', async ({ page }) => {
   await page.goto('/profile?tab=appearance')
   await expect(page.locator('.prof-appearance')).toBeVisible()
-  // Внутри 4 секции из TweaksBody
-  await expect(page.locator('.prof-appearance .twk-section-title')).toHaveCount(4)
+  // Внутри 5 секций из TweaksBody (тема, акцент, шрифт, эффекты, анимации)
+  await expect(page.locator('.prof-appearance .twk-section-title')).toHaveCount(5)
 })
 
-test('/submit без флага submissions → 404', async ({ page }) => {
+test('/submit без флага submissions → страница 404', async ({ page }) => {
   test.skip(ff('SUBMISSIONS'), 'Фича включена — проверяется тестом ниже')
-  const res = await page.goto('/submit')
-  expect(res?.status()).toBe(404)
+  await page.goto('/submit')
+  // notFound() внутри стриминговой страницы (есть app/loading.tsx) отдаёт HTTP 200 с noindex —
+  // статус не проверяем, смотрим что показана 404, а не форма.
+  await expect(page.getByText('This page could not be found')).toBeVisible()
+  await expect(page.locator('input[placeholder*="BURN" i]')).toHaveCount(0)
 })
 
 test('/submit форма заявки видна под логином', async ({ page }) => {

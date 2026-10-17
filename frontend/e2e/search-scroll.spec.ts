@@ -60,7 +60,8 @@ test.describe('search-scroll: мобайл (≤640) — desktop-only', () => {
 
     // Enter коммитит и закрывает оверлей → useScrollLock cleanup: scrollTo(0, 0).
     await input.press('Enter')
-    await expect(page.locator('.mob-search')).toBeHidden()
+    // Sheet не размонтируется, а уезжает за экран: «закрыт» = нет класса `open`.
+    await expect(page.locator('.mob-search')).not.toHaveClass(/\bopen\b/)
 
     // Поиск применился (значение пережило закрытие), но позиция = верх:
     // scroll-to-catalog на мобиле не доживает.

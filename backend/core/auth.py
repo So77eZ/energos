@@ -1,8 +1,10 @@
+from fastapi import Depends
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
 
 from core.config import settings
 from core.constants import UserIdType
+from core.exceptions import ForbiddenException
 from models import User
 from services.user_manager import get_user_manager
 
@@ -28,4 +30,21 @@ fastapi_users = FastAPIUsers[User, UserIdType](
     auth_backends=[auth_backend],
 )
 
-get_current_user = fastapi_users.current_user()
+
+get_current_user = fastapi_users.current_user(active=True)
+
+
+async def get_verified_user(
+    user: User = Depends(get_current_user),
+) -> User:
+    if not user.is_verified:
+        raise ForbiddenException("User account is not verified")
+    return user
+
+
+async def get_superuser(
+    user: User = Depends(get_current_user),
+) -> User:
+    if not user.is_superuser:
+        raise ForbiddenException("Admin privileges required")
+    return user

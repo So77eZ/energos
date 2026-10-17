@@ -24,7 +24,7 @@ interface CatalogTabProps {
 
 export function CatalogTab({ drinks }: CatalogTabProps) {
   const { search } = useCatalogSearch()
-  const enriched = useMemo(() => enrichDrinks(drinks, []), [drinks])
+  const enriched = useMemo(() => enrichDrinks(drinks), [drinks])
   const filtered = enriched.filter((d) =>
     d.name.toLowerCase().includes(search.toLowerCase()),
   )

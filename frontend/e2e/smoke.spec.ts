@@ -49,6 +49,21 @@ test.describe('smoke: основные роуты грузятся без runtim
     expect(errors).toEqual([])
   })
 
+  test('/auth/forgot-password — форма видна, со входа есть ссылка', async ({ page }) => {
+    const errors = trackConsoleErrors(page)
+    await page.goto('/auth/login')
+    await page.locator('a[href="/auth/forgot-password"]:visible').click()
+    await expect(page).toHaveURL(/\/auth\/forgot-password/)
+    await expect(page.locator('form:visible input[name="email"]')).toBeVisible()
+    expect(errors).toEqual([])
+  })
+
+  test('/auth/reset-password без токена — понятное сообщение, а не форма', async ({ page }) => {
+    await page.goto('/auth/reset-password')
+    await expect(page.getByText('В ссылке нет токена')).toBeVisible()
+    await expect(page.locator('input[name="password"]')).toHaveCount(0)
+  })
+
   test('/profile без авторизации → редирект на /auth/login', async ({ page }) => {
     await page.goto('/profile')
     // Server-side redirect: к моменту load уже на login.
