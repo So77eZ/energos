@@ -1,12 +1,9 @@
-from typing import Annotated
-
-from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import defer, selectinload
 
 from core.constants import OrderDirection
-from core.database import get_session
+from core.database import SessionDep
 from core.exceptions import ObjectNotFoundException
 from models.energy_drink import EnergyDrink
 from repositories.base import BaseRepository
@@ -59,5 +56,5 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         return True, ImageData(data=row.image, content_type=row.image_content_type)
 
 
-async def get_energy_drink_repository(session: Annotated[AsyncSession, Depends(get_session)]) -> EnergyDrinkRepository:
+async def get_energy_drink_repository(session: SessionDep) -> EnergyDrinkRepository:
     return EnergyDrinkRepository(session)
