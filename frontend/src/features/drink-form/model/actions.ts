@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { updateTag } from 'next/cache'
 import { drinkApi } from '@entities/drink'
-import { reviewApi } from '@entities/review'
+import { reviewApi, ratingFromMetrics } from '@entities/review'
 import { getToken } from '@shared/lib/session'
 import { withSessionGuard } from '@shared/lib/auth-guard'
 import { ROUTES } from '@shared/config/routes'
@@ -76,10 +76,12 @@ async function upsertAdminReview(drinkId: number, formData: FormData, token: str
     price_quality: metrics.price_quality!,
     comment: null,
   }
+  // В админской форме общей оценки нет: берём среднее метрик, округлённое.
+  const body = { ...scores, rating: ratingFromMetrics(scores) }
   if (existing) {
-    await reviewApi.update(existing.id, drinkId, scores, token)
+    await reviewApi.update(existing.id, drinkId, body, token)
   } else {
-    await reviewApi.create(drinkId, scores, token)
+    await reviewApi.create(drinkId, body, token)
   }
 }
 

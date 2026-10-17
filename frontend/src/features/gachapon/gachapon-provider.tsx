@@ -56,9 +56,9 @@ export function GachaponProvider({ children }: { children: ReactNode }) {
     }
     setPhase('loading')
     fetchGachaponPool()
-      .then(({ drinks, reviews }) => {
+      .then((drinks) => {
         if (!openRef.current) return
-        const enriched = enrichDrinks(drinks, reviews)
+        const enriched = enrichDrinks(drinks)
         cacheRef.current = enriched
         if (enriched.length === 0) {
           setPhase('error')

@@ -10,7 +10,7 @@ import { localizeAuthError } from './auth-errors'
 // username возвращается в состоянии, чтобы форма подставила его обратно:
 // React 19 после server action сбрасывает неуправляемые поля (#299).
 // Пароли не возвращаем — их пользователь вводит заново.
-export type AuthFormState = { error: string; success?: boolean; username?: string } | null
+export type AuthFormState = { error: string; success?: boolean; username?: string; nickname?: string } | null
 
 export async function loginAction(
   _prev: AuthFormState,
@@ -36,19 +36,22 @@ export async function registerAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  // `username` в форме — это e-mail (имя поля как у OAuth2-формы входа); публичное имя — `nickname`.
   const username = formData.get('username') as string
+  const nickname = ((formData.get('nickname') as string) ?? '').trim()
   const password = formData.get('password') as string
   const confirm = formData.get('confirm') as string
 
-  if (password !== confirm) return { error: 'Пароли не совпадают', username }
+  if (password !== confirm) return { error: 'Пароли не совпадают', username, nickname }
+  if (nickname.length < 2) return { error: 'Укажите имя (не короче 2 символов)', username, nickname }
 
   try {
-    await authApi.register(username, password)
+    await authApi.register(username, password, nickname)
     const { access_token } = await authApi.login(username, password)
     await setToken(access_token)
   } catch (e) {
-    if (e instanceof RateLimitError) return { error: e.message, username }
-    return { error: localizeAuthError(e instanceof Error ? e.message : '', 'Ошибка регистрации'), username }
+    if (e instanceof RateLimitError) return { error: e.message, username, nickname }
+    return { error: localizeAuthError(e instanceof Error ? e.message : '', 'Ошибка регистрации'), username, nickname }
   }
 
   return { error: '', success: true }

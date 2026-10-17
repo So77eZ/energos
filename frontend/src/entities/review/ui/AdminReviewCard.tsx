@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react'
 import { Icons } from '@shared/ui/icons'
-import { calcRating, METRIC_KEYS, type Review } from '../model/types'
+import { METRIC_KEYS, type Review } from '../model/types'
 import { MetricDotRow } from './MetricDotRow'
 
 interface AdminReviewCardProps {
@@ -28,7 +28,7 @@ export function AdminReviewCard({ review, reactions }: AdminReviewCardProps) {
           {review.username && <span className="rev-meta-author">{review.username}</span>}
         </div>
         <div className="rev-rating">
-          <Icons.star w={16} /> <span>{calcRating(review).toFixed(1)}</span>
+          <Icons.star w={16} /> <span>{review.rating.toFixed(1)}</span>
         </div>
       </header>
       <div className="rev-body">

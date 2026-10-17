@@ -7,12 +7,14 @@ const apiUser = { id: 3, email: 'neon@example.com', is_active: true, is_superuse
 afterEach(() => vi.unstubAllGlobals())
 
 describe('authApi', () => {
-  it('me: username — локальная часть e-mail, роль user по умолчанию', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(apiUser)))
-
+  it('me: username из API; нет в ответе — локальная часть e-mail; роль user по умолчанию', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({ ...apiUser, username: 'NeonFox' })))
     expect(await authApi.me('tok')).toMatchObject({
-      id: 3, email: 'neon@example.com', username: 'neon', role: 'user', is_verified: false,
+      id: 3, email: 'neon@example.com', username: 'NeonFox', role: 'user', is_verified: false,
     })
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json(apiUser)))
+    expect((await authApi.me('tok')).username).toBe('neon')
   })
 
   it('me: is_superuser → admin; явная role из API приоритетнее', async () => {
@@ -35,13 +37,15 @@ describe('authApi', () => {
     expect(new URLSearchParams(init.body).get('username')).toBe('neon@example.com')
   })
 
-  it('register: JSON { email, password }', async () => {
+  it('register: JSON { email, password, username }', async () => {
     const fetchMock = vi.fn().mockResolvedValue(json(apiUser, 201))
     vi.stubGlobal('fetch', fetchMock)
 
-    await authApi.register('neon@example.com', 'secret123')
+    await authApi.register('neon@example.com', 'secret123', 'NeonFox')
 
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ email: 'neon@example.com', password: 'secret123' })
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      email: 'neon@example.com', password: 'secret123', username: 'NeonFox',
+    })
   })
 
   it('forgotPassword: POST /auth/forgot-password { email }, 202 без тела не падает', async () => {

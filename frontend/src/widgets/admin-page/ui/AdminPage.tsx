@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import type { Drink } from '@entities/drink'
-import type { Review } from '@entities/review'
 import { ROUTES } from '@shared/config/routes'
 import { FEATURES } from '@shared/config/features'
 import { useSubmissions } from '@features/submissions'
@@ -23,7 +22,6 @@ const TAB_IDS: TabId[] = [
 
 interface AdminPageProps {
   drinks: Drink[]
-  reviews: Review[]
 }
 
 function parseTab(raw: string | null): TabId {
@@ -31,7 +29,7 @@ function parseTab(raw: string | null): TabId {
   return 'catalog'
 }
 
-export function AdminPage({ drinks, reviews }: AdminPageProps) {
+export function AdminPage({ drinks }: AdminPageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [tab, setTab] = useState<TabId>(() => parseTab(searchParams.get('tab')))
@@ -48,6 +46,7 @@ export function AdminPage({ drinks, reviews }: AdminPageProps) {
   const { all: submissions } = useSubmissions()
   const pendingCount = submissions.filter((s) => s.status === 'pending').length
   const noSugarCount = drinks.filter((d) => d.no_sugar).length
+  const reviewsTotal = drinks.reduce((sum, d) => sum + d.stats.reviewsCount, 0)
 
   return (
     <div className="page page-admin">
@@ -88,7 +87,7 @@ export function AdminPage({ drinks, reviews }: AdminPageProps) {
         <div className="stat-card stat-pink">
           <div className="stat-icon"><Icons.msg /></div>
           <div className="stat-lbl">ВСЕГО ОТЗЫВОВ</div>
-          <div className="stat-val">{reviews.length}</div>
+          <div className="stat-val">{reviewsTotal}</div>
           <div className="stat-sub">по всему каталогу</div>
           <div className="stat-corner" />
         </div>
@@ -102,7 +101,8 @@ export function AdminPage({ drinks, reviews }: AdminPageProps) {
 
       {tab === 'catalog' && <CatalogTab drinks={drinks} />}
       {tab === 'subs'    && <SubmissionsTab />}
-      {tab === 'leaders' && <LeadersTab reviews={reviews} />}
+      {/* Лидерборду нужны все отзывы с авторами, а `GET /reviews/` отдаёт их только по напитку — вкладка за флагом reviewAuthors. */}
+      {tab === 'leaders' && <LeadersTab reviews={[]} />}
     </div>
   )
 }
