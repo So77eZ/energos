@@ -20,7 +20,8 @@ describe('drinkApi.list', () => {
     expect(a.created_at).toBe('2026-10-10T12:59:25.267857Z')
     expect(Date.parse(a.created_at!)).toBe(Date.UTC(2026, 9, 10, 12, 59, 25, 267))
     expect(b.created_at).toBeNull()
-    expect(a.image_url).toContain('/1/image')
+    // Картинки отдаёт фронт (#320): браузер до `/api` в проде не достаёт.
+    expect(a.image_url).toBe('/drink-image/1')
   })
 
   it('число страниц берёт из /energy-drinks/count', async () => {
