@@ -1,32 +1,21 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import Field
 
 from schemas.base import BaseSchema
+from schemas.user import SimpleUserSchema
 
 
 class ReviewBase(BaseSchema):
-    acidity: float = Field(ge=0, le=5)
-    sweetness: float = Field(ge=0, le=5)
-    concentration: float = Field(ge=0, le=5)
-    carbonation: float = Field(ge=0, le=5)
-    aftertaste: float = Field(ge=0, le=5)
-    price_quality: float = Field(ge=0, le=5)
-    overall: float = Field(ge=0, le=5)
-
-
-class ReviewSchema(ReviewBase):
-    id: int
-
-
-class ReviewForUserSchema(BaseSchema):
-    acidity: float = Field(ge=0, le=5)
-    sweetness: float = Field(ge=0, le=5)
-    concentration: float = Field(ge=0, le=5)
-    carbonation: float = Field(ge=0, le=5)
-    aftertaste: float = Field(ge=0, le=5)
-    price_quality: float = Field(ge=0, le=5)
-    overall: float = Field(ge=0, le=5)
+    rating: int = Field(ge=1, le=5)
+    comment: Optional[str] = Field(default=None, max_length=1000)
+    acidity: int = Field(ge=1, le=5)
+    sweetness: int = Field(ge=1, le=5)
+    concentration: int = Field(ge=1, le=5)
+    carbonation: int = Field(ge=1, le=5)
+    aftertaste: int = Field(ge=1, le=5)
+    price_quality: int = Field(ge=1, le=5)
 
 
 class ReviewCreateSchema(ReviewBase):
@@ -39,11 +28,21 @@ class ReviewCreateInternalSchema(ReviewCreateSchema):
 
 
 class ReviewUpdateSchema(BaseSchema):
+    rating: Optional[int] = Field(default=None, ge=1, le=5)
     comment: Optional[str] = Field(default=None, max_length=1000)
-    acidity: Optional[float] = Field(ge=0, le=5)
-    sweetness: Optional[float] = Field(ge=0, le=5)
-    concentration: Optional[float] = Field(ge=0, le=5)
-    carbonation: Optional[float] = Field(ge=0, le=5)
-    aftertaste: Optional[float] = Field(ge=0, le=5)
-    price_quality: Optional[float] = Field(ge=0, le=5)
-    overall: Optional[float] = Field(ge=0, le=5)
+    acidity: Optional[int] = Field(default=None, ge=1, le=5)
+    sweetness: Optional[int] = Field(default=None, ge=1, le=5)
+    concentration: Optional[int] = Field(default=None, ge=1, le=5)
+    carbonation: Optional[int] = Field(default=None, ge=1, le=5)
+    aftertaste: Optional[int] = Field(default=None, ge=1, le=5)
+    price_quality: Optional[int] = Field(default=None, ge=1, le=5)
+
+
+class ReviewReadSchema(ReviewBase):
+    id: int
+    user: SimpleUserSchema
+    created_at: datetime
+
+
+class ReviewForUserSchema(ReviewBase):
+    pass

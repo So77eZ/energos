@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import type { Drink, EnrichedDrink } from '@entities/drink'
 import { cleanDrinkName, DrinkImg, EnergyCan } from '@entities/drink'
 import type { Review } from '@entities/review'
-import { calcRating, MiniMetrics } from '@entities/review'
+import { MiniMetrics } from '@entities/review'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
 import { ProfileEmpty } from './ProfileEmpty'
@@ -71,7 +71,7 @@ export function ReviewsTab({ reviews, drinkMap, enrichedMap }: ReviewsTabProps) 
                 <div className="prof-rev-meta">
                   <span>{formatDate(r.updated_at ?? r.created_at)}</span>
                   <span>·</span>
-                  <Icons.star w={10} /> {calcRating(r).toFixed(1)}
+                  <Icons.star w={10} /> {r.rating.toFixed(1)}
                 </div>
                 {r.comment && <p className="prof-rev-comment">«{r.comment}»</p>}
               </div>

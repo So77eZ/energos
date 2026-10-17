@@ -1,14 +1,15 @@
 import { httpRequest } from './http'
 
 // Бэк отдаёт списки страницами (limit/offset, по умолчанию limit=20, верхней границы нет).
-// Размер страницы — 20, как договорились с бэкендером: ответ напитка включает отзывы,
-// большие страницы «перегружают».
+// Размер страницы — 20, как договорились с бэкендером.
 export const PAGE_SIZE = 20
 const MAX_PAGES = 50 // предохранитель от бесконечного цикла, если бэк игнорирует offset
 
 type FetchOpts = Parameters<typeof httpRequest>[1]
 
-const pageUrl = (path: string, page: number) => `${path}?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`
+/** В `path` уже может быть строка запроса (`/reviews/?energy_drink_id=1`). */
+const pageUrl = (path: string, page: number) =>
+  `${path}${path.includes('?') ? '&' : '?'}limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`
 
 /** Общее число записей из `GET .../count` → `{ "count": n }`; `null`, если эндпоинт недоступен. */
 async function fetchCount(countPath: string, options?: FetchOpts): Promise<number | null> {
