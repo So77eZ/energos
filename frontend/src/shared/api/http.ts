@@ -110,7 +110,7 @@ async function clientIpHeader(options?: HttpOptions): Promise<Record<string, str
 export async function rawRequest(path: string, options?: HttpOptions): Promise<Response> {
   const headers = {
     ...options?.headers,
-    ...(typeof window === 'undefined' ? { 'Origin': process.env.NEXT_PUBLIC_ORIGIN ?? 'http://localhost:3000' } : {}),
+    ...(typeof window === 'undefined' ? { 'Origin': process.env.PUBLIC_URL ?? 'http://localhost:3000' } : {}),
     ...(await clientIpHeader(options)),
   }
   return fetch(`${BASE_URL}${path}`, {

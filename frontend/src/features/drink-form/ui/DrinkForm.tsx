@@ -11,14 +11,13 @@ import { Icons } from '@shared/ui/icons'
 import { deleteDrinkAction } from '../model/actions'
 import { compressImage } from '../lib/compress-image'
 
-// Должен совпадать с MAX_ENERGY_DRINK_IMAGE_SIZE на бэке (.env, сейчас 1 МБ).
-const MAX_IMAGE_BYTES = Number(process.env.NEXT_PUBLIC_MAX_IMAGE_BYTES ?? 1_048_576)
-
 interface DrinkFormProps {
   mode: 'create' | 'edit'
   drink?: Drink
   adminReview?: Review | null
   action: (formData: FormData) => Promise<void>
+  /** Лимит бэка на картинку (`maxImageBytes()` из `@shared/config/limits`). */
+  maxImageBytes: number
 }
 
 const EMPTY_METRICS: ReviewMetrics = {
@@ -42,7 +41,7 @@ function pickInitialMetrics(review: Review | null | undefined): ReviewMetrics {
   }
 }
 
-export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) {
+export function DrinkForm({ mode, drink, adminReview, action, maxImageBytes }: DrinkFormProps) {
   const router = useRouter()
   const [, formAction, isPending] = useActionState(
     async (_: void, formData: FormData) => { await action(formData) },
@@ -70,8 +69,8 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
     // Бэк режет тело запроса по MAX_ENERGY_DRINK_IMAGE_SIZE (413); на сервере форма
     // ошибок не показывает и роняла страницу. Большое фото сжимаем в браузере (GIF не трогаем —
     // пропала бы анимация) и подменяем файл в поле, чтобы форма отправила уже сжатый.
-    if (file.size > MAX_IMAGE_BYTES && file.type !== 'image/gif') {
-      const compressed = await compressImage(file, MAX_IMAGE_BYTES).catch(() => null)
+    if (file.size > maxImageBytes && file.type !== 'image/gif') {
+      const compressed = await compressImage(file, maxImageBytes).catch(() => null)
       if (compressed) {
         const dt = new DataTransfer()
         dt.items.add(compressed)
@@ -79,8 +78,8 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
         file = compressed
       }
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setFileError(`Файл ${(file.size / 1048576).toFixed(1)} МБ — максимум ${(MAX_IMAGE_BYTES / 1048576).toFixed(0)} МБ, сжать не удалось. Выберите фото поменьше.`)
+    if (file.size > maxImageBytes) {
+      setFileError(`Файл ${(file.size / 1048576).toFixed(1)} МБ — максимум ${(maxImageBytes / 1048576).toFixed(0)} МБ, сжать не удалось. Выберите фото поменьше.`)
       input.value = ''
       return
     }

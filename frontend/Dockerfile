@@ -8,10 +8,6 @@ RUN npm ci
 
 COPY . .
 
-# NEXT_PUBLIC_* вшиваются в код при сборке
-ARG NEXT_PUBLIC_ORIGIN
-ENV NEXT_PUBLIC_ORIGIN=$NEXT_PUBLIC_ORIGIN
-
 RUN npm run build
 
 EXPOSE 3000

@@ -22,13 +22,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        # NEXT_PUBLIC_* Next подставляет при сборке, а не при запуске
-        NEXT_PUBLIC_ORIGIN: ${PUBLIC_URL}
     restart: unless-stopped
     environment:
       API_ORIGIN: http://backend:8000
-      NEXT_PUBLIC_ORIGIN: ${PUBLIC_URL}
+      # Читаются на сервере Next во время запроса — смена в .env не требует пересборки
+      PUBLIC_URL: ${PUBLIC_URL}
+      MAX_ENERGY_DRINK_IMAGE_SIZE: ${MAX_ENERGY_DRINK_IMAGE_SIZE}
     depends_on:
       - backend
     networks:

@@ -20,10 +20,10 @@
 - [x] **`frontend/.env.local` не попадает в образ — сделано в #340.** Раньше при сборке с машины
   разработчика dev-значения (`NEXT_PUBLIC_ORIGIN=http://localhost:3001`) вшивались в серверный код
   фронта. Теперь `.env*.local` в `frontend/.dockerignore`; проверено в собранном образе.
-- [x] **`NEXT_PUBLIC_ORIGIN` при сборке — сделано в #340.** `NEXT_PUBLIC_*` Next подставляет при
-  `next build`, а `environment` в compose действует только при запуске. Теперь `PUBLIC_URL`
-  передаётся build-arg'ом (`ARG`/`ENV` в `frontend/Dockerfile`). Следствие: **сменили
-  `PUBLIC_URL` — пересобрать фронт** (`docker compose up -d --build frontend`).
+- [x] **Адрес сайта во фронте — сделано в #340.** Раньше фронт брал его из `NEXT_PUBLIC_ORIGIN`,
+  который Next вшивает при сборке, а compose передавал только при запуске — в образ попадало
+  не то. Теперь фронт читает `PUBLIC_URL` (и лимит картинки `MAX_ENERGY_DRINK_IMAGE_SIZE`) на
+  сервере во время запроса: одно значение в `.env` на всех, без пересборки при смене.
 - [x] **Перезапуск после перезагрузки сервера — сделано в #340.** У всех сервисов
   `restart: unless-stopped`; проверить, что Docker включён в автозагрузку
   (`systemctl enable docker`).
@@ -33,16 +33,15 @@
 - [ ] `DEPLOY_ENV=prod` — тогда Caddy не проксирует `/api` наружу (бэк, `/api/docs` и
   `/api/openapi.json` снаружи недоступны).
 - [ ] `PUBLIC_URL=https://<домен>` — из него берутся адрес сайта для Caddy (HTTPS), ссылки в
-  письмах (`/auth/verify`, `/auth/reset-password`) и `NEXT_PUBLIC_ORIGIN`. **Без `/` в конце**:
+  письмах (`/auth/verify`, `/auth/reset-password`) и заголовок `Origin` запросов фронта к бэку. **Без `/` в конце**:
   Caddy примет его за путь и будет отдавать только главную.
 - [ ] `ACCESS_TOKEN_SECRET`, `RESET_PASSWORD_TOKEN_SECRET`, `VERIFICATION_TOKEN_SECRET` — новые,
   случайные, разные, не короче 32 символов (бэк не стартует с короче), не те, что в dev.
   Например, `openssl rand -hex 32` на каждый.
 - [ ] `DB_PASSWORD` — новый и стойкий; `DB_USER`/`DB_NAME` по вкусу.
 - [ ] `TOKEN_LIFETIME_SECONDS=86400` (24 ч, refresh-токена нет — договорились «пробуем так»).
-- [ ] `MAX_ENERGY_DRINK_IMAGE_SIZE=1048576` — совпадает с лимитом на фронте (`MAX_IMAGE_BYTES` в
-  `DrinkForm`, либо `NEXT_PUBLIC_MAX_IMAGE_BYTES` при сборке). Разъедутся — фронт пропустит то,
-  что бэк отрежет `413`.
+- [ ] `MAX_ENERGY_DRINK_IMAGE_SIZE=1048576` — лимит картинки; фронт берёт его же и сжимает фото до
+  этого размера перед загрузкой.
 - [ ] `SMTP_*` — боевой ящик (старый пароль из `.env.example` сменён). `SMTP_FROM` — тот же адрес,
   что и ящик, иначе письма уйдут в спам или будут отклонены.
 - [ ] Флаги фронта `NEXT_PUBLIC_FF_*` при сборке **не задавать**: всё вне MVP (избранное, эмодзи,

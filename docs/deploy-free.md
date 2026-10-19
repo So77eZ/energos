@@ -66,10 +66,10 @@ postgresql+asyncpg://postgres.<project-id>:<пароль>@aws-1-<регион>.p
 | Переменная | Значение |
 |---|---|
 | `API_ORIGIN` | `https://<сервис>.onrender.com` |
-| `NEXT_PUBLIC_ORIGIN` | `https://<имя>.vercel.app` |
+| `PUBLIC_URL` | `https://<имя>.vercel.app` |
 | `INTERNAL_API_SECRET` | значение с Render, символ в символ |
 
-4. Deploy. В **Domains** проверить, что выдан ровно `<имя>.vercel.app`; если другой — прописать его в `NEXT_PUBLIC_ORIGIN` здесь и в `ALLOWED_ORIGINS`/`PUBLIC_URL` на Render.
+4. Deploy. В **Domains** проверить, что выдан ровно `<имя>.vercel.app`; если другой — прописать его в `PUBLIC_URL` здесь и в `ALLOWED_ORIGINS`/`PUBLIC_URL` на Render.
 5. Открыть `https://<имя>.vercel.app`.
 
 ## 4. Первый админ
