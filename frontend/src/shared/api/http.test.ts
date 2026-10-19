@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { assertResponseOk, parseError, SessionExpiredError, RateLimitError } from './http'
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import { ApiError, assertResponseOk, httpRequest, parseApiError, parseError, SessionExpiredError, RateLimitError } from './http'
 
 const resWith = (status: number) => new Response(null, { status })
 
@@ -64,5 +64,41 @@ describe('parseError', () => {
   it('detail-объект без reason → code', async () => {
     const res = new Response(JSON.stringify({ detail: { code: 'SOME_CODE' } }), { status: 400 })
     expect(await parseError(res)).toBe('SOME_CODE')
+  })
+})
+
+describe('parseApiError: формат {"error": {code, message}}', () => {
+  const err = (error: unknown, status = 409) => new Response(JSON.stringify({ error }), { status })
+
+  it('код и сообщение берутся из error', async () => {
+    expect(await parseApiError(err({ code: 'REVIEW_ALREADY_EXISTS', message: 'You have already submitted a review' })))
+      .toEqual({ code: 'REVIEW_ALREADY_EXISTS', message: 'You have already submitted a review' })
+  })
+
+  it('ошибка валидации: текст из fields, а не общий message', async () => {
+    const res = err({ code: 'VALIDATION_ERROR', message: 'Request validation failed', fields: [{ msg: 'Field required' }] }, 422)
+    expect(await parseApiError(res)).toEqual({ code: 'VALIDATION_ERROR', message: 'Field required' })
+  })
+
+  it('ошибка fastapi-users: код HTTP_400, исходный код в message', async () => {
+    expect(await parseApiError(err({ code: 'HTTP_400', message: 'RESET_PASSWORD_BAD_TOKEN' }, 400)))
+      .toEqual({ code: 'HTTP_400', message: 'RESET_PASSWORD_BAD_TOKEN' })
+  })
+
+  it('старый формат detail → code null', async () => {
+    const res = new Response(JSON.stringify({ detail: 'Not found' }), { status: 404 })
+    expect(await parseApiError(res)).toEqual({ code: null, message: 'Not found' })
+  })
+})
+
+describe('httpRequest: код ошибки доходит до ApiError', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('ApiError.code и status из ответа', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: { code: 'USERNAME_ALREADY_EXISTS', message: 'taken' } }), { status: 409 })))
+    const e = await httpRequest('/x').catch((x) => x)
+    expect(e).toBeInstanceOf(ApiError)
+    expect(e).toMatchObject({ status: 409, code: 'USERNAME_ALREADY_EXISTS', message: 'taken' })
   })
 })
