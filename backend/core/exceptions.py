@@ -129,3 +129,9 @@ class ReviewAlreadyExistsException(BaseServiceException):
     status_code = 409
     error_code = ErrorCode.REVIEW_ALREADY_EXISTS
     default_message = "You have already submitted a review for this energy drink"
+
+
+class ContentTooLargeException(BaseServiceException):
+    status_code = 413
+    error_code = ErrorCode.CONTENT_TOO_LARGE
+    default_message = "Content too large"
