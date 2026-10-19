@@ -62,6 +62,9 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         if row is None:
             return False, None
 
+        if row.image is None or row.image_content_type is None:
+            return True, None
+
         return True, ImageData(data=row.image, content_type=row.image_content_type)
 
     async def delete_by_id(self, id: int) -> Literal[True]:
