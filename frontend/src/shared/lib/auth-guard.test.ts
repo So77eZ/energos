@@ -29,7 +29,7 @@ describe('withSessionGuard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     h.headersGet.mockReturnValue(null)
-    vi.stubEnv('NEXT_PUBLIC_ORIGIN', 'https://own.app')
+    vi.stubEnv('PUBLIC_URL', 'https://own.app')
   })
 
   it('success — пробрасывает результат, без clear/redirect', async () => {

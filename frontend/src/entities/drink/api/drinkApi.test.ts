@@ -7,13 +7,10 @@ afterEach(() => vi.unstubAllGlobals())
 
 describe('drinkApi.list', () => {
   it('created_at из API приводится к UTC; без него — null', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockImplementation(async (url: string) =>
-      String(url).includes('/count')
-        ? json({ count: 2 })
-        : json([
-            { id: 1, name: 'A', price: 10, no_sugar: false, created_at: '2026-10-10T12:59:25.267857' },
-            { id: 2, name: 'B', price: null, no_sugar: true },
-          ])))
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => json([
+      { id: 1, name: 'A', price: 10, no_sugar: false, created_at: '2026-10-10T12:59:25.267857' },
+      { id: 2, name: 'B', price: null, no_sugar: true },
+    ])))
 
     const [a, b] = await drinkApi.list()
 
@@ -24,12 +21,12 @@ describe('drinkApi.list', () => {
     expect(a.image_url).toBe('/drink-image/1')
   })
 
-  it('число страниц берёт из /energy-drinks/count', async () => {
-    const fetchMock = vi.fn().mockImplementation(async (url: string) =>
-      String(url).includes('/count') ? json({ count: 0 }) : json([]))
+  it('весь каталог одним запросом, без limit/offset и /count', async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => json([{ id: 1, name: 'A', price: 1, no_sugar: false }]))
     vi.stubGlobal('fetch', fetchMock)
 
-    expect(await drinkApi.list()).toEqual([])
-    expect(String(fetchMock.mock.calls[0][0])).toContain('/api/v1/energy-drinks/count')
+    expect(await drinkApi.list()).toHaveLength(1)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(String(fetchMock.mock.calls[0][0])).toMatch(/\/api\/v1\/energy-drinks\/$/)
   })
 })

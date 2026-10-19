@@ -31,7 +31,6 @@ def _count(model: Any, column: InstrumentedAttribute[Any]) -> Any:  # noqa: ANN4
 
 class EnergyDrink(Base):
     __tablename__ = "energy_drinks"
-    __verbose_name__ = "Energy Drink"
 
     name: Mapped[str]
     price: Mapped[float | None]

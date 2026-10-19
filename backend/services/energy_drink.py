@@ -1,9 +1,11 @@
+from io import BytesIO
 from typing import Annotated
 
 from fastapi import Depends, UploadFile
+from PIL import Image
 
 from core.constants import OrderDirection
-from core.exceptions import ObjectNotFoundException
+from core.exceptions import EnergyDrinkNotFoundException, ImageNotFoundException
 from models.energy_drink import EnergyDrink
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from schemas.energy_drink import (
@@ -28,8 +30,13 @@ class EnergyDrinkService(
         energy_drink = await self.repository.get_by_id(energy_drink_id)
 
         image_data = await image_file.read()
-        energy_drink.image = image_data
-        energy_drink.image_content_type = image_file.content_type
+        image = Image.open(BytesIO(image_data))
+        compressed_buffer = BytesIO()
+        image.save(compressed_buffer, format="WEBP", quality=75)
+        compressed_bytes = compressed_buffer.getvalue()
+
+        energy_drink.image = compressed_bytes
+        energy_drink.image_content_type = "image/webp"
 
         updated_energy_drink = await self.repository.update(energy_drink)
         return EnergyDrinkReadSchema.model_validate(updated_energy_drink)
@@ -37,6 +44,10 @@ class EnergyDrinkService(
     async def get_by_id(self, id: int) -> EnergyDrinkWithMetricsReadSchema:
         energy_drink: EnergyDrink = await self.repository.get_by_id(id)
         return EnergyDrinkWithMetricsReadSchema.model_validate(energy_drink)
+
+    async def get_all_with_metrics(self) -> list[EnergyDrinkWithMetricsReadSchema]:
+        energy_drinks: list[EnergyDrink] = await self.repository.get_all_with_metrics()
+        return [EnergyDrinkWithMetricsReadSchema.model_validate(drink) for drink in energy_drinks]
 
     async def get_many_with_reviews(
         self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC
@@ -50,10 +61,10 @@ class EnergyDrinkService(
         exists, image = await self.repository.get_image_by_energy_drink_id(energy_drink_id)
 
         if not exists:
-            raise ObjectNotFoundException(f"Energy drink with id {energy_drink_id} not found")
+            raise EnergyDrinkNotFoundException(f"Energy drink with id {energy_drink_id} not found")
 
         if image is None:
-            raise ObjectNotFoundException(f"Image for energy drink with id {energy_drink_id} not found")
+            raise ImageNotFoundException(f"Image for energy drink with id {energy_drink_id} not found")
 
         return image
 

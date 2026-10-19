@@ -30,7 +30,7 @@ type TabId = 'reviews' | 'favorites' | 'submissions' | 'achievements' | 'appeara
 
 // Вкладки фич, которых нет в API ветки mvp, скрыты флагами (shared/config/features.ts).
 const TAB_IDS: TabId[] = [
-  ...(FEATURES.reviewAuthors ? ['reviews' as const] : []),
+  'reviews',
   ...(FEATURES.favorites ? ['favorites' as const] : []),
   ...(FEATURES.submissions ? ['submissions' as const] : []),
   ...(FEATURES.achievements ? ['achievements' as const] : []),
@@ -195,7 +195,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           <h1 className="prof-name">{user.username}</h1>
           <div className="prof-meta">
             <span>{user.email}</span>
-            {FEATURES.reviewAuthors && <span><Icons.msg w={12} /> {reviews.length} отзывов</span>}
+            <span><Icons.msg w={12} /> {reviews.length} отзывов</span>
             {FEATURES.favorites && <span><Icons.bolt w={12} /> {favIds.length} в избранном</span>}
             {FEATURES.submissions && <span><Icons.beaker w={12} /> {mySubs.length} заявок</span>}
             {FEATURES.achievements && <span><Icons.award w={12} /> {unlockedCount}/{achievements.length}</span>}
@@ -218,13 +218,13 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       {!user.is_verified && <VerifyEmailBanner email={user.email} />}
 
       <section className="prof-stats">
-        {FEATURES.reviewAuthors && <div className="stat-card stat-cyan">
+        <div className="stat-card stat-cyan">
           <div className="stat-icon"><Icons.msg /></div>
           <div className="stat-lbl">ОТЗЫВОВ</div>
           <div className="stat-val">{reviews.length}</div>
           <div className="stat-sub">всего</div>
           <div className="stat-corner" />
-        </div>}
+        </div>
         {FEATURES.favorites && <div className="stat-card stat-amber">
           <div className="stat-icon"><Icons.bolt /></div>
           <div className="stat-lbl">ИЗБРАННЫХ</div>
@@ -249,7 +249,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       </section>
 
       <div className="prof-tabs" role="tablist" aria-label="Разделы профиля">
-        {FEATURES.reviewAuthors && <TabButton id="reviews"      label="Отзывы"     icon="msg"     badge={counts.reviews}      active={tab} onSelect={setTab} />}
+        <TabButton id="reviews"      label="Отзывы"     icon="msg"     badge={counts.reviews}      active={tab} onSelect={setTab} />
         {FEATURES.favorites     && <TabButton id="favorites"    label="Избранное"  icon="bolt"    badge={counts.favorites}    active={tab} onSelect={setTab} />}
         {FEATURES.submissions   && <TabButton id="submissions"  label="Мои заявки" icon="beaker"  badge={counts.submissions}  active={tab} onSelect={setTab} />}
         {FEATURES.achievements  && <TabButton id="achievements" label="Достижения" icon="trophy"  badge={counts.achievements} active={tab} onSelect={setTab} />}

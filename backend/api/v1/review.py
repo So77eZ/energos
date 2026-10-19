@@ -5,7 +5,7 @@ from core.constants import OrderDirection
 from core.rate_limiter import limiter
 from core.router import AutoStatusAPIRouter
 from models import User
-from schemas.review import ReviewCreateSchema, ReviewReadSchema, ReviewUpdateSchema
+from schemas.review import ReviewCreateSchema, ReviewForUserSchema, ReviewReadSchema, ReviewUpdateSchema
 from services.review import ReviewService, get_review_service
 
 router = AutoStatusAPIRouter()
@@ -72,7 +72,7 @@ async def get_my_reviews(
     order_by: str = "id",
     current_user: User = Depends(get_verified_user),
     review_service: ReviewService = Depends(get_review_service),
-) -> list[ReviewReadSchema]:
+) -> list[ReviewForUserSchema]:
     return await review_service.get_many_by_user_id(
         user_id=current_user.id, limit=limit, offset=offset, order_by=order_by
     )

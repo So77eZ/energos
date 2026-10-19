@@ -51,7 +51,7 @@ export async function registerAction(
     await setToken(access_token)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message, username, nickname }
-    return { error: localizeAuthError(e instanceof Error ? e.message : '', 'Ошибка регистрации'), username, nickname }
+    return { error: localizeAuthError(e, 'Ошибка регистрации'), username, nickname }
   }
 
   return { error: '', success: true }
@@ -94,7 +94,7 @@ export async function resetPasswordAction(
     await authApi.resetPassword(token, password)
   } catch (e) {
     if (e instanceof RateLimitError) return { error: e.message }
-    return { error: localizeAuthError(e instanceof Error ? e.message : '', 'Не удалось сменить пароль') }
+    return { error: localizeAuthError(e, 'Не удалось сменить пароль') }
   }
   return { error: '', success: true }
 }

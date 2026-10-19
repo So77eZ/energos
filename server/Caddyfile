@@ -1,4 +1,7 @@
-:80 {
+# Адрес сайта — PUBLIC_URL как есть. `https://<домен>` — Caddy сам получает сертификат
+# Let's Encrypt и редиректит http → https; `http://localhost` — только HTTP на :80.
+# Без `/` в конце: Caddy примет его за путь и будет отдавать только главную.
+{$PUBLIC_URL} {
     @dev_api {
         expression `{env.DEPLOY_ENV} == "dev"`
         path /api /api/*

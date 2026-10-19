@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import Field
 
 from schemas.base import BaseSchema
+from schemas.energy_drink import EnergyDrinkReadSchema
 from schemas.user import SimpleUserSchema
 
 
@@ -42,7 +43,11 @@ class ReviewReadSchema(ReviewBase):
     id: int
     user: SimpleUserSchema
     created_at: datetime
+    updated_at: datetime
 
 
 class ReviewForUserSchema(ReviewBase):
-    pass
+    id: int
+    energy_drink: EnergyDrinkReadSchema
+    created_at: datetime
+    updated_at: datetime

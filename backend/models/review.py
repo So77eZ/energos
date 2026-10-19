@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 class Review(Base):
     __tablename__ = "reviews"
-    __verbose_name__ = "Review"
 
     rating: Mapped[int]
     comment: Mapped[str | None]

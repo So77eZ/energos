@@ -1,10 +1,12 @@
-from sqlalchemy import select
+from typing import Literal
+
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import defer, selectinload
 
 from core.constants import OrderDirection
 from core.database import SessionDep
-from core.exceptions import ObjectNotFoundException
+from core.exceptions import EnergyDrinkNotFoundException
 from models.energy_drink import EnergyDrink
 from repositories.base import BaseRepository
 from schemas.energy_drink import EnergyDrinkCreateSchema, EnergyDrinkUpdateSchema, ImageData
@@ -20,6 +22,13 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         await self.session.flush()
         await self.session.refresh(model_instance, attribute_names=["id", "created_at", "updated_at"])
         return model_instance
+
+    async def get_all_with_metrics(self) -> list[EnergyDrink]:
+        query = select(self.model).options(
+            defer(key=self.model.image), defer(self.model.image_content_type), selectinload(self.model.reviews)
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
 
     async def get_many_with_reviews(
         self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC
@@ -41,7 +50,7 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         result = await self.session.execute(query)
         result = result.scalar_one_or_none()
         if not result:
-            raise ObjectNotFoundException(f"{self.model.__verbose_name__} with id {id} not found")
+            raise EnergyDrinkNotFoundException(f"Energy drink with id {id} not found")
 
         return result
 
@@ -53,7 +62,19 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         if row is None:
             return False, None
 
+        if row.image is None or row.image_content_type is None:
+            return True, None
+
         return True, ImageData(data=row.image, content_type=row.image_content_type)
+
+    async def delete_by_id(self, id: int) -> Literal[True]:
+        statement = delete(self.model).where(self.model.id == id).returning(self.model.id)
+        result = await self.session.execute(statement)
+        deleted_id = result.scalar_one_or_none()
+        await self.session.flush()
+        if deleted_id is None:
+            raise EnergyDrinkNotFoundException(f"Energy drink with id {id} not found")
+        return True
 
 
 async def get_energy_drink_repository(session: SessionDep) -> EnergyDrinkRepository:

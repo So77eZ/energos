@@ -89,6 +89,22 @@ describe('reviewApi', () => {
     expect(updated).toMatchObject({ id: 5, energy_drink_id: 7, rating: 2 })
   })
 
+  it('myReviews: GET /reviews/me с токеном, напиток берётся из energy_drink', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json([
+      { id: 3, ...scores, rating: 4, comment: 'ок', energy_drink: { id: 12, name: 'X' },
+        created_at: '2026-10-19T10:00:00Z', updated_at: '2026-10-19T11:00:00Z' },
+    ]))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const [r] = await reviewApi.myReviews('tok')
+
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toContain('/api/v1/reviews/me?limit=')
+    expect(init.headers.Authorization).toBe('Bearer tok')
+    expect(r).toMatchObject({ id: 3, energy_drink_id: 12, rating: 4, comment: 'ок',
+      created_at: '2026-10-19T10:00:00Z', updated_at: '2026-10-19T11:00:00Z' })
+  })
+
   it('remove: 204 без тела не падает', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })))
 

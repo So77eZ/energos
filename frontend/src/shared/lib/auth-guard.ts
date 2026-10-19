@@ -12,7 +12,7 @@ export async function redirectIfSessionExpired(e: unknown): Promise<void> {
   if (!(e instanceof SessionExpiredError)) return
   await clearToken()
   const h = await headers()
-  const ownOrigin = process.env.NEXT_PUBLIC_ORIGIN ?? `https://${h.get('host')}`
+  const ownOrigin = process.env.PUBLIC_URL ?? `https://${h.get('host')}`
   const ret = returnPathFromReferer(h.get('referer'), ownOrigin)
   const q = new URLSearchParams({ expired: '1', return: ret })
   redirect(`/auth/login?${q}`)

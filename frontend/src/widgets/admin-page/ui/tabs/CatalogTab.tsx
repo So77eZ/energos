@@ -14,6 +14,7 @@ import type { Drink, EnrichedDrink } from '@entities/drink'
 import { deleteDrinkAction } from '@features/drink-form/model/actions'
 import { ROUTES } from '@shared/config/routes'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
+import { searchByName } from '@shared/lib/name-search'
 import { useConfirm } from '@shared/lib/confirm'
 import { useToast } from '@shared/lib/toast'
 import { Icons } from '@shared/ui/icons'
@@ -25,9 +26,7 @@ interface CatalogTabProps {
 export function CatalogTab({ drinks }: CatalogTabProps) {
   const { search } = useCatalogSearch()
   const enriched = useMemo(() => enrichDrinks(drinks), [drinks])
-  const filtered = enriched.filter((d) =>
-    d.name.toLowerCase().includes(search.toLowerCase()),
-  )
+  const filtered = searchByName(enriched, search)
   const totalCount = drinks.length
 
   return (

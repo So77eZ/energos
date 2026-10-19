@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:18
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -21,9 +22,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       API_ORIGIN: http://backend:8000
-      NEXT_PUBLIC_ORIGIN: ${PUBLIC_URL}
+      # Читаются на сервере Next во время запроса — смена в .env не требует пересборки
+      PUBLIC_URL: ${PUBLIC_URL}
+      MAX_ENERGY_DRINK_IMAGE_SIZE: ${MAX_ENERGY_DRINK_IMAGE_SIZE}
     depends_on:
       - backend
     networks:
@@ -33,6 +37,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       DB_HOST: postgres
     depends_on:
@@ -47,10 +52,19 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       DEPLOY_ENV: ${DEPLOY_ENV}
+      # Адрес сайта для Caddy: https://<домен> включает HTTPS
+      PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL не задан в .env}
     ports:
       - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # Сертификаты Let's Encrypt: без томов перевыпускаются при каждом пересоздании контейнера
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - frontend
       - backend
@@ -60,3 +74,7 @@ services:
 networks:
   backend:
     driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

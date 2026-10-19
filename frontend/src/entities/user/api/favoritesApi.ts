@@ -13,7 +13,7 @@ async function requestNoBody(method: 'PUT' | 'DELETE', path: string, headers: Re
   const baseUrl = typeof window === 'undefined' ? (process.env.API_ORIGIN ?? 'http://localhost') : ''
   const reqHeaders = {
     ...headers,
-    ...(typeof window === 'undefined' ? { 'Origin': process.env.NEXT_PUBLIC_ORIGIN ?? 'http://localhost:3000' } : {}),
+    ...(typeof window === 'undefined' ? { 'Origin': process.env.PUBLIC_URL ?? 'http://localhost:3000' } : {}),
   }
   const res = await fetch(`${baseUrl}${path}`, {
     method,

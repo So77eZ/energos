@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { EnrichedDrink } from '@entities/drink'
 import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
+import { searchByName } from '@shared/lib/name-search'
 
 export type { SortOption }
 
@@ -17,16 +18,8 @@ export function useFilterDrinks(drinks: EnrichedDrink[]) {
   const { search, sort, tiers, priceRange, onlyNew, noSugarOnly } = useCatalogSearch()
 
   const filtered = useMemo(() => {
-    let result = drinks
-    if (search.trim()) {
-      // Токены в любом порядке: «burn киви яблоко» находит «BURN Яблоко, киви».
-      // Каждый токен должен встречаться в имени (как подстрока), порядок не важен.
-      const tokens = search.toLowerCase().split(/\s+/).filter(Boolean)
-      result = result.filter((d) => {
-        const name = d.name.toLowerCase()
-        return tokens.every((t) => name.includes(t))
-      })
-    }
+    // Слова в любом порядке, с опечатками: «burm киви» находит «BURN Яблоко, киви».
+    let result = searchByName(drinks, search)
     if (tiers.length > 0) {
       result = result.filter((d) => d.tier != null && tiers.includes(d.tier))
     }
