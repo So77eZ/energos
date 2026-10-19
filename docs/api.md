@@ -2,7 +2,7 @@
 
 Документ описывает API, реализованный в `backend/api`. API построено на
 FastAPI, использует JWT Bearer-аутентификацию и версионируется через префикс
-`/v1`. Актуально для ветки `mvp` на коммите `7d09bbb`.
+`/v1`. Актуально для ветки `mvp-fixes` (#340, 19.10.2026).
 
 ## Базовые URL
 
@@ -39,47 +39,55 @@ Authorization: Bearer <access_token>
 Права проверяются так:
 
 - **подтверждённый пользователь** — активный пользователь с
-  `is_verified=true`, иначе `403` с `detail: "User is not verified"`;
+  `is_verified=true`, иначе `403` с кодом `FORBIDDEN` и сообщением
+  `"User account is not verified"`;
 - **администратор** — активный пользователь с `is_superuser=true`, иначе `403`
-  с `detail: "Admin privileges required"`. Поля `role` у пользователя больше
-  нет. Администратор не освобождается от проверки подтверждения e-mail.
+  с кодом `FORBIDDEN` и сообщением `"Admin privileges required"`. Поля `role` у
+  пользователя больше нет. Администратор не освобождается от проверки
+  подтверждения e-mail.
 
 ### Пагинация и сортировка
 
-Списковые маршруты принимают `limit` (по умолчанию `20`), `offset` (по
-умолчанию `0`) и `order_by` (по умолчанию `id`). Верхней границы `limit` нет.
-Напитки и отзывы напитка принимают ещё `order_direction` (`asc` по умолчанию или `desc`).
+Список напитков (`GET /energy-drinks/`) отдаётся целиком, без параметров:
+фильтры, сортировка и разбивка на страницы делаются на фронте.
 
-`order_by` — имя поля модели (для напитков, например, `id`, `name`, `price`,
-`no_sugar`, `created_at`, а также метрики `avg_rating`, `reviews_count`,
-`avg_acidity` …). Имя несуществующего поля даёт `422` с
-`{"detail": "Invalid order_by field: ..."}`.
+Списки отзывов принимают `limit` (по умолчанию `20`), `offset` (по умолчанию
+`0`) и `order_by` (по умолчанию `id`); верхней границы `limit` нет. Отзывы
+напитка принимают ещё `order_direction` (`asc` по умолчанию или `desc`). Имя
+несуществующего поля в `order_by` даёт `422` с кодом `UNPROCESSABLE_ENTITY`.
 
 ### Ошибки
 
 Ошибки возвращаются в формате:
 
 ```json
-{"detail": "..."}
+{"error": {"code": "REVIEW_ALREADY_EXISTS", "message": "You have already submitted a review for this energy drink"}}
 ```
 
-Значение `detail` бывает трёх видов:
-
-- строка — текст или код: `"Energy drink with id 999 not found"`,
-  `"User is not verified"`, `"RESET_PASSWORD_BAD_TOKEN"`,
-  `"REGISTER_USER_ALREADY_EXISTS"`, `"LOGIN_BAD_CREDENTIALS"`;
-- объект `{"code": "...", "reason": "..."}` — ошибка пароля при регистрации и
-  сбросе (`reason`: `Password should be at least 8 characters`,
-  `Password should not contain e-mail`);
-- список ошибок Pydantic — при ошибках валидации (`422`).
+- `code` — машинный код (список — `backend/core/error_codes.py`): общие
+  `BAD_REQUEST`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`,
+  `UNPROCESSABLE_ENTITY`, `INTERNAL_ERROR`, и предметные `ENERGY_DRINK_NOT_FOUND`,
+  `REVIEW_NOT_FOUND`, `IMAGE_NOT_FOUND`, `USER_NOT_FOUND`, `EMAIL_ALREADY_EXISTS`,
+  `USERNAME_ALREADY_EXISTS`, `INVALID_PASSWORD`, `REVIEW_NOT_OWNER`,
+  `REVIEW_ALREADY_EXISTS`. Фронт переводит сообщения по коду, а не по тексту;
+- `message` — текст на английском;
+- при ошибке валидации (`422`, код `VALIDATION_ERROR`) есть ещё `fields` —
+  список ошибок Pydantic; при битом JSON — `400` с кодом `INVALID_JSON`;
+- ошибки fastapi-users (вход, битые токены подтверждения и сброса) приходят с
+  кодом `HTTP_<статус>`, а их собственный код лежит в `message`
+  (`RESET_PASSWORD_BAD_TOKEN`, `VERIFY_USER_BAD_TOKEN`,
+  `VERIFY_USER_ALREADY_VERIFIED`); неверный логин или пароль — `401` с кодом
+  `BAD_CREDENTIALS`;
+- непойманное исключение — `500` с кодом `INTERNAL_ERROR`.
 
 Основные статусы:
 
-- `400` — некорректный JSON, битый токен подтверждения/сброса, неверный пароль;
+- `400` — некорректный JSON, битый токен подтверждения/сброса;
 - `401` — отсутствует/неверен токен либо неверные учётные данные;
 - `403` — недостаточно прав, пользователь не подтверждён, чужой отзыв;
 - `404` — объект не найден;
-- `409` — конфликт: повторный отзыв того же пользователя на напиток;
+- `409` — конфликт: занятый e-mail или `username` при регистрации, повторный
+  отзыв того же пользователя на напиток;
 - `413` — тело запроса больше `MAX_ENERGY_DRINK_IMAGE_SIZE` (ответ — обычный
   текст `Content Too Large`, не JSON; ограничение действует на все запросы);
 - `422` — ошибка валидации параметров или тела запроса;
@@ -128,10 +136,9 @@ Authorization: Bearer <access_token>
 
 | Метод и путь | Параметры | Лимит | Ответ |
 | --- | --- | --- | --- |
-| `GET /energy-drinks/` | `limit`, `offset`, `order_by`, `order_direction` | 1000/мин | `200`, `list[EnergyDrinkWithMetricsReadSchema]` |
-| `GET /energy-drinks/count` | нет | 1000/мин | `200`, `{"count": <int>}` |
+| `GET /energy-drinks/` | нет | 1000/мин | `200`, `list[EnergyDrinkWithMetricsReadSchema]` — все напитки |
 | `GET /energy-drinks/{energy_drink_id}` | `energy_drink_id` (int) | 1000/мин | `200`, `EnergyDrinkWithMetricsReadSchema`; `404`, если не найден |
-| `GET /energy-drinks/{energy_drink_id}/image` | `energy_drink_id` (int) | 1000/мин | `200`, бинарное тело изображения с сохранённым `Content-Type`; `404`, если напитка или картинки нет |
+| `GET /energy-drinks/{energy_drink_id}/image` | `energy_drink_id` (int) | 1000/мин | `200`, изображение (`image/webp`); `404 ENERGY_DRINK_NOT_FOUND`, если напитка нет; у напитка без картинки сейчас `200` с пустым телом (задумано `404 IMAGE_NOT_FOUND`, см. «Известные расхождения») |
 
 Элемент `EnergyDrinkWithMetricsReadSchema` содержит поля напитка и готовую
 сводку по отзывам; самих отзывов в нём **нет**:
@@ -174,7 +181,9 @@ Authorization: Bearer <access_token>
 | `DELETE /energy-drinks/{energy_drink_id}/image` | нет | `204` |
 
 Размер загружаемой картинки ограничен `MAX_ENERGY_DRINK_IMAGE_SIZE` (в `.env`,
-сейчас 1 МБ): большие запросы получают `413`.
+сейчас 1 МБ): большие запросы получают `413`. Сохраняется картинка в WebP
+(качество 75), размер в пикселях не меняется. Фронт уменьшает фото больше лимита
+ещё в браузере, до отправки.
 
 Схемы напитка:
 
@@ -192,7 +201,7 @@ Authorization: Bearer <access_token>
 | Метод и путь | Доступ | Параметры/тело | Ответ |
 | --- | --- | --- | --- |
 | `GET /reviews/` | публичный | `energy_drink_id` (**обязателен**, без него `422`), `limit`, `offset`, `order_by`, `order_direction` | `200`, `list[ReviewReadSchema]` — отзывы одного напитка |
-| `GET /reviews/me` | Bearer + подтверждённый пользователь | `limit`, `offset`, `order_by` | `200`, `list[ReviewReadSchema]` — отзывы текущего пользователя |
+| `GET /reviews/me` | Bearer + подтверждённый пользователь | `limit`, `offset`, `order_by` | `200`, `list[ReviewForUserSchema]` — отзывы текущего пользователя |
 | `POST /reviews/{energy_drink_id}` | Bearer + подтверждённый пользователь | JSON `ReviewCreateSchema` | `201`, `ReviewReadSchema` |
 | `PUT /reviews/{review_id}` | Bearer + подтверждённый пользователь, только автор отзыва | JSON `ReviewUpdateSchema` | `200`, `ReviewReadSchema` |
 | `DELETE /reviews/{review_id}` | Bearer + подтверждённый пользователь, только автор отзыва | нет | `204` |
@@ -210,15 +219,16 @@ Authorization: Bearer <access_token>
 маршрут.
 
 `ReviewReadSchema` — это `ReviewCreateSchema` плюс `id`, автор
-`user: {id, username, role}` и `created_at` (datetime, ISO 8601 с часовым поясом,
-`Z`). `energy_drink_id` и `updated_at` в ответе нет. При создании
+`user: {id, username, role}`, `created_at` и `updated_at` (datetime, ISO 8601 с
+часовым поясом, `Z`); `energy_drink_id` в ответе нет — напиток известен из
+запроса. `ReviewForUserSchema` (`GET /reviews/me`) — то же, но вместо автора
+напиток `energy_drink` (`EnergyDrinkReadSchema`). При создании
 отзыв привязывается к напитку из `{energy_drink_id}` и текущему пользователю.
 Если напиток или отзыв не найден, возвращается `404`; при попытке изменить
 или удалить чужой отзыв — `403`.
 
 Один пользователь может оставить на напиток только один отзыв: повторное
-создание возвращает `409` с `{"detail": "User has already submitted a review
-for this Energy Drink"}`.
+создание возвращает `409` с кодом `REVIEW_ALREADY_EXISTS`.
 
 ## Rate limiting
 
@@ -231,7 +241,7 @@ for this Energy Drink"}`.
 | --- | --- |
 | `/auth/*` (вход, регистрация, сброс пароля, подтверждение e-mail) | 10/мин |
 | `/auth/me` | 100/мин |
-| `GET /energy-drinks/`, `GET /energy-drinks/{id}`, `GET /energy-drinks/{id}/image`, `GET /energy-drinks/count` | 1000/мин |
+| `GET /energy-drinks/`, `GET /energy-drinks/{id}`, `GET /energy-drinks/{id}/image` | 1000/мин |
 | `GET /reviews/` | 1000/мин |
 | `GET /reviews/me` | 100/мин |
 | `POST`/`PUT`/`DELETE /reviews/*` | 10/мин |
@@ -264,7 +274,12 @@ for this Energy Drink"}`.
 
 Найдено при проверке `mvp` в docker; пока не исправлено:
 
-- нет `has_image`/`image_url` у напитка, а в отзывах — `energy_drink_id`;
-  `GET /reviews/me` не говорит, к какому напитку относится отзыв, а
-  `GET /reviews/` без `energy_drink_id` отвечает `422`, поэтому общей ленты отзывов
-  нет — подробности и вопросы в `docs/mvp-backend-questions.md`.
+- нет `has_image`/`image_url` у напитка; `GET /reviews/` без `energy_drink_id`
+  отвечает `422`, поэтому общей ленты отзывов нет — подробности в
+  `docs/mvp-backend-questions.md`;
+- напиток без картинки: `GET /energy-drinks/{id}/image` отвечает `200` с пустым
+  телом вместо `404 IMAGE_NOT_FOUND` (репозиторий возвращает `ImageData(data=None)`);
+- коды `VERIFIED_USER_REQUIRED` и `ADMIN_REQUIRED` объявлены, но проверки
+  подтверждения и прав администратора отдают общий `FORBIDDEN`;
+- `413` (тело больше лимита) приходит текстом `Content Too Large`, не в формате
+  `{"error": …}`.
