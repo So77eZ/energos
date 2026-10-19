@@ -1,21 +1,39 @@
 from email.message import EmailMessage
-from typing import AsyncGenerator
+from pathlib import Path
+from typing import Any, AsyncGenerator
 
 from aiosmtplib import SMTP
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from core.config import settings
+
+TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 
 
 class EmailClient:
     def __init__(self, smtp_client: SMTP):
         self.smtp_client: SMTP = smtp_client
+        self.env = Environment(
+            loader=FileSystemLoader(TEMPLATES_DIR),
+            autoescape=select_autoescape(["html", "xml"]),
+        )
 
-    async def send_email(self, subject: str, body: str, to_email: str) -> None:
+    async def send_template_email(
+        self,
+        subject: str,
+        to_email: str,
+        template_name: str,
+        context: dict[str, Any],
+    ) -> None:
+        html_body = self.env.get_template(template_name).render(**context)
+
         message = EmailMessage()
-        message.set_content(body)
         message["Subject"] = subject
         message["From"] = settings.email.SMTP_FROM
         message["To"] = to_email
+
+        message.set_content(html_body, subtype="html")
+
         await self.smtp_client.send_message(message)
 
     @classmethod
@@ -35,10 +53,11 @@ class EmailClient:
 
         async for smtp_client in cls.get_session():
             client = cls(smtp_client)
-            await client.send_email(
-                subject="Verify your email",
-                body=f"Please click the following link to verify your email: {verification_link}",
+            await client.send_template_email(
+                subject="Подтвердите ваш e-mail",
                 to_email=to_email,
+                template_name="welcome.html",
+                context={"verification_link": verification_link},
             )
 
     @classmethod
@@ -47,8 +66,9 @@ class EmailClient:
 
         async for smtp_client in cls.get_session():
             client = cls(smtp_client)
-            await client.send_email(
-                subject="Reset your password",
-                body=f"Please click the following link to reset your password: {reset_password_link}",
+            await client.send_template_email(
+                subject="Сброс пароля",
                 to_email=to_email,
+                template_name="reset_password.html",
+                context={"reset_password_link": reset_password_link},
             )
