@@ -9,12 +9,11 @@
   (`frontend/src/shared/lib/session.ts`), а браузер не сохраняет `Secure`-cookie по обычному
   HTTP — без HTTPS на настоящем домене **вход не заработает** (на localhost это не видно: он
   считается безопасным). Теперь:
-  - `server/Caddyfile` слушает адрес из `SITE_ADDRESS`. Домен (`energos.example`, без схемы) —
-    Caddy сам получает сертификат Let's Encrypt и редиректит `http → https`; не задано — `:80`,
-    только HTTP, как раньше локально;
+  - адрес сайта в `server/Caddyfile` — `PUBLIC_URL` как есть. `https://<домен>` — Caddy сам
+    получает сертификат Let's Encrypt и редиректит `http → https`; `http://localhost` — только
+    HTTP на `:80`, как раньше локально (но отвечает только на `localhost`, не на `127.0.0.1`/IP);
   - у `server` в `docker-compose.yml` порты `80`, `443`, `443/udp` (HTTP/3) и тома
     `caddy_data`/`caddy_config` — сертификат переживает пересоздание контейнера.
-  - [ ] **На сервере:** `SITE_ADDRESS=<домен>` в `.env`.
 - [ ] **Домен и DNS.** Купить домен, A-запись (и AAAA, если есть IPv6) на IP сервера; решить про
   `www` (редирект на основной). Сертификат выпустится, только когда DNS уже указывает на сервер и
   порты 80/443 открыты.
@@ -33,9 +32,9 @@
 
 - [ ] `DEPLOY_ENV=prod` — тогда Caddy не проксирует `/api` наружу (бэк, `/api/docs` и
   `/api/openapi.json` снаружи недоступны).
-- [ ] `PUBLIC_URL=https://<домен>` без `/` в конце — из него строятся ссылки в письмах
-  (`/auth/verify`, `/auth/reset-password`) и `NEXT_PUBLIC_ORIGIN`.
-- [ ] `SITE_ADDRESS=<домен>` — тот же домен, что в `PUBLIC_URL`, но без схемы.
+- [ ] `PUBLIC_URL=https://<домен>` — из него берутся адрес сайта для Caddy (HTTPS), ссылки в
+  письмах (`/auth/verify`, `/auth/reset-password`) и `NEXT_PUBLIC_ORIGIN`. **Без `/` в конце**:
+  Caddy примет его за путь и будет отдавать только главную.
 - [ ] `ACCESS_TOKEN_SECRET`, `RESET_PASSWORD_TOKEN_SECRET`, `VERIFICATION_TOKEN_SECRET` — новые,
   случайные, разные, не короче 32 символов (бэк не стартует с короче), не те, что в dev.
   Например, `openssl rand -hex 32` на каждый.

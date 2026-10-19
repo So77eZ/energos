@@ -56,8 +56,8 @@ services:
     restart: unless-stopped
     environment:
       DEPLOY_ENV: ${DEPLOY_ENV}
-      # Домен в проде — Caddy включит HTTPS; не задано — :80, только HTTP
-      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      # Адрес сайта для Caddy: https://<домен> включает HTTPS
+      PUBLIC_URL: ${PUBLIC_URL:?PUBLIC_URL не задан в .env}
     ports:
       - "80:80"
       - "443:443"
