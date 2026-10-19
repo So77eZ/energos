@@ -1,9 +1,11 @@
 import { ApiError } from '@shared/api/http'
+import type { ErrorCode } from '@shared/api/error-codes'
 
 // Ошибки авторизации. Свои ошибки бэк отдаёт кодом (`{"error": {"code": …}}`) — переводим по нему.
 // Ошибки fastapi-users (битый токен сброса/подтверждения) приходят с кодом `HTTP_400`, а их собственный
 // код (RESET_PASSWORD_BAD_TOKEN и т. п.) лежит в тексте — их переводим по тексту.
-const BY_CODE: Readonly<Record<string, string>> = {
+// Ключи типизированы кодами бэка: переименованный или удалённый код ломает tsc.
+const BY_CODE: Readonly<Partial<Record<ErrorCode, string>>> = {
   EMAIL_ALREADY_EXISTS: 'Пользователь с таким e-mail уже зарегистрирован',
   USERNAME_ALREADY_EXISTS: 'Это имя уже занято, выберите другое',
 }
@@ -17,7 +19,8 @@ const BY_TEXT: ReadonlyArray<readonly [string, string]> = [
 ]
 
 export function localizeAuthError(error: unknown, fallback: string): string {
-  if (error instanceof ApiError && error.code && BY_CODE[error.code]) return BY_CODE[error.code]
+  const byCode = error instanceof ApiError && error.code ? BY_CODE[error.code as ErrorCode] : undefined
+  if (byCode) return byCode
   const message = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
   const hit = BY_TEXT.find(([key]) => message.includes(key))
   if (hit) return hit[1]
