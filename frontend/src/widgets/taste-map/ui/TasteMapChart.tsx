@@ -12,6 +12,7 @@ import {
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
+import { searchByName } from '@shared/lib/name-search'
 
 interface TasteMapChartProps {
   drinks: EnrichedDrink[]
@@ -36,12 +37,7 @@ export function TasteMapChart({ drinks }: TasteMapChartProps) {
   const [hovered, setHovered] = useState<number | null>(null)
   const { search, noSugarOnly } = useCatalogSearch()
 
-  const visible = drinks.filter((d) => {
-    if (!d.metrics) return false
-    if (noSugarOnly && !d.no_sugar) return false
-    if (search && !d.name.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
+  const visible = searchByName(drinks, search).filter((d) => d.metrics && !(noSugarOnly && !d.no_sugar))
 
   return (
     <div className="page page-tastemap">

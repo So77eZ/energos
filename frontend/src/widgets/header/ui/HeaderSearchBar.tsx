@@ -7,6 +7,7 @@ import { IconSearch, IconBolt, IconSliders } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
 import { DrinkImg } from '@entities/drink'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
+import { searchByName } from '@shared/lib/name-search'
 import { FilterPanel } from '@features/filter-drinks/ui/FilterPanel'
 
 const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/drinks', '/taste-map']
@@ -63,9 +64,8 @@ export function HeaderSearchBar(
     )
   }
 
-  const matchingItems = showResults && search
-    ? searchItems.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()))
-    : []
+  // По релевантности: первыми идут лучшие совпадения, опечатки прощаются.
+  const matchingItems = showResults && search ? searchByName(searchItems, search) : []
 
   return (
     <div className="hdr-search" ref={containerRef}>
