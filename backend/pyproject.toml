@@ -12,6 +12,7 @@ dependencies = [
     "fastapi>=0.142.0",
     "fastapi-limitex>=1.1.1",
     "fastapi-users[sqlalchemy]>=15.0.5",
+    "pillow>=13.0.0",
     "pydantic-settings>=2.15.0",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",

@@ -1,6 +1,8 @@
+from io import BytesIO
 from typing import Annotated
 
 from fastapi import Depends, UploadFile
+from PIL import Image
 
 from core.constants import OrderDirection
 from core.exceptions import EnergyDrinkNotFoundException, ImageNotFoundException
@@ -28,8 +30,13 @@ class EnergyDrinkService(
         energy_drink = await self.repository.get_by_id(energy_drink_id)
 
         image_data = await image_file.read()
-        energy_drink.image = image_data
-        energy_drink.image_content_type = image_file.content_type
+        image = Image.open(BytesIO(image_data))
+        compressed_buffer = BytesIO()
+        image.save(compressed_buffer, format="WEBP", quality=75)
+        compressed_bytes = compressed_buffer.getvalue()
+
+        energy_drink.image = compressed_bytes
+        energy_drink.image_content_type = "image/webp"
 
         updated_energy_drink = await self.repository.update(energy_drink)
         return EnergyDrinkReadSchema.model_validate(updated_energy_drink)
