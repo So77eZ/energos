@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from typing import Literal
+
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -52,7 +54,7 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
         )
 
     async def exists_by_user_and_energy_drink(self, user_id: int, energy_drink_id: int) -> bool:
-        stmt = (
+        statement = (
             select(Review.id)
             .where(
                 Review.user_id == user_id,
@@ -60,15 +62,24 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
             )
             .limit(1)
         )
-        return (await self.session.execute(stmt)).scalar_one_or_none() is not None
+        return (await self.session.execute(statement)).scalar_one_or_none() is not None
 
     async def get_author_id(self, review_id: int) -> int:
-        stmt = select(Review.user_id).where(Review.id == review_id)
-        result = await self.session.execute(stmt)
+        statement = select(Review.user_id).where(Review.id == review_id)
+        result = await self.session.execute(statement)
         author_id = result.scalar_one_or_none()
         if author_id is None:
             raise ReviewNotFoundException(f"Review with id {review_id} not found")
         return author_id
+
+    async def delete_by_id(self, id: int) -> Literal[True]:
+        statement = delete(self.model).where(self.model.id == id).returning(self.model.id)
+        result = await self.session.execute(statement)
+        deleted_id = result.scalar_one_or_none()
+        await self.session.flush()
+        if deleted_id is None:
+            raise ReviewNotFoundException(f"Review with id {id} not found")
+        return True
 
 
 async def get_review_repository(session: SessionDep) -> ReviewRepository:

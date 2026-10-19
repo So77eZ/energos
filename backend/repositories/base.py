@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Generic, Type, TypeVar
 
-from sqlalchemy import Select, delete, func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.constants import OrderDirection
@@ -61,15 +61,11 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
         return merged
 
     async def delete_by_id(self, id: int) -> bool:
-        stmt = delete(self.model).where(self.model.id == id).returning(self.model.id)
-        result = await self.session.execute(stmt)
-        deleted_id = result.scalar_one_or_none()
-        await self.session.flush()
-        return deleted_id is not None
+        raise NotImplementedError("delete_by_id method must be implemented in the subclass")
 
     async def get_count(self) -> int:
-        stmt = select(func.count()).select_from(self.model)
-        result = await self.session.execute(stmt)
+        statement = select(func.count()).select_from(self.model)
+        result = await self.session.execute(statement)
         return result.scalar_one()
 
 

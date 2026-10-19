@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from typing import Literal
+
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import defer, selectinload
 
@@ -61,6 +63,15 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
             return False, None
 
         return True, ImageData(data=row.image, content_type=row.image_content_type)
+
+    async def delete_by_id(self, id: int) -> Literal[True]:
+        statement = delete(self.model).where(self.model.id == id).returning(self.model.id)
+        result = await self.session.execute(statement)
+        deleted_id = result.scalar_one_or_none()
+        await self.session.flush()
+        if deleted_id is None:
+            raise EnergyDrinkNotFoundException(f"Energy drink with id {id} not found")
+        return True
 
 
 async def get_energy_drink_repository(session: SessionDep) -> EnergyDrinkRepository:
