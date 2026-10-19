@@ -46,7 +46,7 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
         order_by: str = "id",
         direction: OrderDirection = OrderDirection.ASC,
     ) -> list[Review]:
-        query = select(self.model).where(self.model.user_id == user_id)
+        query = select(self.model).where(self.model.user_id == user_id).options(selectinload(Review.energy_drink))
         return await self.execute_get_many_query(
             query, limit=limit, offset=offset, order_by=order_by, direction=direction
         )

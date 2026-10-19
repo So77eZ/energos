@@ -3,7 +3,7 @@ from fastapi_users.authentication import AuthenticationBackend, BearerTransport,
 
 from core.config import settings
 from core.exceptions import ForbiddenException
-from custom_fastapi_users.fastapi_users import CustomFastAPIUsers
+from core.fastapi_users import CustomFastAPIUsers
 from models import User
 from services.user_manager import get_user_manager
 

@@ -8,7 +8,13 @@ from models.review import Review
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from repositories.review import ReviewRepository, get_review_repository
 from repositories.user import UserRepository, get_user_repository
-from schemas.review import ReviewCreateInternalSchema, ReviewCreateSchema, ReviewReadSchema, ReviewUpdateSchema
+from schemas.review import (
+    ReviewCreateInternalSchema,
+    ReviewCreateSchema,
+    ReviewForUserSchema,
+    ReviewReadSchema,
+    ReviewUpdateSchema,
+)
 from services.base import BaseService
 
 
@@ -67,11 +73,11 @@ class ReviewService(
         offset: int = 0,
         order_by: str = "id",
         direction: OrderDirection = OrderDirection.ASC,
-    ) -> list[ReviewReadSchema]:
+    ) -> list[ReviewForUserSchema]:
         reviews = await self.repository.get_many_by_user_id(
             user_id=user_id, limit=limit, offset=offset, order_by=order_by, direction=direction
         )
-        return [self.read_schema.model_validate(review) for review in reviews]
+        return [ReviewForUserSchema.model_validate(review) for review in reviews]
 
     async def get_many_by_energy_drink_id(
         self,
