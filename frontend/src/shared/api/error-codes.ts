@@ -23,6 +23,7 @@ export const ERROR_CODES = [
   'ADMIN_REQUIRED',
   'REVIEW_NOT_OWNER',
   'REVIEW_ALREADY_EXISTS',
+  'CONTENT_TOO_LARGE',
 ] as const
 
 export type ErrorCode = (typeof ERROR_CODES)[number]

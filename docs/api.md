@@ -88,8 +88,8 @@ Authorization: Bearer <access_token>
 - `404` — объект не найден;
 - `409` — конфликт: занятый e-mail или `username` при регистрации, повторный
   отзыв того же пользователя на напиток;
-- `413` — тело запроса больше `MAX_ENERGY_DRINK_IMAGE_SIZE` (ответ — обычный
-  текст `Content Too Large`, не JSON; ограничение действует на все запросы);
+- `413 CONTENT_TOO_LARGE` — тело запроса больше `MAX_ENERGY_DRINK_IMAGE_SIZE`
+  (ограничение действует на все запросы);
 - `422` — ошибка валидации параметров или тела запроса;
 - `429` — превышен rate limit.
 
@@ -138,7 +138,7 @@ Authorization: Bearer <access_token>
 | --- | --- | --- | --- |
 | `GET /energy-drinks/` | нет | 1000/мин | `200`, `list[EnergyDrinkWithMetricsReadSchema]` — все напитки |
 | `GET /energy-drinks/{energy_drink_id}` | `energy_drink_id` (int) | 1000/мин | `200`, `EnergyDrinkWithMetricsReadSchema`; `404`, если не найден |
-| `GET /energy-drinks/{energy_drink_id}/image` | `energy_drink_id` (int) | 1000/мин | `200`, изображение (`image/webp`); `404 ENERGY_DRINK_NOT_FOUND`, если напитка нет; у напитка без картинки сейчас `200` с пустым телом (задумано `404 IMAGE_NOT_FOUND`, см. «Известные расхождения») |
+| `GET /energy-drinks/{energy_drink_id}/image` | `energy_drink_id` (int) | 1000/мин | `200`, изображение (`image/webp`); `404 ENERGY_DRINK_NOT_FOUND`, если напитка нет; `404 IMAGE_NOT_FOUND`, если у напитка нет картинки |
 
 Элемент `EnergyDrinkWithMetricsReadSchema` содержит поля напитка и готовую
 сводку по отзывам; самих отзывов в нём **нет**:
@@ -276,8 +276,4 @@ Authorization: Bearer <access_token>
 
 - нет `has_image`/`image_url` у напитка; `GET /reviews/` без `energy_drink_id`
   отвечает `422`, поэтому общей ленты отзывов нет — подробности в
-  `docs/mvp-backend-questions.md`;
-- напиток без картинки: `GET /energy-drinks/{id}/image` отвечает `200` с пустым
-  телом вместо `404 IMAGE_NOT_FOUND` (репозиторий возвращает `ImageData(data=None)`);
-- `413` (тело больше лимита) приходит текстом `Content Too Large`, не в формате
-  `{"error": …}`.
+  `docs/mvp-backend-questions.md`.
