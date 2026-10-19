@@ -279,7 +279,5 @@ Authorization: Bearer <access_token>
   `docs/mvp-backend-questions.md`;
 - напиток без картинки: `GET /energy-drinks/{id}/image` отвечает `200` с пустым
   телом вместо `404 IMAGE_NOT_FOUND` (репозиторий возвращает `ImageData(data=None)`);
-- коды `VERIFIED_USER_REQUIRED` и `ADMIN_REQUIRED` объявлены, но проверки
-  подтверждения и прав администратора отдают общий `FORBIDDEN`;
 - `413` (тело больше лимита) приходит текстом `Content Too Large`, не в формате
   `{"error": …}`.
