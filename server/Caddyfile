@@ -1,4 +1,6 @@
-:80 {
+# SITE_ADDRESS: в проде — домен (energos.example), тогда Caddy сам получает сертификат
+# Let's Encrypt и редиректит http → https. Без переменной — `:80`, только HTTP (локальная разработка).
+{$SITE_ADDRESS::80} {
     @dev_api {
         expression `{env.DEPLOY_ENV} == "dev"`
         path /api /api/*

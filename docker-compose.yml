@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:18
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -21,6 +22,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* Next подставляет при сборке, а не при запуске
+        NEXT_PUBLIC_ORIGIN: ${PUBLIC_URL}
+    restart: unless-stopped
     environment:
       API_ORIGIN: http://backend:8000
       NEXT_PUBLIC_ORIGIN: ${PUBLIC_URL}
@@ -33,6 +38,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       DB_HOST: postgres
     depends_on:
@@ -47,10 +53,19 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       DEPLOY_ENV: ${DEPLOY_ENV}
+      # Домен в проде — Caddy включит HTTPS; не задано — :80, только HTTP
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     ports:
       - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # Сертификаты Let's Encrypt: без томов перевыпускаются при каждом пересоздании контейнера
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - frontend
       - backend
@@ -60,3 +75,7 @@ services:
 networks:
   backend:
     driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
