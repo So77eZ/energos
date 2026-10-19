@@ -1,5 +1,4 @@
 import { httpRequest, rawRequest, bearerHeaders, API_V1 } from '@shared/api/http'
-import { fetchAllPages } from '@shared/api/paginate'
 import type { ReviewMetrics } from '@entities/review/@x/drink'
 import type { Drink, DrinkCreate, DrinkUpdate, DrinkStats } from '../model/types'
 import { toUtcIso } from '../lib/api-date'
@@ -60,13 +59,9 @@ const toDrink = (d: ApiDrink): Drink => ({
 })
 
 export const drinkApi = {
-  /** Все напитки: число страниц считается по `GET /energy-drinks/count`, страницы грузятся параллельно. */
+  /** Все напитки одним запросом: бэк отдаёт каталог целиком (их сотни), фильтры и страницы — на фронте. */
   list: async (): Promise<Drink[]> =>
-    (await fetchAllPages<ApiDrink>(
-      `${BASE}/`,
-      { next: { revalidate: 60, tags: ['drinks', 'reviews'] } },
-      `${BASE}/count`,
-    )).map(toDrink),
+    (await httpRequest<ApiDrink[]>(`${BASE}/`, { next: { revalidate: 60, tags: ['drinks', 'reviews'] } })).map(toDrink),
 
   get: async (id: number): Promise<Drink> =>
     toDrink(await httpRequest<ApiDrink>(`${BASE}/${id}`, { next: { revalidate: 60, tags: ['drinks'] } })),
