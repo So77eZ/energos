@@ -21,6 +21,13 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         await self.session.refresh(model_instance, attribute_names=["id", "created_at", "updated_at"])
         return model_instance
 
+    async def get_all_with_metrics(self) -> list[EnergyDrink]:
+        query = select(self.model).options(
+            defer(key=self.model.image), defer(self.model.image_content_type), selectinload(self.model.reviews)
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
     async def get_many_with_reviews(
         self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC
     ) -> list[EnergyDrink]:

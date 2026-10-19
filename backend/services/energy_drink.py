@@ -45,6 +45,10 @@ class EnergyDrinkService(
         energy_drink: EnergyDrink = await self.repository.get_by_id(id)
         return EnergyDrinkWithMetricsReadSchema.model_validate(energy_drink)
 
+    async def get_all_with_metrics(self) -> list[EnergyDrinkWithMetricsReadSchema]:
+        energy_drinks: list[EnergyDrink] = await self.repository.get_all_with_metrics()
+        return [EnergyDrinkWithMetricsReadSchema.model_validate(drink) for drink in energy_drinks]
+
     async def get_many_with_reviews(
         self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC
     ) -> list[EnergyDrinkWithMetricsReadSchema]:
