@@ -1,4 +1,4 @@
-{$PUBLIC_URL} {
+{$PUBLIC_URL}, www.{$PUBLIC_URL}{
     @dev_api {
         expression `{env.DEPLOY_ENV} == "dev"`
         path /api /api/*
