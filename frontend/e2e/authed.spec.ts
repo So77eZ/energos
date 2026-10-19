@@ -19,8 +19,8 @@ test('/profile открывается под логином, видны вкла
   await page.goto('/profile')
   await expect(page).toHaveURL(/\/profile/)
   await expect(page.locator('.prof-tabs')).toBeVisible()
-  // reviews (reviewAuthors), favorites, submissions, achievements — по флагам; appearance всегда.
-  const expected = 1 + ['REVIEW_AUTHORS', 'FAVORITES', 'SUBMISSIONS', 'ACHIEVEMENTS'].filter(ff).length
+  // reviews и appearance — всегда; favorites, submissions, achievements — по флагам.
+  const expected = 2 + ['FAVORITES', 'SUBMISSIONS', 'ACHIEVEMENTS'].filter(ff).length
   await expect(page.locator('.prof-tab')).toHaveCount(expected)
 })
 

@@ -11,7 +11,18 @@ interface ApiReview extends ReviewMetrics {
   rating: number
   comment: string | null
   created_at?: string
+  updated_at?: string
   user: { id: number; username: string; role: string }
+}
+
+// `GET /reviews/me` (ReviewForUserSchema): вместо автора — напиток, к которому относится отзыв.
+interface ApiMyReview extends ReviewMetrics {
+  id: number
+  rating: number
+  comment: string | null
+  created_at?: string
+  updated_at?: string
+  energy_drink: { id: number }
 }
 
 const fromApi = (r: ApiReview, drinkId: number): Review => ({
@@ -30,7 +41,25 @@ const fromApi = (r: ApiReview, drinkId: number): Review => ({
   // Отзыв админа показываем отдельно (карточка «редакции» вверху страницы напитка).
   from_admin: r.user.role === 'admin',
   created_at: r.created_at ?? null, // бэк отдаёт ISO с часовым поясом (`…Z`)
-  updated_at: null,
+  updated_at: r.updated_at ?? null,
+})
+
+const fromMyApi = (r: ApiMyReview): Review => ({
+  id: r.id,
+  energy_drink_id: r.energy_drink.id,
+  acidity: r.acidity,
+  sweetness: r.sweetness,
+  carbonation: r.carbonation,
+  concentration: r.concentration,
+  aftertaste: r.aftertaste,
+  price_quality: r.price_quality,
+  rating: r.rating,
+  user_id: null, // это отзывы текущего пользователя, автор не нужен
+  username: null,
+  comment: r.comment,
+  from_admin: false,
+  created_at: r.created_at ?? null,
+  updated_at: r.updated_at ?? null,
 })
 
 /** Оценки в теле запроса — целые 1–5. `rating` выбирает пользователь отдельно от метрик. */
@@ -76,7 +105,8 @@ export const reviewApi = {
       headers: bearerHeaders(token),
     }),
 
-  /** «Мои отзывы»: `GET /reviews/me` не отдаёт, к какому напитку относится отзыв, — вкладку
-   *  не наполнить (флаг reviewAuthors, docs/mvp-backend-questions.md). */
-  myReviews: async (_token: string): Promise<Review[]> => [],
+  /** «Мои отзывы»: `GET /reviews/me` (только подтверждённый пользователь, иначе 403). */
+  myReviews: async (token: string): Promise<Review[]> =>
+    (await fetchAllPages<ApiMyReview>(`${BASE}/me`, { headers: bearerHeaders(token), cache: 'no-store' }))
+      .map(fromMyApi),
 }

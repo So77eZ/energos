@@ -17,9 +17,9 @@ export const FEATURES = {
   submissions: on(process.env.NEXT_PUBLIC_FF_SUBMISSIONS),
   /** Достижения/бейджи: нужны счётчики в /auth/me и данные об авторах отзывов. */
   achievements: on(process.env.NEXT_PUBLIC_FF_ACHIEVEMENTS),
-  /** Вкладка «Мои отзывы» в профиле, счётчики отзывов и лидерборд в админке: `GET /reviews/me` не
-   *  говорит, к какому напитку относится отзыв, а общего списка отзывов нет (B3 в docs/mvp-backend-questions.md).
-   *  «Мой отзыв» и лента отзывов на странице напитка от флага не зависят. */
+  /** Лидерборд в админке: нужен общий список отзывов с авторами, а `GET /reviews/` отдаёт их только
+   *  по одному напитку (B3 в docs/mvp-backend-questions.md). Лента отзывов на странице напитка и
+   *  вкладка «Мои отзывы» в профиле от флага не зависят. */
   reviewAuthors: on(process.env.NEXT_PUBLIC_FF_REVIEW_AUTHORS),
   /** Редакторская (admin) оценка напитка: в API нет признака from_admin. */
   adminReviews: on(process.env.NEXT_PUBLIC_FF_ADMIN_REVIEWS),
