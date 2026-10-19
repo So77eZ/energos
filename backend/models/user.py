@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 class User(Base, SQLAlchemyBaseUserTable[int]):
     __tablename__ = "users"
-    __verbose_name__ = "User"
 
     username: Mapped[str]
 
