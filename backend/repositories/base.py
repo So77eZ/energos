@@ -5,7 +5,7 @@ from sqlalchemy import Select, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.constants import OrderDirection
-from core.exceptions import ObjectNotFoundException, UnprocessableEntityException
+from core.exceptions import UnprocessableEntityException
 from models.base import BaseModelType
 from schemas.base import CreateSchemaType, UpdateSchemaType
 
@@ -16,11 +16,7 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
         self.model = model
 
     async def get_by_id(self, id: int) -> BaseModelType:
-        model_instance: BaseModelType | None = await self.session.get(self.model, id)
-        if not model_instance:
-            raise ObjectNotFoundException(f"{self.model.__verbose_name__} with id {id} not found")
-
-        return model_instance
+        raise NotImplementedError("get_by_id method must be implemented in the subclass")
 
     async def get_many(
         self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC

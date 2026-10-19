@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from core.constants import OrderDirection
-from core.exceptions import ConflictException, ForbiddenException
+from core.exceptions import ReviewAlreadyExistsException, ReviewNotOwnerException
 from models.review import Review
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from repositories.review import ReviewRepository, get_review_repository
@@ -29,13 +29,11 @@ class ReviewService(
     async def _check_if_user_is_author(self, review_id: int, user_id: int) -> None:
         author_id = await self.repository.get_author_id(review_id)
         if author_id != user_id:
-            raise ForbiddenException("You are not the author of this review")
+            raise ReviewNotOwnerException
 
     async def _check_if_review_already_exists(self, user_id: int, energy_drink_id: int) -> None:
         if await self.repository.exists_by_user_and_energy_drink(user_id=user_id, energy_drink_id=energy_drink_id):
-            raise ConflictException(
-                f"User has already submitted a review for this {self.energy_drink_repository.model.__verbose_name__}"
-            )
+            raise ReviewAlreadyExistsException
 
     async def create_review(
         self, review_data: ReviewCreateSchema, user_id: int, energy_drink_id: int

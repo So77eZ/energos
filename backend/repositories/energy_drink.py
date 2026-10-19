@@ -4,7 +4,7 @@ from sqlalchemy.orm import defer, selectinload
 
 from core.constants import OrderDirection
 from core.database import SessionDep
-from core.exceptions import ObjectNotFoundException
+from core.exceptions import EnergyDrinkNotFoundException
 from models.energy_drink import EnergyDrink
 from repositories.base import BaseRepository
 from schemas.energy_drink import EnergyDrinkCreateSchema, EnergyDrinkUpdateSchema, ImageData
@@ -41,7 +41,7 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         result = await self.session.execute(query)
         result = result.scalar_one_or_none()
         if not result:
-            raise ObjectNotFoundException(f"{self.model.__verbose_name__} with id {id} not found")
+            raise EnergyDrinkNotFoundException(f"Energy drink with id {id} not found")
 
         return result
 

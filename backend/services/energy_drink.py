@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, UploadFile
 
 from core.constants import OrderDirection
-from core.exceptions import ObjectNotFoundException
+from core.exceptions import EnergyDrinkNotFoundException, ImageNotFoundException
 from models.energy_drink import EnergyDrink
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from schemas.energy_drink import (
@@ -50,10 +50,10 @@ class EnergyDrinkService(
         exists, image = await self.repository.get_image_by_energy_drink_id(energy_drink_id)
 
         if not exists:
-            raise ObjectNotFoundException(f"Energy drink with id {energy_drink_id} not found")
+            raise EnergyDrinkNotFoundException(f"Energy drink with id {energy_drink_id} not found")
 
         if image is None:
-            raise ObjectNotFoundException(f"Image for energy drink with id {energy_drink_id} not found")
+            raise ImageNotFoundException(f"Image for energy drink with id {energy_drink_id} not found")
 
         return image
 

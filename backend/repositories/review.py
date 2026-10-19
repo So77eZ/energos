@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload
 
 from core.constants import OrderDirection
 from core.database import SessionDep
-from core.exceptions import ObjectNotFoundException
+from core.exceptions import ReviewNotFoundException
 from models.review import Review
 from repositories.base import BaseRepository
 from schemas.review import ReviewCreateSchema, ReviewUpdateSchema
@@ -13,6 +13,15 @@ from schemas.review import ReviewCreateSchema, ReviewUpdateSchema
 class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSchema]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, Review)
+
+    async def get_by_id(self, id: int) -> Review:
+        query = select(self.model).filter(self.model.id == id).options(selectinload(Review.user))
+        result = await self.session.execute(query)
+        result = result.scalar_one_or_none()
+        if not result:
+            raise ReviewNotFoundException(f"Review with id {id} not found")
+
+        return result
 
     async def get_reviews_by_energy_drink_id(
         self,
@@ -58,7 +67,7 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
         result = await self.session.execute(stmt)
         author_id = result.scalar_one_or_none()
         if author_id is None:
-            raise ObjectNotFoundException(f"{self.model.__verbose_name__} with id {review_id} not found")
+            raise ReviewNotFoundException(f"Review with id {review_id} not found")
         return author_id
 
 

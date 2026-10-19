@@ -1,10 +1,9 @@
 from fastapi import Depends
-from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
 
 from core.config import settings
-from core.constants import UserIdType
 from core.exceptions import ForbiddenException
+from custom_fastapi_users.fastapi_users import CustomFastAPIUsers
 from models import User
 from services.user_manager import get_user_manager
 
@@ -25,7 +24,7 @@ auth_backend = AuthenticationBackend(
     get_strategy=get_jwt_strategy,
 )
 
-fastapi_users = FastAPIUsers[User, UserIdType](
+fastapi_users = CustomFastAPIUsers(
     get_user_manager=get_user_manager,
     auth_backends=[auth_backend],
 )
