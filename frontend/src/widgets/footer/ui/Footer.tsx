@@ -4,7 +4,7 @@ import { HiddenBolt } from '@features/easter-eggs'
 const TEAM = [
   { role: 'Фронт', name: 'So77eZ',                 url: 'https://github.com/So77eZ' },
   { role: 'Бэк',   name: 'SeleznevAS-dev',         url: 'https://github.com/SeleznevAS-dev' },
-  { role: 'Боль',  name: 'GeroiGorodskoyZastroiki', url: 'https://github.com/GeroiGorodskoyZastroiki' },
+  { role: 'Боль',  name: 'trb1mkr', url: 'https://github.com/trb1mkr' },
 ] as const
 
 const TELEGRAMS = [

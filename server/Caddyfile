@@ -1,4 +1,8 @@
-{$PUBLIC_URL}, www.{$PUBLIC_URL}{
+www.{$DOMAIN} {
+    redir {$PUBLIC_URL}{uri} permanent
+}
+
+{$PUBLIC_URL} {
     @dev_api {
         expression `{env.DEPLOY_ENV} == "dev"`
         path /api /api/*
