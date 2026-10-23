@@ -31,6 +31,7 @@ class EmailClient:
         message["Subject"] = subject
         message["From"] = settings.email.SMTP_FROM
         message["To"] = to_email
+        message["Reply-To"] = settings.email.SMTP_REPLY_TO
 
         message.set_content(html_body, subtype="html")
 

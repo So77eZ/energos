@@ -22,6 +22,7 @@ class EmailSettings(BaseSettings):
     SMTP_USERNAME: str = Field(...)
     SMTP_PASSWORD: str = Field(...)
     SMTP_FROM: str = Field(...)
+    SMTP_REPLY_TO: str = Field(...)
     SMTP_USE_TLS: bool = Field(...)
 
 

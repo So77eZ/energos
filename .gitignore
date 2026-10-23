@@ -230,5 +230,6 @@ data/
 BDBackup/
 dumps/
 fromDesign/
+docker-data/
 
 .githooks/
