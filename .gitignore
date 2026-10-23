@@ -217,10 +217,6 @@ __marimo__/
 # Local History Extension for Visual Studio Code
 .history/
 
-# uv library
-uv.lock
-.python-version
-
 # Локальный референс мокапов дизайна (старый прототип на vanilla JS).
 # Используется только для миграции идей в текущий frontend/.
 frontendNew/
