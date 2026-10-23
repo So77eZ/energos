@@ -43,6 +43,7 @@ class EmailClient:
             hostname=settings.email.SMTP_HOST,
             password=settings.email.SMTP_PASSWORD,
             port=settings.email.SMTP_PORT,
+            start_tls=settings.email.SMTP_START_TLS,
             use_tls=settings.email.SMTP_USE_TLS,
         ) as smtp_client:
             await smtp_client.login(settings.email.SMTP_USERNAME, settings.email.SMTP_PASSWORD)
