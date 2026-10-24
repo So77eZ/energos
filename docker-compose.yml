@@ -64,8 +64,8 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - caddy_data:/data
-      - caddy_config:/config
+      - ./docker-data/caddy/data:/data
+      - ./docker-data/caddy/config:/config
     depends_on:
       - frontend
       - backend
@@ -102,7 +102,3 @@ networks:
     driver: bridge
   database:
     driver: bridge
-
-volumes:
-  caddy_data:
-  caddy_config:
