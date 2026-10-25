@@ -2127,7 +2127,9 @@ body::before {
 }
 .prof-appearance-panel { min-width: 0; }
 /* TweaksBody внутри профиля — без своих padding'ов (есть у .prof-appearance). */
-.prof-appearance-panel .twk-body { padding: 0; }
+/* overflow: visible — у .twk-body overflow-y:auto (для плавающей панели), а он режет и по
+   горизонтали: кольцо и свечение выбранного цвета обрезались по краю. Прокрутка тут не нужна. */
+.prof-appearance-panel .twk-body { padding: 6px; overflow: visible; }
 .prof-appearance-aside { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .prof-appearance-title {
   font-family: var(--font-title); font-weight: 600; font-size: 22px;
