@@ -1,1 +1,1 @@
-export { AnalyticsConsent } from './AnalyticsConsent'
+export { AnalyticsConsent, useAnalyticsConsentDecided } from './AnalyticsConsent'

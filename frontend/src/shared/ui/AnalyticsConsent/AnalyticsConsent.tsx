@@ -1,11 +1,31 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 
 // 152-ФЗ / GDPR: Яндекс.Метрику (webvisor пишет клики/движения/ввод = перс.данные)
 // грузим ТОЛЬКО после явного согласия (opt-in). До согласия — никакого трекинга.
 const YM_ID = 109003264
 const KEY = 'energos_analytics_consent' // 'granted' | 'denied'
+const DECIDED_EVENT = 'energos:analytics-consent'
+
+function readDecided(): boolean {
+  try { return localStorage.getItem(KEY) != null } catch { return false }
+}
+
+function subscribeDecided(onChange: () => void): () => void {
+  window.addEventListener(DECIDED_EVENT, onChange)
+  window.addEventListener('storage', onChange) // ответ в соседней вкладке
+  return () => {
+    window.removeEventListener(DECIDED_EVENT, onChange)
+    window.removeEventListener('storage', onChange)
+  }
+}
+
+/** Ответил ли посетитель на баннер Метрики. Другие плашки внизу экрана ждут этого,
+ *  чтобы не перекрывать баннер (он с кнопками). На сервере — «нет». */
+export function useAnalyticsConsentDecided(): boolean {
+  return useSyncExternalStore(subscribeDecided, readDecided, () => false)
+}
 
 type Ym = ((...args: unknown[]) => void) & { a?: unknown[]; l?: number }
 declare global {
@@ -52,6 +72,7 @@ export function AnalyticsConsent() {
     try { localStorage.setItem(KEY, granted ? 'granted' : 'denied') } catch {}
     if (granted) loadMetrika()
     setDecided(true)
+    window.dispatchEvent(new Event(DECIDED_EVENT))
   }
 
   if (decided) return null
