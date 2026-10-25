@@ -5,7 +5,6 @@ import { getToken } from '@shared/lib/session'
 import { DrinkForm } from '@features/drink-form/ui/DrinkForm'
 import { updateDrinkAction } from '@features/drink-form/model/actions'
 import { ROUTES } from '@shared/config/routes'
-import { maxImageBytes } from '@shared/config/limits'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,5 +29,5 @@ export default async function EditDrinkPage({ params }: Props) {
 
   const boundAction = updateDrinkAction.bind(null, drinkId)
 
-  return <DrinkForm mode="edit" drink={drink} adminReview={adminReview} action={boundAction} maxImageBytes={maxImageBytes()} />
+  return <DrinkForm mode="edit" drink={drink} adminReview={adminReview} action={boundAction} />
 }

@@ -24,6 +24,7 @@ export const ERROR_CODES = [
   'REVIEW_NOT_OWNER',
   'REVIEW_ALREADY_EXISTS',
   'CONTENT_TOO_LARGE',
+  'UNSUPPORTED_MEDIA_TYPE',
 ] as const
 
 export type ErrorCode = (typeof ERROR_CODES)[number]

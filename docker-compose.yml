@@ -28,7 +28,6 @@ services:
     environment:
       API_ORIGIN: http://backend:8000
       PUBLIC_URL: ${PUBLIC_URL}
-      MAX_ENERGY_DRINK_IMAGE_SIZE: ${MAX_ENERGY_DRINK_IMAGE_SIZE}
     depends_on:
       - backend
     networks:
