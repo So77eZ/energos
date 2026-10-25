@@ -35,10 +35,11 @@ class EnergyDrinkService(
         if image_type not in ALLOWED_IMAGE_MIME_TYPES:
             raise UnsupportedMediaTypeException
 
-        image = ImageOps.exif_transpose(Image.open(BytesIO(image_data)))
+        image = ImageOps.exif_transpose(Image.open(BytesIO(image_data))).convert("RGBA")
         image.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE), Image.Resampling.LANCZOS)
         compressed_buffer = BytesIO()
-        image.save(compressed_buffer, format="WEBP", quality=75)
+
+        image.save(compressed_buffer, format="WEBP", quality=80, method=6)
         compressed_bytes = compressed_buffer.getvalue()
 
         energy_drink.image = compressed_bytes
