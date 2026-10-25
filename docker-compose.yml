@@ -87,8 +87,10 @@ services:
       - ./docker-data/dms/mail-state/:/var/mail-state/
       - ./docker-data/dms/mail-logs/:/var/log/mail/
       - ./docker-data/dms/config/:/tmp/docker-mailserver/
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
+      - SSL_TYPE=letsencrypt
       - ENABLE_RSPAMD=1
       - ENABLE_CLAMAV=1
       - ENABLE_FAIL2BAN=1
