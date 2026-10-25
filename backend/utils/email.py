@@ -1,5 +1,5 @@
 from email.message import EmailMessage
-from email.utils import make_msgid
+from email.utils import formatdate, make_msgid
 from pathlib import Path
 from typing import Any, AsyncGenerator
 
@@ -29,13 +29,14 @@ class EmailClient:
         html_body = self.env.get_template(template_name).render(**context)
 
         message = EmailMessage()
+        message.set_content(html_body, subtype="html")
+
         message["Subject"] = subject
         message["From"] = settings.email.SMTP_FROM
         message["To"] = to_email
         message["Reply-To"] = settings.email.SMTP_REPLY_TO
         message["Message-ID"] = make_msgid(domain="energos.fun")
-
-        message.set_content(html_body, subtype="html")
+        message["Date"] = formatdate(localtime=True)
 
         await self.smtp_client.send_message(message)
 
