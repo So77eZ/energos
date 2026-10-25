@@ -6,6 +6,7 @@
 //
 // Показывается только если: система просит reduce-motion И юзер не включил
 // оверрайд ('system') И баннер не закрывали ранее. Закрытие — навсегда.
+// Ждёт ответа на баннер Метрики: оба внизу экрана, иначе этот перекрывает его кнопки.
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -13,6 +14,7 @@ import { useTheme } from '@shared/lib/theme'
 import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
+import { useAnalyticsConsentDecided } from '@shared/ui/AnalyticsConsent'
 
 const STORAGE_KEY = 'energos_motion_notice'
 
@@ -22,6 +24,7 @@ export function MotionNotice() {
   // «закрыто» на SSR/первом рендере, реальное значение из localStorage в effect.
   const systemReduce = usePrefersReducedMotion()
   const [dismissed, setDismissed] = useState(true)
+  const consentDecided = useAnalyticsConsentDecided()
 
   useEffect(() => {
     let stored = false
@@ -34,7 +37,7 @@ export function MotionNotice() {
     try { localStorage.setItem(STORAGE_KEY, 'dismissed') } catch {}
   }
 
-  if (dismissed || !systemReduce || motion !== 'system') return null
+  if (dismissed || !consentDecided || !systemReduce || motion !== 'system') return null
 
   return (
     <div className="motion-notice" role="status">
