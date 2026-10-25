@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { collectLightning, allLightningFound, LIGHTNING_IDS, type EggState } from './eggs-storage'
+import { collectLightning, allLightningFound, lightningProgressMsg, LIGHTNING_IDS, type EggState } from './eggs-storage'
 
 const base: EggState = { logoClicks: 0, lightning: [] }
 
@@ -24,5 +24,17 @@ describe('allLightningFound', () => {
   })
   it('true при всех 10', () => {
     expect(allLightningFound({ ...base, lightning: [...LIGHTNING_IDS] })).toBe(true)
+  })
+})
+
+describe('lightningProgressMsg', () => {
+  it('прогресс, остаток и награда', () => {
+    expect(lightningProgressMsg(3, 'Следопыт')).toBe('Молния 3/10 — осталось найти 7. Собери все и получишь «Следопыт»')
+  })
+})
+
+describe('LIGHTNING_IDS', () => {
+  it('нет молнии на странице заявок — она выключена флагом и отдаёт 404', () => {
+    expect(LIGHTNING_IDS).not.toContain('submit')
   })
 })

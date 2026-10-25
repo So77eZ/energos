@@ -4,9 +4,9 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useRouter } from 'next/navigation'
 import { useToast } from '@shared/lib/toast'
 import { ACHIEVEMENT_BY_ID } from '@entities/achievement'
-import { toastAchievement, markSeen } from '@entities/achievement'
+import { toastAchievement, markSeen, Medal } from '@entities/achievement'
 import { matchKonami, KONAMI } from './konami'
-import { readEggs, writeEggs, collectLightning, allLightningFound } from './eggs-storage'
+import { readEggs, writeEggs, collectLightning, allLightningFound, lightningProgressMsg } from './eggs-storage'
 import { Fireworks } from './Fireworks'
 
 interface EasterEggsValue {
@@ -83,11 +83,16 @@ export function EasterEggsProvider({ children }: { children: ReactNode }) {
     if (next === s) return
     writeEggs(next)
     setLightning(next.lightning)
+    const ach = ACHIEVEMENT_BY_ID['pathfinder']
     if (allLightningFound(next)) {
-      const ach = ACHIEVEMENT_BY_ID['pathfinder']
       if (ach) { toastAchievement(ach, { toast, router }); markSeen('pathfinder') }
     } else {
-      toast(`⚡ Молния ${next.lightning.length}/10`)
+      // С иконкой будущей ачивки: видно, что молния — часть коллекции и искать стоит дальше.
+      toast({
+        msg: lightningProgressMsg(next.lightning.length, ach?.name ?? 'награду'),
+        icon: ach ? <Medal badge={ach} size="sm" /> : undefined,
+        ttl: 5000,
+      })
     }
   }, [toast, router])
 

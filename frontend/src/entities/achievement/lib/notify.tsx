@@ -2,6 +2,7 @@ import type { Achievement, EvaluatedAchievement } from '../model/types'
 import { ACHIEVEMENT_BY_ID } from '../model/achievements'
 import { Medal } from '../ui/Medal'
 import { ROUTES } from '@shared/config/routes'
+import { FEATURES } from '@shared/config/features'
 import type { ToastInput } from '@shared/lib/toast'
 import { planUnlockToasts } from './plan'
 import { readSeen, writeSeen, isSeeded, markSeeded } from './seen'
@@ -18,7 +19,10 @@ export function toastAchievement(ach: Pick<Achievement, 'id' | 'tier' | 'name'>,
     kind: 'ok',
     ttl: 5000,
     icon: <Medal badge={ach} size="sm" />,
-    action: { label: 'Открыть', onClick: () => router.push(`${ROUTES.profile}?tab=achievements`) },
+    // Вкладки достижений без флага нет — кнопка вела бы в никуда.
+    ...(FEATURES.achievements
+      ? { action: { label: 'Открыть', onClick: () => router.push(`${ROUTES.profile}?tab=achievements`) } }
+      : {}),
   })
 }
 
