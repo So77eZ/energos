@@ -1,4 +1,5 @@
 from email.message import EmailMessage
+from email.utils import make_msgid
 from pathlib import Path
 from typing import Any, AsyncGenerator
 
@@ -32,6 +33,7 @@ class EmailClient:
         message["From"] = settings.email.SMTP_FROM
         message["To"] = to_email
         message["Reply-To"] = settings.email.SMTP_REPLY_TO
+        message["Message-ID"] = make_msgid(domain="energos.fun")
 
         message.set_content(html_body, subtype="html")
 
