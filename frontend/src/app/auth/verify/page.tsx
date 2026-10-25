@@ -14,7 +14,7 @@ export default async function VerifyPage({
     <AuthCard
       eyebrow="ПОДТВЕРЖДЕНИЕ E-MAIL"
       title="Почти готово"
-      blurb="Нажмите кнопку, чтобы подтвердить адрес и открыть отзывы."
+      blurb="Подтверждаем адрес — после этого можно оставлять отзывы."
     >
       <VerifyEmailForm token={token ?? null} />
     </AuthCard>
