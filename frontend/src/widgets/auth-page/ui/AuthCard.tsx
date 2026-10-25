@@ -11,8 +11,8 @@ interface AuthCardProps {
  *  в отличие от AuthPage без вкладок «Вход/Регистрация» и демо-банки. */
 export function AuthCard({ eyebrow, title, blurb, children }: AuthCardProps) {
   return (
-    <div className="page page-auth">
-      <div className="auth-stage">
+    <div className="page page-auth page-auth-single">
+      <div className="auth-stage auth-stage-single">
         <div className="auth-form">
           <div className="auth-form-head">
             <div className="auth-eyebrow">{eyebrow}</div>
