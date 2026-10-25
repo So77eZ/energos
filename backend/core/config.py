@@ -36,8 +36,6 @@ class Settings(BaseSettings):
     PUBLIC_URL: str = Field(...)
     DEPLOY_ENV: str = Field(...)
 
-    MAX_ENERGY_DRINK_IMAGE_SIZE: int = Field(...)
-
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}/{self.DB_NAME}"

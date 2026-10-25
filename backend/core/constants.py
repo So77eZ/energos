@@ -17,3 +17,8 @@ class OrderDirection(StrEnum):
 
 
 UserIdType = int
+
+MAX_BODY_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"]
