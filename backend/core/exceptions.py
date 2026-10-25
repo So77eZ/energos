@@ -135,3 +135,9 @@ class ContentTooLargeException(BaseServiceException):
     status_code = 413
     error_code = ErrorCode.CONTENT_TOO_LARGE
     default_message = "Content too large"
+
+
+class UnsupportedMediaTypeException(BaseServiceException):
+    status_code = 415
+    error_code = ErrorCode.UNSUPPORTED_MEDIA_TYPE
+    default_message = "Unsupported media type"

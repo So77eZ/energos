@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import Depends, UploadFile
 from PIL import Image
 
-from core.constants import OrderDirection
-from core.exceptions import EnergyDrinkNotFoundException, ImageNotFoundException
+from core.constants import ALLOWED_IMAGE_MIME_TYPES, OrderDirection
+from core.exceptions import EnergyDrinkNotFoundException, ImageNotFoundException, UnsupportedMediaTypeException
 from models.energy_drink import EnergyDrink
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from schemas.energy_drink import (
@@ -30,6 +30,11 @@ class EnergyDrinkService(
         energy_drink = await self.repository.get_by_id(energy_drink_id)
 
         image_data = await image_file.read()
+        image_type = image_file.content_type
+
+        if image_type not in ALLOWED_IMAGE_MIME_TYPES:
+            raise UnsupportedMediaTypeException
+
         image = Image.open(BytesIO(image_data))
         compressed_buffer = BytesIO()
         image.save(compressed_buffer, format="WEBP", quality=75)
