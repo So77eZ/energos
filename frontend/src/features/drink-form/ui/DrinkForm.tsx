@@ -9,15 +9,17 @@ import { ROUTES } from '@shared/config/routes'
 import { FEATURES } from '@shared/config/features'
 import { Icons } from '@shared/ui/icons'
 import { deleteDrinkAction } from '../model/actions'
-import { compressImage } from '../lib/compress-image'
+
+// Форматы, которые принимает бэк (ALLOWED_IMAGE_MIME_TYPES в backend/core/constants.py).
+// Размер и сжатие — забота бэка; тип проверяем здесь, иначе 415 уронил бы страницу формы.
+// iOS при таком accept сам перекодирует HEIC в JPEG.
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 interface DrinkFormProps {
   mode: 'create' | 'edit'
   drink?: Drink
   adminReview?: Review | null
   action: (formData: FormData) => Promise<void>
-  /** Лимит бэка на картинку (`maxImageBytes()` из `@shared/config/limits`). */
-  maxImageBytes: number
 }
 
 const EMPTY_METRICS: ReviewMetrics = {
@@ -41,7 +43,7 @@ function pickInitialMetrics(review: Review | null | undefined): ReviewMetrics {
   }
 }
 
-export function DrinkForm({ mode, drink, adminReview, action, maxImageBytes }: DrinkFormProps) {
+export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) {
   const router = useRouter()
   const [, formAction, isPending] = useActionState(
     async (_: void, formData: FormData) => { await action(formData) },
@@ -62,24 +64,12 @@ export function DrinkForm({ mode, drink, adminReview, action, maxImageBytes }: D
     setMetrics((m) => ({ ...m, [k]: v }))
   }
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const input = e.target
-    let file = input.files?.[0]
+    const file = input.files?.[0]
     if (!file) return
-    // Бэк режет тело запроса по MAX_ENERGY_DRINK_IMAGE_SIZE (413); на сервере форма
-    // ошибок не показывает и роняла страницу. Большое фото сжимаем в браузере (GIF не трогаем —
-    // пропала бы анимация) и подменяем файл в поле, чтобы форма отправила уже сжатый.
-    if (file.size > maxImageBytes && file.type !== 'image/gif') {
-      const compressed = await compressImage(file, maxImageBytes).catch(() => null)
-      if (compressed) {
-        const dt = new DataTransfer()
-        dt.items.add(compressed)
-        input.files = dt.files
-        file = compressed
-      }
-    }
-    if (file.size > maxImageBytes) {
-      setFileError(`Файл ${(file.size / 1048576).toFixed(1)} МБ — максимум ${(maxImageBytes / 1048576).toFixed(0)} МБ, сжать не удалось. Выберите фото поменьше.`)
+    if (!IMAGE_TYPES.includes(file.type)) {
+      setFileError('Этот формат не подходит — выберите JPEG, PNG или WebP.')
       input.value = ''
       return
     }
@@ -158,7 +148,7 @@ export function DrinkForm({ mode, drink, adminReview, action, maxImageBytes }: D
                   id="drink-image"
                   type="file"
                   name="image"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept={IMAGE_TYPES.join(',')}
                   style={{ display: 'none' }}
                   onChange={handleFile}
                 />

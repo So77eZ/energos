@@ -88,8 +88,9 @@ Authorization: Bearer <access_token>
 - `404` — объект не найден;
 - `409` — конфликт: занятый e-mail или `username` при регистрации, повторный
   отзыв того же пользователя на напиток;
-- `413 CONTENT_TOO_LARGE` — тело запроса больше `MAX_ENERGY_DRINK_IMAGE_SIZE`
-  (ограничение действует на все запросы);
+- `413 CONTENT_TOO_LARGE` — тело запроса больше 10 МБ (`MAX_BODY_SIZE` в
+  `backend/core/constants.py`, ограничение действует на все запросы);
+- `415 UNSUPPORTED_MEDIA_TYPE` — картинка не JPEG, PNG или WebP;
 - `422` — ошибка валидации параметров или тела запроса;
 - `429` — превышен rate limit.
 
@@ -180,10 +181,12 @@ Authorization: Bearer <access_token>
 | `POST /energy-drinks/{energy_drink_id}/image` | `multipart/form-data`, поле `image` (файл) | `201`, `EnergyDrinkReadSchema` |
 | `DELETE /energy-drinks/{energy_drink_id}/image` | нет | `204` |
 
-Размер загружаемой картинки ограничен `MAX_ENERGY_DRINK_IMAGE_SIZE` (в `.env`,
-сейчас 1 МБ): большие запросы получают `413`. Сохраняется картинка в WebP
-(качество 75), размер в пикселях не меняется. Фронт уменьшает фото больше лимита
-ещё в браузере, до отправки.
+Картинка — JPEG, PNG или WebP (`ALLOWED_IMAGE_MIME_TYPES`, иначе `415`), запрос
+не больше 10 МБ (`MAX_BODY_SIZE`, иначе `413`); обе константы в
+`backend/core/constants.py`. Сохраняется картинка в WebP (качество 75), размер в
+пикселях не меняется. Фронт картинку не сжимает; список форматов повторён в форме
+напитка (`accept` и проверка при выборе файла), лимит 10 МБ — в
+`serverActions.bodySizeLimit` (`frontend/next.config.ts`).
 
 Схемы напитка:
 
