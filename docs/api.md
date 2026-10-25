@@ -183,8 +183,9 @@ Authorization: Bearer <access_token>
 
 Картинка — JPEG, PNG или WebP (`ALLOWED_IMAGE_MIME_TYPES`, иначе `415`), запрос
 не больше 10 МБ (`MAX_BODY_SIZE`, иначе `413`); обе константы в
-`backend/core/constants.py`. Сохраняется картинка в WebP (качество 75), размер в
-пикселях не меняется. Фронт картинку не сжимает; список форматов повторён в форме
+`backend/core/constants.py`. Сохраняется картинка в WebP (качество 75): бэк
+поворачивает её по EXIF и уменьшает до 1600 px по длинной стороне
+(`MAX_IMAGE_SIDE`), меньшие не увеличивает. Фронт картинку не сжимает; список форматов повторён в форме
 напитка (`accept` и проверка при выборе файла), лимит 10 МБ — в
 `serverActions.bodySizeLimit` (`frontend/next.config.ts`).
 

@@ -2180,6 +2180,13 @@ body::before {
   border-radius: var(--r-lg); overflow: hidden;
   min-height: 600px;
 }
+/* AuthCard (подтверждение e-mail, сброс пароля): одна колонка без демо-банки — иначе вторая
+   половина сетки пустая и карточка растягивается на всю ширину. */
+.page-auth-single { display: grid; align-content: center; }
+.auth-stage-single {
+  grid-template-columns: 1fr; min-height: 0;
+  width: 100%; max-width: 520px; margin: 0 auto;
+}
 .auth-vis {
   position: relative; overflow: hidden;
   background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.15), var(--bg-deep) 70%);
