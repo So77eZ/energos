@@ -19,7 +19,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: ROUTES.tasteMap, label: 'Карта вкусов', icon: IconMap },
   { href: ROUTES.tier, label: 'Tier list', icon: IconTrophy },
   { href: ROUTES.compare(), label: 'Сравнение', icon: IconScale },
-  { href: ROUTES.glossary, label: 'Словарь', icon: IconBook },
+  { href: ROUTES.legend, label: 'Легенда', icon: IconBook },
   { href: ROUTES.reviews(), label: 'Отзывы', icon: IconMsg },
   ...(FEATURES.submissions ? [{ href: ROUTES.submit, label: 'Предложить', icon: IconPlus }] : []),
   { href: ROUTES.admin.drinks, label: 'Управление', icon: IconSliders, adminOnly: true },

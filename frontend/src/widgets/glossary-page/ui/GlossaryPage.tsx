@@ -84,7 +84,7 @@ export function GlossaryPage({ drinks }: GlossaryPageProps) {
       <header className="som-head">
         <div className="som-head-meta">
           <div className="page-eyebrow">СПРАВОЧНИК · ТУЛКИТ СОМЕЛЬЕ</div>
-          <h1 className="page-title">Словарь вкусов</h1>
+          <h1 className="page-title">Легенда вкусов</h1>
           <p className="page-blurb">
             6 ключевых характеристик, по которым оцениваются все напитки в Energos.
             Используй эту карту, чтобы лучше понимать профили и формулировать собственные оценки.

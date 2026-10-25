@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
     // тело action'а ≤ 1 МБ, фото банки больше — страница падала с «Body exceeded 1 MB limit».
     serverActions: { bodySizeLimit: '8mb' },
   },
+  // Раздел «Словарь» переименован в «Легенду» — старые ссылки не ломаем.
+  async redirects() {
+    return [{ source: '/glossary', destination: '/legend', permanent: true }]
+  },
 
 }
 

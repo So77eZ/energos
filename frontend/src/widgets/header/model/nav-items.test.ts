@@ -17,7 +17,7 @@ describe('isActive', () => {
     expect(isActive('/compare', '/compare')).toBe(true)
   })
   it('чужой раздел не активен', () => {
-    expect(isActive('/glossary', '/tier')).toBe(false)
+    expect(isActive('/legend', '/tier')).toBe(false)
   })
 })
 
@@ -37,10 +37,10 @@ describe('sheetItemsFor', () => {
     expect(hrefs).not.toContain('/')
     expect(hrefs.some((h) => h.startsWith('/compare'))).toBe(false)
   })
-  it('включает не-таб разделы (Tier, Словарь, Отзывы, Предложить)', () => {
+  it('включает не-таб разделы (Tier, Легенда, Отзывы, Предложить)', () => {
     const labels = sheetItemsFor(false).map((i) => i.label)
     expect(labels).toContain('Tier list')
-    expect(labels).toContain('Словарь')
+    expect(labels).toContain('Легенда')
   })
   it('admin-пункт только при isAdmin', () => {
     expect(sheetItemsFor(false).some((i) => i.adminOnly)).toBe(false)

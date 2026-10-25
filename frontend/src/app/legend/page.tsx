@@ -1,7 +1,7 @@
 import { drinkApi, enrichDrinks } from '@entities/drink'
 import { GlossaryPage } from '@widgets/glossary-page/ui/GlossaryPage'
 
-export const metadata = { title: 'Словарь — Energos' }
+export const metadata = { title: 'Легенда — Energos' }
 export const dynamic = 'force-dynamic'
 
 export default async function GlossaryRoute() {
