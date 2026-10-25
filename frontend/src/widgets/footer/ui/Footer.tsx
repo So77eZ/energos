@@ -1,16 +1,12 @@
 import { Icons } from '@shared/ui/icons'
 import { HiddenBolt } from '@features/easter-eggs'
 
-const TEAM = [
-  { role: 'Фронт', name: 'So77eZ',                 url: 'https://github.com/So77eZ' },
-  { role: 'Бэк',   name: 'SeleznevAS-dev',         url: 'https://github.com/SeleznevAS-dev' },
-  { role: 'Боль',  name: 'trb1mkr', url: 'https://github.com/trb1mkr' },
-] as const
-
-const TELEGRAMS = [
-  { handle: '@thisIsBananash',    url: 'https://t.me/thisIsBananash' },
-  { handle: '@its_a_magic_time',  url: 'https://t.me/its_a_magic_time' },
-] as const
+// Каждый участник один раз: иконки-ссылки (Telegram, GitHub), затем «роль: ник».
+const TEAM: ReadonlyArray<{ role: string; github: string; telegram?: string }> = [
+  { role: 'Фронт', github: 'So77eZ',         telegram: 'thisIsBananash' },
+  { role: 'Бэк',   github: 'SeleznevAS-dev', telegram: 'its_a_magic_time' },
+  { role: 'Боль',  github: 'trb1mkr' },
+]
 
 export function Footer() {
   return (
@@ -33,25 +29,37 @@ export function Footer() {
           <Icons.github w={12} /> So77eZ/energos
         </a>
         {TEAM.map((m) => (
-          <span key={m.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+          <span key={m.github} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
             <span className="dot" />
-            <a className="foot-link" href={m.url} target="_blank" rel="noopener noreferrer">
-              <Icons.github w={12} /> {m.role}: {m.name}
+            {m.telegram && (
+              <a
+                className="foot-link"
+                href={`https://t.me/${m.telegram}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Telegram: @${m.telegram}`}
+                title={`@${m.telegram}`}
+              >
+                <Icons.telegram w={12} />
+              </a>
+            )}
+            <a
+              className="foot-link"
+              href={`https://github.com/${m.github}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`GitHub: ${m.github}`}
+              title={m.github}
+            >
+              <Icons.github w={12} />
             </a>
+            <span className="foot-member">{m.role}: {m.github}</span>
           </span>
         ))}
       </div>
 
       <div className="foot-right">
         <span>© 2026</span>
-        {TELEGRAMS.map((tg) => (
-          <span key={tg.handle} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            <span className="dot" />
-            <a className="foot-link" href={tg.url} target="_blank" rel="noopener noreferrer">
-              <Icons.telegram w={12} /> {tg.handle}
-            </a>
-          </span>
-        ))}
       </div>
     </footer>
   )
