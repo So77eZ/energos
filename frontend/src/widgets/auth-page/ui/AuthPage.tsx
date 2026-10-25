@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { EnergyCan } from '@entities/drink'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
+import { HiddenBolt } from '@features/easter-eggs'
 
 interface AuthPageProps {
   mode: 'login' | 'register'
@@ -27,6 +28,7 @@ export function AuthPage({ mode, children }: AuthPageProps) {
     <div className="page page-auth">
       <div className="auth-stage">
         <div className="auth-vis" aria-hidden="true">
+          <HiddenBolt id="auth" />
           <div className="auth-vis-glow" />
           <div className="auth-vis-grid" />
           <div className="auth-vis-can">

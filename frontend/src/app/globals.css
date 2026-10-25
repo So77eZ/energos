@@ -4399,15 +4399,21 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
 
 /* спрятанная молния */
 .egg-bolt {
-  display: inline-flex; padding: 2px; color: var(--c-amber); opacity: 0.5; cursor: pointer;
+  display: inline-flex; padding: 1px; color: var(--c-amber); opacity: 0.5; cursor: pointer;
   background: none; border: 0; transition: opacity .15s, transform .15s, color .15s;
-  /* align-self: иначе как flex-ребёнок .page (align stretch) кнопка растягивается
-     на всю ширину → hover-scale уводит иконку вбок («упрыгивает») + гигант-таргет.
-     z-index: поднять над 3D-слоем (.three-can pointer-events:auto перехватывал клик). */
-  align-self: flex-start;
-  position: relative; z-index: 2;
+  /* Вне потока: молния не занимает места, и после сбора контент не сдвигается.
+     По умолчанию (.page > молния) — в верхнем отступе .main над страницей: 16px высоты
+     помещаются и в мобильные 16px. z-index — над 3D-слоем (.three-can перехватывал клик). */
+  position: absolute; z-index: 2;
+  top: -17px; left: 0;
 }
 .egg-bolt:hover { opacity: 1; transform: scale(1.25); color: var(--c-pink); }
+/* В карточках — в пустом углу, внутри их отступов. У .hero слева сверху на телефоне
+   плашка «TOP RATED» (в 21px от угла) — там молния её перекрывала, поэтому справа. */
+.drink-hero > .egg-bolt, .auth-vis > .egg-bolt { top: 12px; left: 12px; }
+.hero > .egg-bolt { top: 12px; left: auto; right: 12px; }
+.foot { position: relative; }
+.foot > .egg-bolt { top: calc(50% - 8px); left: 8px; }
 
 /* микро-вспышка лого при клике (намёк на интерактивность) */
 .logo-flash .logo-bolt { animation: logoFlash .4s ease; }

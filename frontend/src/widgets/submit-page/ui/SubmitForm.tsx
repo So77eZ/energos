@@ -2,7 +2,6 @@
 
 import { useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { HiddenBolt } from '@features/easter-eggs'
 import type { User } from '@entities/user'
 import type { Submission } from '@entities/submission'
 import { Icons } from '@shared/ui/icons'
@@ -87,7 +86,6 @@ export function SubmitForm({ currentUser, onSubmitted }: SubmitFormProps) {
 
   return (
     <form className="submit-form" onSubmit={onSubmit}>
-      <HiddenBolt id="submit" />
       <div className="submit-form-grid">
         {/* LEFT — photo */}
         <div className="submit-form-col submit-form-photo">
