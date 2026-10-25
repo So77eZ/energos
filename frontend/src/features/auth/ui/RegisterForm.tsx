@@ -1,17 +1,27 @@
 'use client'
 
-import { useActionState, useEffect } from 'react'
+import { useActionState } from 'react'
 import { Icons } from '@shared/ui/icons'
 import { registerAction } from '../model/actions'
 
 export function RegisterForm() {
   const [state, formAction, isPending] = useActionState(registerAction, null)
 
-  useEffect(() => {
-    if (state?.success) {
-      window.location.href = '/'
-    }
-  }, [state?.success])
+  // Пользователь уже вошёл (registerAction ставит cookie), но отзывы откроются только после
+  // подтверждения e-mail — говорим об этом сразу, а не молча уводим на главную.
+  if (state?.success) {
+    return (
+      <div className="auth-fields">
+        <p className="auth-notice" role="status">
+          Аккаунт создан. Мы отправили письмо на <b>{state.username}</b> — перейдите по ссылке
+          из него, чтобы подтвердить e-mail и оставлять отзывы.
+        </p>
+        <span className="auth-field-hint">Письма нет несколько минут? Проверьте «Спам» или запросите его ещё раз в профиле.</span>
+        {/* Полная перезагрузка, а не Link: шапка должна увидеть новую сессию. */}
+        <a href="/" className="cta-primary auth-submit">На главную <Icons.arrow w={14} /></a>
+      </div>
+    )
+  }
 
   return (
     <form action={formAction} className="auth-fields">

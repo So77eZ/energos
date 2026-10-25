@@ -48,7 +48,7 @@ export function HeaderSearchBar(
     return () => document.removeEventListener('mousedown', onOutside)
   }, [dropdownOpen])
 
-  // На страницах без поиска (/glossary, /compare, /tier, /submit, /auth/...) —
+  // На страницах без поиска (/legend, /compare, /tier, /submit, /auth/...) —
   // рендерим ту же визуальную плашку, но как Link на каталог. Так header
   // одинаков на всех страницах; навигация не сдвигается влево из-за пустого
   // слота, и юзер при клике сразу попадает туда где поиск работает.

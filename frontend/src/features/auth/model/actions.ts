@@ -54,7 +54,7 @@ export async function registerAction(
     return { error: localizeAuthError(e, 'Ошибка регистрации'), username, nickname }
   }
 
-  return { error: '', success: true }
+  return { error: '', success: true, username }
 }
 
 export type ForgotPasswordState = { error: string; sent?: boolean; email?: string } | null

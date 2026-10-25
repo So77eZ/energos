@@ -64,6 +64,12 @@ test.describe('smoke: основные роуты грузятся без runtim
     await expect(page.locator('input[name="password"]')).toHaveCount(0)
   })
 
+  test('/auth/verify подтверждает сам, без кнопки (битый токен → ошибка)', async ({ page }) => {
+    await page.goto('/auth/verify?token=broken')
+    await expect(page.getByRole('main').getByText('Ссылка недействительна или устарела')).toBeVisible()
+    await expect(page.getByRole('button', { name: /Подтвердить/ })).toHaveCount(0)
+  })
+
   test('/profile без авторизации → редирект на /auth/login', async ({ page }) => {
     await page.goto('/profile')
     // Server-side redirect: к моменту load уже на login.
@@ -86,11 +92,16 @@ test.describe('smoke: основные роуты грузятся без runtim
     expect(errors).toEqual([])
   })
 
-  test('/glossary — словарь рендерится', async ({ page }) => {
+  test('/legend — легенда рендерится', async ({ page }) => {
     const errors = trackConsoleErrors(page)
-    await page.goto('/glossary')
+    await page.goto('/legend')
     await expect(page.locator('h1')).toBeVisible()
     expect(errors).toEqual([])
+  })
+
+  test('/glossary — старый адрес ведёт на /legend', async ({ page }) => {
+    await page.goto('/glossary')
+    await expect(page).toHaveURL(/\/legend$/)
   })
 })
 

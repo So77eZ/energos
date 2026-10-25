@@ -959,6 +959,7 @@ body::before {
   text-decoration: none;
 }
 .foot-link:hover { color: var(--accent); }
+.foot-member { color: var(--txt-dim); }
 
 .section-head {
   display: flex; justify-content: space-between; align-items: baseline;
