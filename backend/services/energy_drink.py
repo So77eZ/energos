@@ -2,9 +2,9 @@ from io import BytesIO
 from typing import Annotated
 
 from fastapi import Depends, UploadFile
-from PIL import Image
+from PIL import Image, ImageOps
 
-from core.constants import ALLOWED_IMAGE_MIME_TYPES, OrderDirection
+from core.constants import ALLOWED_IMAGE_MIME_TYPES, MAX_IMAGE_SIDE, OrderDirection
 from core.exceptions import EnergyDrinkNotFoundException, ImageNotFoundException, UnsupportedMediaTypeException
 from models.energy_drink import EnergyDrink
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
@@ -35,7 +35,8 @@ class EnergyDrinkService(
         if image_type not in ALLOWED_IMAGE_MIME_TYPES:
             raise UnsupportedMediaTypeException
 
-        image = Image.open(BytesIO(image_data))
+        image = ImageOps.exif_transpose(Image.open(BytesIO(image_data)))
+        image.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE), Image.Resampling.LANCZOS)
         compressed_buffer = BytesIO()
         image.save(compressed_buffer, format="WEBP", quality=75)
         compressed_bytes = compressed_buffer.getvalue()
