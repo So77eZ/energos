@@ -496,10 +496,8 @@ select option { background-color: var(--bg-base); color: var(--txt); }
    theme-provider.tsx). Где API не поддержан — правила игнорируются. */
 ::view-transition-old(root),
 ::view-transition-new(root) { animation-duration: .35s; }
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) { animation: none !important; }
-}
+:root[data-motion="off"]::view-transition-old(root),
+:root[data-motion="off"]::view-transition-new(root) { animation: none !important; }
 
 /* ═══════════════════════════════════════════════════════════════════
    ENERGOS — Theme tokens, base reset, shared layout primitives
@@ -715,20 +713,18 @@ body::before {
    сканлайны рулятся только тогглами; сканлайны/шум статичны — их тут нет).
    liquid-bg оставляем видимым (цвет), но блобы перестают дрейфовать.
    3D-банки рендерятся статичным кадром (без rAF/орбиты) — гейтятся в JS
-   (matchMedia, ThreeCans.tsx), сам элемент остаётся видимым. */
-@media (prefers-reduced-motion: reduce) {
-  /* :root:not([data-force-motion]) — профильный оверрайд «Анимации: Всегда вкл.»
-     снимает заморозку даже при системном reduce (см. motion-preference спеку). */
-  :root:not([data-force-motion]) .lb-blob,   /* дрейф блобов жидкого фона — стоп, фон остаётся */
-  :root:not([data-force-motion]) .ticker-row,
-  :root:not([data-force-motion]) .ticker-tag::before,
-  :root:not([data-force-motion]) .auth-vis-glow,
-  :root:not([data-force-motion]) .auth-vis-can,
-  :root:not([data-force-motion]) .auth-line,
-  :root:not([data-force-motion]) .age-gate::before,
-  :root:not([data-force-motion]) .age-gate::after {
-    animation: none !important;
-  }
+   (motionOn, ThreeCans.tsx), сам элемент остаётся видимым.
+   data-motion="off" — настройка «Анимации: Выкл.», а пока юзер не выбирал — системная
+   «уменьшить движение» (ставят THEME_INIT_SCRIPT до отрисовки и ThemeProvider). */
+:root[data-motion="off"] .lb-blob,   /* дрейф блобов жидкого фона — стоп, фон остаётся */
+:root[data-motion="off"] .ticker-row,
+:root[data-motion="off"] .ticker-tag::before,
+:root[data-motion="off"] .auth-vis-glow,
+:root[data-motion="off"] .auth-vis-can,
+:root[data-motion="off"] .auth-line,
+:root[data-motion="off"] .age-gate::before,
+:root[data-motion="off"] .age-gate::after {
+  animation: none !important;
 }
 .hdr  { z-index: 50; }
 
@@ -3171,9 +3167,7 @@ body::before {
   animation: skel-shimmer 1.4s ease-in-out infinite;
   border-radius: var(--r-md);
 }
-@media (prefers-reduced-motion: reduce) {
-  .skel { animation: none; }
-}
+:root[data-motion="off"] .skel { animation: none; }
 .skel-strip { height: 120px; margin-bottom: 20px; }
 .skel-sortbar { height: 52px; margin-bottom: 16px; border-radius: var(--r-sm); }
 .skel-card { height: 360px; }
@@ -4188,13 +4182,11 @@ body::before {
   .gacha-actions { width: 100%; }
   .gacha-actions .cta-primary, .gacha-actions .cta-ghost { flex: 1; justify-content: center; }
 }
-/* reduced-motion: gated на data-force-motion (уважать «Анимации: всегда вкл.») */
-@media (prefers-reduced-motion: reduce) {
-  :root:not([data-force-motion]) .gacha-window.landed .gacha-payline { animation: none; }
-  :root:not([data-force-motion]) .gacha-dots i { animation: none; opacity: 0.7; }
-  :root:not([data-force-motion]) .gacha-machine,
-  :root:not([data-force-motion]) .gacha-won { animation: none; }
-}
+/* Анимации выключены (data-motion, см. блок accessibility выше) */
+:root[data-motion="off"] .gacha-window.landed .gacha-payline { animation: none; }
+:root[data-motion="off"] .gacha-dots i { animation: none; opacity: 0.7; }
+:root[data-motion="off"] .gacha-machine,
+:root[data-motion="off"] .gacha-won { animation: none; }
 
 /* ═══════════════════════════════════════════════════════════════════
    ENERGOS — Badges / Achievements (sub-project B)
@@ -4311,10 +4303,8 @@ body::before {
 @keyframes hourglass { 0%,70%,100% { transform: rotate(0); } 85% { transform: rotate(180deg); } }
 
 /* motion-гейт: при системном reduce и без «Анимации: всегда вкл.» — стоп */
-@media (prefers-reduced-motion: reduce) {
-  :root:not([data-force-motion]) .medal-elite,
-  :root:not([data-force-motion]) .bl-pending svg { animation: none; }
-}
+:root[data-motion="off"] .medal-elite,
+:root[data-motion="off"] .bl-pending svg { animation: none; }
 
 /* ═══════════════════════════════════════════════════════════════════
    ENERGOS — Calendar heatmap (профиль, активность отзывов)
@@ -4432,12 +4422,10 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
   100% { filter: none; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  :root:not([data-force-motion]) .egg-fireworks,
-  :root:not([data-force-motion]) .egg-fw-burst,
-  :root:not([data-force-motion]) .egg-fw-spark,
-  :root:not([data-force-motion]) .logo-flash .logo-bolt { animation: none; }
-}
+:root[data-motion="off"] .egg-fireworks,
+:root[data-motion="off"] .egg-fw-burst,
+:root[data-motion="off"] .egg-fw-spark,
+:root[data-motion="off"] .logo-flash .logo-bolt { animation: none; }
 
 /* Якорь скролла к каталогу при вводе поиска: отступ под sticky-шапку
    (.hdr-inner ~54px + .ticker ~28px). Десктоп-онли: на ≤640px поиск живёт в

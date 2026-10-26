@@ -123,25 +123,25 @@ export function TweaksBody() {
           <button
             type="button"
             role="radio"
-            aria-checked={theme.motion === 'system'}
-            className={`twk-seg-btn${theme.motion === 'system' ? ' active' : ''}`}
-            onClick={() => theme.setMotion('system')}
+            aria-checked={theme.motionOn}
+            className={`twk-seg-btn${theme.motionOn ? ' active' : ''}`}
+            onClick={() => theme.setMotion('on')}
           >
-            По системе
+            Вкл.
           </button>
           <button
             type="button"
             role="radio"
-            aria-checked={theme.motion === 'always'}
-            className={`twk-seg-btn${theme.motion === 'always' ? ' active' : ''}`}
-            onClick={() => theme.setMotion('always')}
+            aria-checked={!theme.motionOn}
+            className={`twk-seg-btn${!theme.motionOn ? ' active' : ''}`}
+            onClick={() => theme.setMotion('off')}
           >
-            Всегда вкл.
+            Выкл.
           </button>
         </div>
         <p className="twk-hint">
-          «По системе» уважает настройку ОС «уменьшить движение». «Всегда вкл.» —
-          анимации (фон, 3D-банки) работают независимо от системы.
+          Движение фона, 3D-банок и прочие анимации. Пока не выбрано — как в системе
+          («уменьшить движение»). Выключение помогает, если сайт тормозит.
         </p>
       </section>
     </div>

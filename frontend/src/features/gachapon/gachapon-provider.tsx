@@ -5,7 +5,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { enrichDrinks, type EnrichedDrink } from '@entities/drink'
 import { ROUTES } from '@shared/config/routes'
 import { useTheme } from '@shared/lib/theme'
-import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
 import { fetchGachaponPool } from './actions'
 import { buildSpin } from './reel'
 import { GachaponMachine, type GachaponPhase } from './GachaponMachine'
@@ -19,7 +18,7 @@ const GachaponContext = createContext<GachaponContextValue | null>(null)
 export function GachaponProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { motion } = useTheme()
+  const { motionOn } = useTheme()
 
   const [phase, setPhase] = useState<'idle' | GachaponPhase>('idle')
   const [reel, setReel] = useState<EnrichedDrink[]>([])
@@ -29,9 +28,7 @@ export function GachaponProvider({ children }: { children: ReactNode }) {
   const cacheRef = useRef<EnrichedDrink[] | null>(null)
   const openRef = useRef(false)
 
-  const reducedMotion = usePrefersReducedMotion()
-  // reduced бьёт системную настройку, кроме «Анимации: всегда вкл.» (motion === 'always').
-  const reduced = reducedMotion && motion !== 'always'
+  const reduced = !motionOn
   // Длительность спина: momentum-кривая держит динамику, 6с достаточно (был 7 под мёртвый хвост).
   const dur = reduced ? 0.35 : 6
 

@@ -1,4 +1,4 @@
-import type { Accent, ThemePrefs } from './types'
+import type { Accent, Motion, ThemePrefs } from './types'
 
 export const ACCENT_MAP: Record<Accent, { rgb: string; hex: string }> = {
   cyan:   { rgb: '0,229,255',   hex: '#00e5ff' },
@@ -14,8 +14,16 @@ export const DEFAULT_PREFS: ThemePrefs = {
   liquidBg: true,
   grain: true,
   scanlines: true,
-  motion: 'system',
+  motion: null,
   gachapon: true,
 }
 
 export const STORAGE_KEY = 'energos_theme'
+
+/** Сохранённое значение анимаций → Motion. Старые значения: 'always' («Всегда вкл.») → 'on',
+ *  'system' («По системе») и мусор → null (следовать системе). */
+export function parseMotion(v: unknown): Motion | null {
+  if (v === 'on' || v === 'always') return 'on'
+  if (v === 'off') return 'off'
+  return null
+}

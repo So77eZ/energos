@@ -3,10 +3,13 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { FEATURES } from '@shared/config/features'
-import { ACCENT_MAP, DEFAULT_PREFS, STORAGE_KEY } from './constants'
+import { usePrefersReducedMotion } from '../usePrefersReducedMotion'
+import { ACCENT_MAP, DEFAULT_PREFS, STORAGE_KEY, parseMotion } from './constants'
 import type { Accent, Motion, Theme, ThemePrefs } from './types'
 
 interface ThemeContextValue extends ThemePrefs {
+  /** Анимации включены сейчас: выбор пользователя, а если не выбирал — системная настройка. */
+  motionOn: boolean
   setTheme: (t: Theme) => void
   setAccent: (a: Accent) => void
   setLiquidBg: (v: boolean) => void
@@ -19,14 +22,14 @@ interface ThemeContextValue extends ThemePrefs {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-function applyToDOM(prefs: ThemePrefs) {
+function applyToDOM(prefs: ThemePrefs, motionOn: boolean) {
   const html = document.documentElement
   html.setAttribute('data-theme', prefs.theme)
   const accent = ACCENT_MAP[prefs.accent]
   html.style.setProperty('--accent', accent.hex)
   html.style.setProperty('--accent-rgb', accent.rgb)
-  // 'always' → атрибут, на который скоупится reduced-motion CSS (отключает заморозку).
-  html.toggleAttribute('data-force-motion', prefs.motion === 'always')
+  // Единый источник для CSS: :root[data-motion="off"] замораживает анимации (globals.css).
+  html.setAttribute('data-motion', motionOn ? 'on' : 'off')
   // Address-bar (mobile) под цвет фона текущей темы. Читаем реальный --bg-base
   // (data-theme уже выставлен выше) — честно при toggle, без хардкода палитры.
   const bg = getComputedStyle(html).getPropertyValue('--bg-base').trim()
@@ -46,13 +49,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const hydrated = useRef(false)
   const firstApply = useRef(true)
   const prevTheme = useRef<Theme>(DEFAULT_PREFS.theme)
+  const systemReduce = usePrefersReducedMotion()
+  const motionOn = prefs.motion ? prefs.motion === 'on' : !systemReduce
 
   // Hydrate from storage once on mount. The inline init script already applied
   // theme/accent visually — this brings state into React.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) setPrefs({ ...DEFAULT_PREFS, ...(JSON.parse(raw) as Partial<ThemePrefs>) })
+      if (raw) {
+        const stored = JSON.parse(raw) as Partial<ThemePrefs> & { motion?: unknown }
+        setPrefs({ ...DEFAULT_PREFS, ...stored, motion: parseMotion(stored.motion) })
+      }
     } catch {}
     hydrated.current = true
   }, [])
@@ -68,19 +76,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const themeChanged = prevTheme.current !== prefs.theme
     prevTheme.current = prefs.theme
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown }
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    if (themeChanged && !firstApply.current && !reduced && typeof doc.startViewTransition === 'function') {
-      doc.startViewTransition(() => applyToDOM(prefs))
+    if (themeChanged && !firstApply.current && motionOn && typeof doc.startViewTransition === 'function') {
+      doc.startViewTransition(() => applyToDOM(prefs, motionOn))
     } else {
-      applyToDOM(prefs)
+      applyToDOM(prefs, motionOn)
     }
     firstApply.current = false
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
     } catch {}
-  }, [prefs])
+  }, [prefs, motionOn])
 
   const update = useCallback((patch: Partial<ThemePrefs>) => {
     setPrefs((prev) => ({ ...prev, ...patch }))
@@ -88,6 +95,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const value: ThemeContextValue = {
     ...prefs,
+    motionOn,
     // Рулетка вне MVP: без флага её нет в меню независимо от сохранённой настройки пользователя
     // (в localStorage по-прежнему пишется prefs, значение пользователя не теряется).
     gachapon: FEATURES.gachapon && prefs.gachapon,

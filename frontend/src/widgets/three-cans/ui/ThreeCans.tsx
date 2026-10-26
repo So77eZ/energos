@@ -252,7 +252,7 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
     })
   }
 
-  // prefers-reduced-motion: показываем банки статичным кадром — без rAF-цикла,
+  // Анимации выключены: показываем банки статичным кадром — без rAF-цикла,
   // hover-разгона и орбиты льдинок. Элемент остаётся (как у liquid-bg), глушим
   // только движение. resize перерисовывает единичный кадр.
   if (!animate) {
@@ -376,7 +376,7 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
 const ACCENT_CYCLE: Array<keyof typeof ACCENT_MAP> = ['cyan', 'pink', 'lime', 'amber', 'purple']
 
 export function ThreeCans() {
-  const { accent, motion } = useTheme()
+  const { accent, motionOn } = useTheme()
   const { onBurst } = useCanGame()
   const onBurstRef = useRef(onBurst)
   useEffect(() => { onBurstRef.current = onBurst }, [onBurst])
@@ -387,23 +387,10 @@ export function ThreeCans() {
   const leftRef = useRef<HTMLCanvasElement>(null)
   const rightRef = useRef<HTMLCanvasElement>(null)
 
-  // Уважаем системную настройку «уменьшить движение»: банки крутятся/орбитят
-  // непрерывно (idle-wobble + кубы-льдинки + hover-разгон). При reduce-motion
-  // НЕ прячем банки, а рендерим статичным кадром (как у liquid-bg — глушим
-  // только движение). Lazy-init синхронно, чтобы не словить лишний remount.
-  const [systemReduce, setSystemReduce] = useState(
-    () => typeof window !== 'undefined'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  )
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const onChange = () => setSystemReduce(mq.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
-
-  // Профильный оверрайд 'always' бьёт системную настройку (см. motion-preference спеку).
-  const reduced = systemReduce && motion !== 'always'
+  // Анимации выключены (настройка или, если не выбирали, система): банки крутятся/орбитят
+  // непрерывно (idle-wobble + кубы-льдинки + hover-разгон) — при выключенных НЕ прячем,
+  // а рендерим статичным кадром без rAF-цикла (как у liquid-bg — глушим только движение).
+  const reduced = !motionOn
 
   useEffect(() => {
     const cleanups: Array<() => void> = []
