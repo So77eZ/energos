@@ -38,7 +38,7 @@ export function HomeHero({ drink, rank }: HomeHeroProps) {
               style={{ background: `radial-gradient(circle, rgba(${blend},0.45), transparent 70%)` }}
             />
             {drink.image_url ? (
-              <DrinkImg src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 400, width: 'auto', position: 'relative', zIndex: 1 }} fallback={<EnergyCan can={drink.can} w={180} h={400} />} />
+              <DrinkImg displayWidth={200} src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 400, width: 'auto', position: 'relative', zIndex: 1 }} fallback={<EnergyCan can={drink.can} w={180} h={400} />} />
             ) : (
               <EnergyCan can={drink.can} w={180} h={400} />
             )}

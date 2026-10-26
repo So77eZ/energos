@@ -35,7 +35,7 @@ export function DrinkHero({ drink, loggedIn, hasMyReview, onWriteReview }: Drink
       <HiddenBolt id="drink" />
       <div className="drink-hero-vis">
         {drink.image_url ? (
-          <DrinkImg src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 480, width: 'auto' }} fallback={<EnergyCan can={drink.can} w={220} h={500} />} />
+          <DrinkImg displayWidth={240} src={drink.image_url} alt={drink.name} loading="eager" fetchPriority="high" decoding="async" style={{ maxHeight: 480, width: 'auto' }} fallback={<EnergyCan can={drink.can} w={220} h={500} />} />
         ) : (
           <EnergyCan can={drink.can} w={220} h={500} />
         )}

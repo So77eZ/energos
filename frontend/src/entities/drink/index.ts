@@ -4,7 +4,7 @@ export { TierBadge, TIER_COLORS } from './ui/TierBadge'
 export { EnergyCan } from './ui/EnergyCan'
 export { DrinkImg } from './ui/DrinkImg'
 export type { CanSpec } from './ui/EnergyCan'
-export { drinkApi } from './api/drinkApi'
+export { drinkApi, drinkImageVersion } from './api/drinkApi'
 export {
   enrichDrink,
   enrichDrinks,

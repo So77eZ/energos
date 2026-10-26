@@ -36,7 +36,7 @@ export function HomeSideRail({ drinks }: HomeSideRailProps) {
               <Link key={d.id} href={ROUTES.reviews(d.id)} className="rail-row">
                 <div className="rail-can">
                   {d.image_url ? (
-                    <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" style={{ width: 32, height: 68, objectFit: 'contain' }} fallback={<EnergyCan can={d.can} w={32} h={68} />} />
+                    <DrinkImg displayWidth={32} src={d.image_url} alt={d.name} loading="lazy" decoding="async" style={{ width: 32, height: 68, objectFit: 'contain' }} fallback={<EnergyCan can={d.can} w={32} h={68} />} />
                   ) : (
                     <EnergyCan can={d.can} w={32} h={68} />
                   )}

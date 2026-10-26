@@ -144,7 +144,7 @@ export function ComparePage({ drinks }: ComparePageProps) {
                   style={{ background: `radial-gradient(circle, rgba(${blend}, 0.4), transparent 70%)` }}
                 />
                 {d.image_url ? (
-                  <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={120} h={260} />} />
+                  <DrinkImg displayWidth={128} src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={120} h={260} />} />
                 ) : (
                   <EnergyCan can={d.can} w={120} h={260} />
                 )}
@@ -283,7 +283,7 @@ export function ComparePage({ drinks }: ComparePageProps) {
                 >
                   <div className="cmp-pick-can">
                     {d.image_url ? (
-                      <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={32} h={68} />} />
+                      <DrinkImg displayWidth={32} src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={32} h={68} />} />
                     ) : (
                       <EnergyCan can={d.can} w={32} h={68} />
                     )}

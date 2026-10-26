@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { HoverPrefetchLink } from '@shared/ui/hover-prefetch-link'
 import { ROUTES } from '@shared/config/routes'
 import { METRIC_COLOR_VARS, METRIC_KEYS, METRIC_SHORT } from '@entities/review'
 import type { EnrichedDrink } from '@entities/drink'
@@ -39,7 +39,7 @@ export function HeatmapView({ drinks }: HeatmapViewProps) {
         const cleaned = cleanDrinkName(d.name)
         const split = splitDrinkBrand(cleaned)
         return (
-          <Link key={d.id} href={ROUTES.reviews(d.id)} className="heatmap-row">
+          <HoverPrefetchLink key={d.id} href={ROUTES.reviews(d.id)} className="heatmap-row">
             <div className="hm-cell hm-name">
               <span className="hm-rank">#{String(i + 1).padStart(2, '0')}</span>
               <span className="hm-brand">{split.brand}</span>
@@ -72,7 +72,7 @@ export function HeatmapView({ drinks }: HeatmapViewProps) {
             <div className="hm-cell hm-price" style={{ color: 'var(--c-pink)' }}>
               {d.price != null ? d.price.toFixed(0) : '—'}
             </div>
-          </Link>
+          </HoverPrefetchLink>
         )
       })}
     </div>

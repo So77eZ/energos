@@ -6,14 +6,16 @@ import { toUtcIso } from '../lib/api-date'
 const BASE = `${API_V1}/energy-drinks`
 
 // Что отдаёт бэк: EnergyDrinkWithMetricsReadSchema (список) / EnergyDrinkReadSchema (create,
-// update, image — без метрик). image_url и updated_at в API нет — достраиваем в toDrink;
-// created_at приходит с часовым поясом (`…Z`), но `toUtcIso` страхует от дат без зоны.
+// update, image — без метрик). image_url в API нет — достраиваем в toDrink;
+// даты приходят с часовым поясом (`…Z`), но `toUtcIso` страхует от дат без зоны.
 interface ApiDrink {
   id: number
   name: string
   price: number | null
   no_sugar: boolean
   created_at?: string | null
+  /** Меняется и при загрузке картинки (она в той же строке) — служит её версией. */
+  updated_at?: string | null
   avg_rating?: number | null
   reviews_count?: number
   avg_acidity?: number | null
@@ -24,10 +26,20 @@ interface ApiDrink {
   avg_price_quality?: number | null
 }
 
+/** Версия картинки — `updated_at` напитка в миллисекундах; null, если бэк его не отдал. */
+export function drinkImageVersion(updatedAt: string | null | undefined): number | null {
+  const ms = Date.parse(toUtcIso(updatedAt) ?? '')
+  return Number.isFinite(ms) ? ms : null
+}
+
 /** Картинка отдаётся отдельным эндпоинтом. Есть ли она у напитка, список не говорит.
  *  Браузер берёт её у фронта (`app/drink-image/[id]/route.ts`), а не у /api напрямую:
- *  в проде Caddy проксирует /api только при DEPLOY_ENV=dev, и rewrites в Next нет. */
-export const drinkImageUrl = (id: number) => `/drink-image/${id}`
+ *  в проде Caddy проксирует /api только при DEPLOY_ENV=dev, и rewrites в Next нет.
+ *  `?v=` — версия: новая картинка → новый адрес, поэтому её можно кешировать надолго. */
+export function drinkImageUrl(id: number, updatedAt?: string | null): string {
+  const v = drinkImageVersion(updatedAt)
+  return v === null ? `/drink-image/${id}` : `/drink-image/${id}?v=${v}`
+}
 
 const toStats = (d: ApiDrink): DrinkStats => {
   const count = d.reviews_count ?? 0
@@ -52,9 +64,9 @@ const toDrink = (d: ApiDrink): Drink => ({
   name: d.name,
   price: d.price ?? null,
   no_sugar: d.no_sugar,
-  image_url: drinkImageUrl(d.id),
+  image_url: drinkImageUrl(d.id, d.updated_at),
   created_at: toUtcIso(d.created_at),
-  updated_at: null,
+  updated_at: toUtcIso(d.updated_at),
   stats: toStats(d),
 })
 
