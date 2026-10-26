@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import {
-  FONTS, DEFAULT_FONT, OPTIONAL_FONT_HREFS, FONT_COOKIE, fontLinkId, isFontId,
+  FONTS, DEFAULT_FONT, FONT_STACKS, OPTIONAL_FONT_HREFS, FONT_COOKIE, fontLinkId, isFontId,
+  PREFS_STORAGE_KEY as STORAGE_KEY, PREFS_SCHEMA_VERSION as SCHEMA_VERSION,
   type FontId,
 } from './fonts'
 
@@ -32,9 +33,6 @@ function ensureFontLoaded(font: FontId): void {
   link.href = href
   document.head.appendChild(link)
 }
-
-const STORAGE_KEY = 'energos_prefs'
-const SCHEMA_VERSION = 1
 
 interface Prefs {
   v: number
@@ -71,7 +69,13 @@ function writePrefs(prefs: Prefs): void {
 export function applyFont(font: FontId): void {
   if (typeof document === 'undefined') return
   ensureFontLoaded(font)
-  document.documentElement.style.setProperty('--font-sans', `"${font}"`)
+  const root = document.documentElement.style
+  root.setProperty('--font-sans', FONT_STACKS[font])
+  // Заголовки (названия напитков, h1) по умолчанию — Exo 2 в паре с JetBrains Mono. Выбрал
+  // другой шрифт — меняются и они, иначе «шрифт сменился везде, кроме названий».
+  // До первой отрисовки то же самое делает THEME_INIT_SCRIPT — держать в согласии.
+  if (font === DEFAULT_FONT) root.removeProperty('--font-title')
+  else root.setProperty('--font-title', FONT_STACKS[font])
 }
 
 export function useUserPreferences() {

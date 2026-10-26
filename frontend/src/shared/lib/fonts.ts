@@ -13,6 +13,17 @@ export type FontId = (typeof FONTS)[number]['id']
 
 export const DEFAULT_FONT: FontId = 'JetBrains Mono'
 
+// CSS-стек для выбранного шрифта. В Orbitron, Rajdhani и Share Tech Mono нет кириллицы —
+// без запасного шрифта русские буквы рисовались системным serif (Times). Запасные похожего
+// стиля и с кириллицей, все из always-load набора layout.tsx.
+export const FONT_STACKS: Record<FontId, string> = {
+  'JetBrains Mono':  `'JetBrains Mono', ui-monospace, monospace`,
+  'Share Tech Mono': `'Share Tech Mono', 'JetBrains Mono', ui-monospace, monospace`,
+  'Orbitron':        `'Orbitron', 'Russo One', sans-serif`,
+  'Rajdhani':        `'Rajdhani', 'Exo 2', sans-serif`,
+  'Monocraft':       `'Monocraft', 'JetBrains Mono', monospace`,
+}
+
 // Google Fonts CSS-href для ОПЦИОНАЛЬНЫХ шрифтов (не входят в always-load набор
 // layout.tsx). JetBrains Mono всегда загружен, Monocraft self-hosted — их тут нет.
 export const OPTIONAL_FONT_HREFS: Partial<Record<FontId, string>> = {
@@ -20,6 +31,11 @@ export const OPTIONAL_FONT_HREFS: Partial<Record<FontId, string>> = {
   'Orbitron':        'https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap',
   'Rajdhani':        'https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap',
 }
+
+// localStorage с выбранным шрифтом (user-preferences.ts). Здесь, а не там: ключ нужен и
+// THEME_INIT_SCRIPT, который собирается на сервере, — из 'use client'-модуля значение не взять.
+export const PREFS_STORAGE_KEY = 'energos_prefs'
+export const PREFS_SCHEMA_VERSION = 1
 
 // Cookie с выбранным шрифтом — чтобы сервер мог отдать <link> нужного шрифта
 // на первом рендере (без FOUT). Дублирует localStorage-преференс (см.
