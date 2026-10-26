@@ -2104,6 +2104,24 @@ body::before {
   font-family: var(--font-display); font-weight: 800;
   font-size: 36px; letter-spacing: 0.5px; color: var(--txt); line-height: 1;
 }
+/* Смена имени: карандаш рядом с именем, по клику — поле и кнопки (features/auth/ui/UsernameEditor). */
+.prof-name-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.prof-name-row .prof-name { overflow-wrap: anywhere; }
+.prof-name-edit {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  color: var(--txt-dim); border: 1px solid var(--line); background: transparent;
+}
+.prof-name-edit:hover, .prof-name-edit:focus-visible { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.5); }
+.prof-name-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.prof-name-input {
+  flex: 1 1 220px; min-width: 0; max-width: 360px;
+  padding: 10px 14px; background: var(--bg-input);
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  color: var(--txt); font-family: var(--font-display); font-weight: 700; font-size: 20px;
+}
+.prof-name-input:focus { border-color: rgba(var(--accent-rgb), 0.5); }
+.prof-name-error { flex-basis: 100%; }
 .prof-meta {
   display: flex; gap: 18px; flex-wrap: wrap;
   font-family: var(--font-mono); font-size: 11px; color: var(--txt-dim); letter-spacing: 0.5px;

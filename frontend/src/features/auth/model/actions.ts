@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { authApi } from '@entities/user'
 import { getToken, setToken, clearToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
+import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
 import { localizeAuthError } from './auth-errors'
 
 // username возвращается в состоянии, чтобы форма подставила его обратно:
@@ -96,6 +97,30 @@ export async function resetPasswordAction(
     if (e instanceof RateLimitError) return { error: e.message }
     return { error: localizeAuthError(e, 'Не удалось сменить пароль') }
   }
+  return { error: '', success: true }
+}
+
+export type ChangeUsernameState = { error: string; success?: boolean; nickname?: string } | null
+
+/** Смена публичного имени (PATCH /auth/me). Пределы — как у формы регистрации; занятость проверяет бэк. */
+export async function changeUsernameAction(
+  _prev: ChangeUsernameState,
+  formData: FormData,
+): Promise<ChangeUsernameState> {
+  const token = await getToken()
+  if (!token) redirect('/auth/login')
+  const nickname = ((formData.get('nickname') as string) ?? '').trim()
+  if (nickname.length < 2 || nickname.length > 32) return { error: 'Имя — от 2 до 32 символов', nickname }
+
+  try {
+    await authApi.updateMe(token, { username: nickname })
+  } catch (e) {
+    await redirectIfSessionExpired(e) // 401 → clear+redirect; иначе вниз
+    if (e instanceof RateLimitError) return { error: e.message, nickname }
+    return { error: localizeAuthError(e, 'Не удалось сменить имя'), nickname }
+  }
+  // Имя показывают шапка (layout) и отзывы на страницах напитков — обновляем всё дерево.
+  revalidatePath('/', 'layout')
   return { error: '', success: true }
 }
 

@@ -12,7 +12,7 @@ from core.exceptions import (
 )
 from models import User
 from repositories.user import UserRepository, get_user_repository
-from schemas.user import UserCreate
+from schemas.user import UserCreate, UserUpdate
 from utils.email import EmailClient
 
 
@@ -46,6 +46,16 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
         await self.on_after_register(created_user, request)
 
         return created_user
+
+    async def update(
+        self, user_update: UserUpdate, user: User, safe: bool = False, request: Request | None = None
+    ) -> User:
+        # Отзывы ссылаются на user_id, ник подтягивается при чтении — после смены он виден во всех отзывах.
+        if user_update.username is not None and user_update.username != user.username:
+            if await cast(UserRepository, self.user_db).get_by_username(user_update.username):
+                raise UsernameAlreadyExistsException
+
+        return await super().update(user_update, user, safe=safe, request=request)
 
     async def validate_password(
         self,

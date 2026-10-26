@@ -25,6 +25,18 @@ describe('authApi', () => {
     expect((await authApi.me('tok')).role).toBe('user')
   })
 
+  it('updateMe: PATCH /auth/me с токеном и JSON { username }', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json({ ...apiUser, username: 'NewFox' }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect((await authApi.updateMe('tok', { username: 'NewFox' })).username).toBe('NewFox')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toMatch(/\/api\/v1\/auth\/me$/)
+    expect(init.method).toBe('PATCH')
+    expect(init.headers.Authorization).toBe('Bearer tok')
+    expect(JSON.parse(init.body)).toEqual({ username: 'NewFox' })
+  })
+
   it('login: form-urlencoded, поле username несёт e-mail', async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ access_token: 'a', token_type: 'bearer' }))
     vi.stubGlobal('fetch', fetchMock)
