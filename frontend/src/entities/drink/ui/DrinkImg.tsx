@@ -14,7 +14,7 @@ interface DrinkImgProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' 
   fallback?: ReactNode
 }
 
-const OPTIMIZABLE = /^\/drink-image\/\d+$/
+const OPTIMIZABLE = /^\/drink-image\/\d+(\?v=\d+)?$/
 
 export function drinkImgSources(src: string, displayWidth: number): { src: string; srcSet?: string } {
   if (!OPTIMIZABLE.test(src)) return { src }
