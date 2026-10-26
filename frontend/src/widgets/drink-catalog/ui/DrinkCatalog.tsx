@@ -11,7 +11,7 @@ import { FEATURES } from '@shared/config/features'
 import { Icons } from '@shared/ui/icons'
 import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
-import { usePrefersReducedMotion } from '@shared/lib/usePrefersReducedMotion'
+import { useTheme } from '@shared/lib/theme'
 import { useInfiniteReveal } from '../model/useInfiniteReveal'
 import { HeatmapView } from './HeatmapView'
 
@@ -128,17 +128,17 @@ export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) 
 
   // Скролл к каталогу при вводе поиска (раз на переход пусто↔непусто).
   const sortRef = useRef<HTMLDivElement | null>(null)
-  const reducedMotion = usePrefersReducedMotion()
+  const { motionOn } = useTheme()
   const prevHad = useRef<boolean | null>(null)
   useEffect(() => {
     const has = search.trim().length > 0
     if (prevHad.current === null) { prevHad.current = has; return } // mount — без скролла
     if (has === prevHad.current) return
     prevHad.current = has
-    const behavior: ScrollBehavior = reducedMotion ? 'auto' : 'smooth'
+    const behavior: ScrollBehavior = motionOn ? 'smooth' : 'auto'
     if (has) sortRef.current?.scrollIntoView({ behavior, block: 'start' })
     else window.scrollTo({ top: 0, behavior })
-  }, [search, reducedMotion])
+  }, [search, motionOn])
 
   if (enriched.length === 0) {
     return (

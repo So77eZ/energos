@@ -24,7 +24,8 @@ var h=document.documentElement;
 h.setAttribute('data-theme',t);
 h.style.setProperty('--accent',a.hex);
 h.style.setProperty('--accent-rgb',a.rgb);
-if(p.motion==='always')h.setAttribute('data-force-motion','');
+var mo=p.motion==='on'||p.motion==='always'?'on':p.motion==='off'?'off':(matchMedia('(prefers-reduced-motion: reduce)').matches?'off':'on');
+h.setAttribute('data-motion',mo);
 }catch(e){}
 try{
 var S=${JSON.stringify(FONT_STACKS)};

@@ -16,7 +16,7 @@ export function HeaderTicker({ items }: { items: TickerItem[] }) {
   const [duration, setDuration] = useState(80)
 
   useEffect(() => {
-    // reduced-motion заморозку делает gated CSS (уважает data-force-motion);
+    // заморозку при выключенных анимациях делает CSS (:root[data-motion="off"]);
     // здесь — только пауза анимации на скрытой вкладке.
     const onVis = () => setFrozen(document.hidden)
     onVis()
