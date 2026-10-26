@@ -38,6 +38,7 @@ class EnergyDrinkUpdateSchema(BaseSchema):
 class EnergyDrinkReadSchema(EnergyDrinkBaseSchema):
     id: int
     created_at: datetime
+    updated_at: datetime
 
 
 class EnergyDrinkWithMetricsReadSchema(EnergyDrinkReadSchema, EnergyDrinkMetricsSchema):
