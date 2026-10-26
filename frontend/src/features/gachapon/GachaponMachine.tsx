@@ -138,7 +138,7 @@ export function GachaponMachine({
                       style={{ background: `radial-gradient(ellipse at center 60%, rgba(${d.blend},0.30), transparent 70%)` }}
                     />
                     {d.image_url ? (
-                      <DrinkImg src={d.image_url} alt={d.name} decoding="async" className="gacha-cell-img" fallback={<EnergyCan can={d.can} name={d.name} w={64} h={140} />} />
+                      <DrinkImg displayWidth={72} src={d.image_url} alt={d.name} decoding="async" className="gacha-cell-img" fallback={<EnergyCan can={d.can} name={d.name} w={64} h={140} />} />
                     ) : (
                       <EnergyCan can={d.can} name={d.name} w={64} h={140} />
                     )}

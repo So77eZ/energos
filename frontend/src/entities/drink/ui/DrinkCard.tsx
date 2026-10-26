@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { HoverPrefetchLink } from '@shared/ui/hover-prefetch-link'
 import { useRouter } from 'next/navigation'
 import type { CSSProperties, MouseEvent } from 'react'
 import { ROUTES } from '@shared/config/routes'
@@ -48,7 +48,7 @@ export function DrinkCard({ drink, rank = null, brand, isFav = false, onToggleFa
   }
 
   return (
-    <Link href={ROUTES.reviews(drink.id)} className="card card-glass" style={style}>
+    <HoverPrefetchLink href={ROUTES.reviews(drink.id)} className="card card-glass" style={style}>
       <div className="card-top">
         {rank != null && (
           <div className="card-rank">
@@ -80,7 +80,7 @@ export function DrinkCard({ drink, rank = null, brand, isFav = false, onToggleFa
         style={{ background: `radial-gradient(ellipse at center 60%, rgba(${blend},0.28), transparent 70%)` }}
       >
         {drink.image_url ? (
-          <DrinkImg
+          <DrinkImg displayWidth={96}
             src={drink.image_url}
             alt={drink.name}
             loading="lazy"
@@ -141,6 +141,6 @@ export function DrinkCard({ drink, rank = null, brand, isFav = false, onToggleFa
         className="card-hover-line"
         style={{ background: `linear-gradient(90deg, transparent, rgba(${blend},0.9), transparent)` }}
       />
-    </Link>
+    </HoverPrefetchLink>
   )
 }

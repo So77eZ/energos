@@ -35,7 +35,7 @@ export function SimilarRail({ matches }: SimilarRailProps) {
                 style={{ background: `radial-gradient(ellipse at center, rgba(${blend},0.25), transparent 70%)` }}
               >
                 {drink.image_url ? (
-                  <DrinkImg
+                  <DrinkImg displayWidth={56}
                     src={drink.image_url}
                     alt={drink.name}
                     loading="lazy"

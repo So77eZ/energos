@@ -61,7 +61,7 @@ export function ReviewsTab({ reviews, drinkMap, enrichedMap }: ReviewsTabProps) 
             >
               <div className="prof-rev-can">
                 {drink?.image_url ? (
-                  <DrinkImg src={drink.image_url} alt={drink.name} loading="lazy" decoding="async" style={{ maxHeight: 108, width: 'auto', objectFit: 'contain' }} fallback={enriched ? <EnergyCan can={enriched.can} w={50} h={108} /> : null} />
+                  <DrinkImg displayWidth={56} src={drink.image_url} alt={drink.name} loading="lazy" decoding="async" style={{ maxHeight: 108, width: 'auto', objectFit: 'contain' }} fallback={enriched ? <EnergyCan can={enriched.can} w={50} h={108} /> : null} />
                 ) : enriched ? (
                   <EnergyCan can={enriched.can} w={50} h={108} />
                 ) : null}

@@ -3,7 +3,13 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   images: {
-    unoptimized: true,
+    // Картинки напитков бэк хранит до 1600 px, а показываем их в карточках ~70×180. Отдаём
+    // уменьшенные копии через оптимизатор Next (DrinkImg → getImageProps): 98 карточек весили
+    // 7,4 МБ и 90 Мпикс в памяти. Разрешён только наш прокси /drink-image/{id} без query.
+    localPatterns: [{ pathname: '/drink-image/**', search: '' }],
+    qualities: [75],
+    // = Cache-Control прокси (300 с): иначе по умолчанию 4 ч, и замена фото была бы видна не скоро.
+    minimumCacheTTL: 300,
   },
   experimental: {
     // Картинка напитка уходит в бэк через server action (drinkApi.uploadImage); по умолчанию

@@ -117,7 +117,7 @@ export function DrinkForm({ mode, drink, adminReview, action }: DrinkFormProps) 
               <div className="adm-upload">
                 {preview ? (
                   <div className="adm-upload-preview">
-                    <DrinkImg
+                    <DrinkImg displayWidth={96}
                       src={preview}
                       alt=""
                       style={{ maxHeight: 170, width: 'auto', objectFit: 'contain' }}

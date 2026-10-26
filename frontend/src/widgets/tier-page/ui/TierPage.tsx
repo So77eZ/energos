@@ -106,7 +106,7 @@ export function TierPage({ drinks }: TierPageProps) {
                           }}
                         >
                           {d.image_url ? (
-                            <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={56} h={120} />} />
+                            <DrinkImg displayWidth={56} src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<EnergyCan can={d.can} w={56} h={120} />} />
                           ) : (
                             <EnergyCan can={d.can} w={56} h={120} />
                           )}

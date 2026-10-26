@@ -106,7 +106,7 @@ export function HeaderSearchBar(
                 >
                   <span className="search-dropdown-thumb">
                     {d.image_url ? (
-                      <DrinkImg src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<IconBolt w={12} />} />
+                      <DrinkImg displayWidth={24} src={d.image_url} alt={d.name} loading="lazy" decoding="async" fallback={<IconBolt w={12} />} />
                     ) : (
                       <IconBolt w={12} />
                     )}
