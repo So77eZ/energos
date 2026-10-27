@@ -46,7 +46,7 @@ class EnergyDrinkService(
         energy_drink.image_content_type = "image/webp"
 
         updated_energy_drink = await self.repository.update(energy_drink)
-        return EnergyDrinkReadSchema.model_validate(updated_energy_drink)
+        return self.read_schema.model_validate(updated_energy_drink)
 
     async def get_by_id(self, id: int) -> EnergyDrinkWithMetricsReadSchema:
         energy_drink: EnergyDrink = await self.repository.get_by_id(id)
