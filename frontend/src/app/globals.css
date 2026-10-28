@@ -635,6 +635,23 @@ select option { background-color: var(--bg-base); color: var(--txt); }
   .app.has-scan::after, html[data-retro] .app::after { display: none; }
 }
 
+/* Слабая графика (data-gfx="low": браузер рисует без видеокарты или не тянет — gfx.ts).
+   Без видеокарты кадр собирается на CPU: каталог со всеми эффектами шёл 5 кадров/с, без пятен
+   ~12, а без пятен, блюра карточек и наложений шума/сканлайнов — 70. Вид — как на мобиле выше,
+   плюс без backdrop-filter (карточки и так на 92% непрозрачны). 3D-банки не монтируются (JS). */
+:root[data-gfx="low"] .lb-blob,
+:root[data-gfx="low"] .auth-vis-glow,
+:root[data-gfx="low"] .age-gate::before,
+:root[data-gfx="low"] .age-gate::after { filter: none; }
+:root[data-gfx="low"]:not([data-theme="light"]) .lb-blob { opacity: 0.6; }
+:root[data-gfx="low"] .app.has-grain::before,
+:root[data-gfx="low"][data-retro] .app::before { background-image: none; mix-blend-mode: normal; }
+:root[data-gfx="low"] .app.has-scan::after,
+:root[data-gfx="low"][data-retro] .app::after { display: none; }
+/* Только без префикса: -webkit- добавит сборка (lightningcss). Если написать оба, она оставляет
+   один -webkit-, и Chrome правило не видит. */
+:root[data-gfx="low"] * { backdrop-filter: none !important; }
+
 .lb-grid {
   position: absolute; inset: 0;
   background-image:

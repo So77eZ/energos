@@ -1,7 +1,7 @@
 'use client'
 
 // Одноразовый баннер внизу экрана: объясняет, что часть анимаций урезана из-за
-// системного prefers-reduced-motion, и направляет в профиль где их можно включить.
+// системного prefers-reduced-motion или слабой графики, и направляет в профиль где их можно включить.
 //
 // Показывается только если: юзер сам не выбирал Вкл/Выкл (motion === null), анимации
 // выключены (значит, по системе) И баннер не закрывали ранее. Закрытие — навсегда.
@@ -17,7 +17,7 @@ import { useAnalyticsConsentDecided } from '@shared/ui/AnalyticsConsent'
 const STORAGE_KEY = 'energos_motion_notice'
 
 export function MotionNotice() {
-  const { motion, motionOn } = useTheme()
+  const { motion, motionOn, lowGfx } = useTheme()
   // dismissed — «закрыто» на SSR/первом рендере, реальное значение из localStorage в effect.
   const [dismissed, setDismissed] = useState(true)
   const consentDecided = useAnalyticsConsentDecided()
@@ -38,7 +38,9 @@ export function MotionNotice() {
   return (
     <div className="motion-notice" role="status">
       <span>
-        Часть анимаций сайта урезана из-за системных настроек. Изменить поведение можно в{' '}
+        {lowGfx
+          ? 'Браузер рисует сайт медленно, поэтому анимации и тяжёлые эффекты выключены. Анимации можно включить в'
+          : 'Часть анимаций сайта урезана из-за системных настроек. Изменить поведение можно в'}{' '}
         <Link href={ROUTES.profile}>профиле</Link>.
       </span>
       <button type="button" className="motion-notice-close" onClick={close} aria-label="Закрыть">
