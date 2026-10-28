@@ -32,7 +32,7 @@ export function UsernameEditor({ username }: { username: string }) {
         defaultValue={state?.nickname ?? username}
         aria-label="Новое имя"
         required
-        minLength={2}
+        minLength={3}
         maxLength={32}
         autoComplete="nickname"
         autoFocus

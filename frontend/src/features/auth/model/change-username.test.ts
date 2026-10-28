@@ -32,10 +32,20 @@ describe('changeUsernameAction', () => {
     expect(m.revalidatePath).toHaveBeenCalledWith('/', 'layout')
   })
 
-  it.each(['x', ' x ', 'a'.repeat(33)])('длину проверяет до запроса: %j', async (nick) => {
-    const res = await changeUsernameAction(null, form(nick))
-    expect(res?.error).toBe('Имя — от 2 до 32 символов')
+  it.each([
+    ['xy', 'Имя — от 3 до 32 символов'],
+    ['a'.repeat(33), 'Имя — от 3 до 32 символов'],
+    ['Лиса', 'В имени — только латинские буквы, цифры, «_» и «-»'],
+    ['admin', 'Это имя зарезервировано, выберите другое'],
+  ])('правила бэка проверяет до запроса: %j', async (nick, error) => {
+    await expect(changeUsernameAction(null, form(nick))).resolves.toEqual({ error, nickname: nick })
     expect(m.updateMe).not.toHaveBeenCalled()
+  })
+
+  it('INVALID_USERNAME от бэка — понятный текст', async () => {
+    m.updateMe.mockRejectedValue(new ApiError(422, 'Username must be 3-32 chars long', 'INVALID_USERNAME'))
+    const res = await changeUsernameAction(null, form('Wolf'))
+    expect(res?.error).toMatch(/^Имя не подходит/)
   })
 
   it('занятый ник — понятная ошибка, введённое значение возвращается в форму', async () => {
