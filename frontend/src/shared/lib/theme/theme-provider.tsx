@@ -4,12 +4,16 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { ReactNode } from 'react'
 import { FEATURES } from '@shared/config/features'
 import { usePrefersReducedMotion } from '../usePrefersReducedMotion'
-import { ACCENT_MAP, DEFAULT_PREFS, STORAGE_KEY, parseMotion } from './constants'
+import { ACCENT_MAP, DEFAULT_PREFS, GFX_STORAGE_KEY, STORAGE_KEY, parseMotion } from './constants'
+import { isSlowFrames, measureFrameDeltas } from './gfx'
 import type { Accent, Motion, Theme, ThemePrefs } from './types'
 
 interface ThemeContextValue extends ThemePrefs {
-  /** Анимации включены сейчас: выбор пользователя, а если не выбирал — системная настройка. */
+  /** Анимации включены сейчас: выбор пользователя, а если не выбирал — системная настройка
+   *  и слабая графика (обе выключают). */
   motionOn: boolean
+  /** Слабая графика (<html data-gfx="low">, gfx.ts): тяжёлые эффекты упрощены, 3D-банок нет. */
+  lowGfx: boolean
   setTheme: (t: Theme) => void
   setAccent: (a: Accent) => void
   setLiquidBg: (v: boolean) => void
@@ -50,7 +54,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const firstApply = useRef(true)
   const prevTheme = useRef<Theme>(DEFAULT_PREFS.theme)
   const systemReduce = usePrefersReducedMotion()
-  const motionOn = prefs.motion ? prefs.motion === 'on' : !systemReduce
+  // false на SSR и первом рендере, как systemReduce; реальное значение — в effect ниже.
+  const [lowGfx, setLowGfx] = useState(false)
+  const motionOn = prefs.motion ? prefs.motion === 'on' : !(systemReduce || lowGfx)
 
   // Hydrate from storage once on mount. The inline init script already applied
   // theme/accent visually — this brings state into React.
@@ -62,7 +68,34 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         setPrefs({ ...DEFAULT_PREFS, ...stored, motion: parseMotion(stored.motion) })
       }
     } catch {}
+    setLowGfx(document.documentElement.getAttribute('data-gfx') === 'low')
     hydrated.current = true
+  }, [])
+
+  // Видеокарта есть, но кадры всё равно медленные (слабая встройка, нагруженная машина) —
+  // через 2 с после загрузки меряем 3 с кадров и при медленной отрисовке включаем слабую графику.
+  // shortcut: решение запоминается навсегда (GFX_STORAGE_KEY), переключателя нет; при ложных
+  // срабатываниях — хранить со сроком или дать выключить в настройках.
+  useEffect(() => {
+    if (document.documentElement.getAttribute('data-gfx') === 'low') return
+    let cancelled = false
+    let timer = 0
+    const run = () => {
+      timer = window.setTimeout(async () => {
+        const deltas = await measureFrameDeltas(3000)
+        if (cancelled || !deltas || !isSlowFrames(deltas)) return
+        try { localStorage.setItem(GFX_STORAGE_KEY, 'low') } catch {}
+        document.documentElement.setAttribute('data-gfx', 'low')
+        setLowGfx(true)
+      }, 2000)
+    }
+    if (document.readyState === 'complete') run()
+    else window.addEventListener('load', run, { once: true })
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+      window.removeEventListener('load', run)
+    }
   }, [])
 
   // Apply + persist on any change after hydration.
@@ -96,6 +129,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const value: ThemeContextValue = {
     ...prefs,
     motionOn,
+    lowGfx,
     // Рулетка вне MVP: без флага её нет в меню независимо от сохранённой настройки пользователя
     // (в localStorage по-прежнему пишется prefs, значение пользователя не теряется).
     gachapon: FEATURES.gachapon && prefs.gachapon,
