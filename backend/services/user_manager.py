@@ -3,7 +3,6 @@ from typing import Annotated, Union, cast
 from fastapi import BackgroundTasks, Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin
 
-from backend.core.exceptions import UserNotFoundException
 from core.config import settings
 from core.constants import BANNED_USERNAMES, UserIdType
 from core.exceptions import (
@@ -11,6 +10,7 @@ from core.exceptions import (
     InvalidPasswordException,
     InvalidUsernameException,
     UsernameAlreadyExistsException,
+    UserNotFoundException,
 )
 from models import User
 from repositories.user import UserRepository, get_user_repository
