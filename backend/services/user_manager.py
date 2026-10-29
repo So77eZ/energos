@@ -74,7 +74,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
         safe: bool = False,
         request: Request | None = None,
     ) -> User:
-        update_dict = user_update.create_update_dict()
+        if safe:
+            update_dict = user_update.create_update_dict()
+        else:
+            update_dict = user_update.create_update_dict_superuser()
 
         validated_update_dict = {}
         for field, value in update_dict.items():
@@ -127,8 +130,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
         username_lower = username.lower()
 
         if (
-            # 1. Length check: username must be between 3 and 32 characters
-            len(username) < 3
+            # 1. Length check: username must be between 2 and 32 characters
+            len(username) < 2
             or len(username) > 32
             # 2. Banned usernames: username should not be in the list of banned usernames
             or username_lower in BANNED_USERNAMES
@@ -149,7 +152,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, UserIdType]):
             or any(not (char.isascii() and (char.isalnum() or char in ("_", "-"))) for char in username)
         ):
             raise InvalidUsernameException(
-                "Username must be 3-32 chars long, start/end with a letter or digit, "
+                "Username must be 2-32 chars long, start/end with a letter or digit, "
                 "contain no consecutive separators (_ or -), and include only alphanumeric characters, '_' or '-'"
             )
 
