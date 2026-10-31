@@ -107,6 +107,12 @@ class InvalidPasswordException(BaseServiceException):
     default_message = "Password validation failed"
 
 
+class InvalidUsernameException(BaseServiceException):
+    status_code = 422
+    error_code = ErrorCode.INVALID_USERNAME
+    default_message = "Username validation failed"
+
+
 class VerifiedUserRequiredException(BaseServiceException):
     status_code = 403
     error_code = ErrorCode.VERIFIED_USER_REQUIRED

@@ -49,6 +49,14 @@ export const authApi = {
       headers: bearerHeaders(token),
     })),
 
+  /** PATCH /auth/me. Отзывы ссылаются на id автора — новый ник виден в них сразу. */
+  updateMe: async (token: string, body: { username: string }): Promise<User> =>
+    toUser(await httpRequest<ApiUser>(`${BASE}/me`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...bearerHeaders(token) },
+      body: JSON.stringify(body),
+    })),
+
   logout: (token: string) =>
     httpRequest<void>(`${BASE}/logout`, {
       method: 'POST',

@@ -8,6 +8,9 @@ import type { ErrorCode } from '@shared/api/error-codes'
 const BY_CODE: Readonly<Partial<Record<ErrorCode, string>>> = {
   EMAIL_ALREADY_EXISTS: 'Пользователь с таким e-mail уже зарегистрирован',
   USERNAME_ALREADY_EXISTS: 'Это имя уже занято, выберите другое',
+  // Бэк не уточняет, какое правило нарушено; обычно до запроса не доходит — ловит validateNickname.
+  INVALID_USERNAME:
+    'Имя не подходит: 3–32 латинские буквы, цифры, «_» или «-»; «_» и «-» не подряд и не по краям; не служебное слово',
 }
 
 const BY_TEXT: ReadonlyArray<readonly [string, string]> = [
