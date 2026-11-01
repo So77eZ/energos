@@ -2,12 +2,12 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from core.constants import OrderDirection
-from core.exceptions import ReviewAlreadyExistsException, ReviewNotOwnerException
+from exceptions.base import ReviewAlreadyExistsException, ReviewNotOwnerException
 from models.review import Review
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from repositories.review import ReviewRepository, get_review_repository
 from repositories.user import UserRepository, get_user_repository
+from schemas.request_query import RequestQuerySchema
 from schemas.review import (
     ReviewCreateInternalSchema,
     ReviewCreateSchema,
@@ -69,27 +69,19 @@ class ReviewService(
     async def get_many_by_user_id(
         self,
         user_id: int,
-        limit: int = 20,
-        offset: int = 0,
-        order_by: str = "id",
-        direction: OrderDirection = OrderDirection.ASC,
+        request_query: RequestQuerySchema,
     ) -> list[ReviewForUserSchema]:
-        reviews = await self.repository.get_many_by_user_id(
-            user_id=user_id, limit=limit, offset=offset, order_by=order_by, direction=direction
-        )
+        reviews = await self.repository.get_many_by_user_id(user_id=user_id, request_query=request_query)
         return [ReviewForUserSchema.model_validate(review) for review in reviews]
 
     async def get_many_by_energy_drink_id(
         self,
         energy_drink_id: int,
-        limit: int = 20,
-        offset: int = 0,
-        order_by: str = "id",
-        direction: OrderDirection = OrderDirection.ASC,
+        request_query: RequestQuerySchema,
     ) -> list[ReviewReadSchema]:
         await self.energy_drink_repository.get_by_id(energy_drink_id)
         reviews = await self.repository.get_reviews_by_energy_drink_id(
-            energy_drink_id=energy_drink_id, limit=limit, offset=offset, order_by=order_by, direction=direction
+            energy_drink_id=energy_drink_id, request_query=request_query
         )
         return [self.read_schema.model_validate(review) for review in reviews]
 

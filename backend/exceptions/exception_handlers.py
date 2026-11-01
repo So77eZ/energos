@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi_users.router.common import ErrorCode as FastAPIUsersErrorCode
 
 from core.error_codes import ErrorCode
-from core.exceptions import BaseServiceException
+from exceptions.base import BaseServiceException
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,10 @@
 from fastapi import Depends, Request
 
 from core.auth import get_verified_user
-from core.constants import OrderDirection
 from core.rate_limiter import limiter
 from core.router import AutoStatusAPIRouter
 from models import User
+from schemas.request_query import RequestQuerySchema
 from schemas.review import ReviewCreateSchema, ReviewForUserSchema, ReviewReadSchema, ReviewUpdateSchema
 from services.review import ReviewService, get_review_service
 
@@ -16,14 +16,11 @@ router = AutoStatusAPIRouter()
 async def get_reviews_by_energy_drink(
     request: Request,
     energy_drink_id: int,
-    limit: int = 20,
-    offset: int = 0,
-    order_by: str = "id",
-    order_direction: OrderDirection = OrderDirection.ASC,
+    request_query: RequestQuerySchema = Depends(),
     review_service: ReviewService = Depends(get_review_service),
 ) -> list[ReviewReadSchema]:
     return await review_service.get_many_by_energy_drink_id(
-        energy_drink_id=energy_drink_id, limit=limit, offset=offset, order_by=order_by, direction=order_direction
+        energy_drink_id=energy_drink_id, request_query=request_query
     )
 
 
@@ -67,12 +64,8 @@ async def delete_review(
 @limiter.limit("100/minute")
 async def get_my_reviews(
     request: Request,
-    limit: int = 20,
-    offset: int = 0,
-    order_by: str = "id",
+    request_query: RequestQuerySchema = Depends(),
     current_user: User = Depends(get_verified_user),
     review_service: ReviewService = Depends(get_review_service),
 ) -> list[ReviewForUserSchema]:
-    return await review_service.get_many_by_user_id(
-        user_id=current_user.id, limit=limit, offset=offset, order_by=order_by
-    )
+    return await review_service.get_many_by_user_id(user_id=current_user.id, request_query=request_query)

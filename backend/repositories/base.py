@@ -5,9 +5,10 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.constants import OrderDirection
-from core.exceptions import UnprocessableEntityException
+from exceptions.base import UnprocessableEntityException
 from models.base import BaseModelType
 from schemas.base import CreateSchemaType, UpdateSchemaType
+from schemas.request_query import RequestQuerySchema
 
 
 class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaType]):
@@ -18,33 +19,26 @@ class BaseRepository(ABC, Generic[BaseModelType, CreateSchemaType, UpdateSchemaT
     async def get_by_id(self, id: int) -> BaseModelType:
         raise NotImplementedError("get_by_id method must be implemented in the subclass")
 
-    async def get_many(
-        self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC
-    ) -> list[BaseModelType]:
+    async def get_many(self, request_query: RequestQuerySchema) -> list[BaseModelType]:
         query = select(self.model)
-        return await self.execute_get_many_query(
-            query, limit=limit, offset=offset, order_by=order_by, direction=direction
-        )
+        return await self.execute_get_many_query(query, request_query=request_query)
 
     async def execute_get_many_query(
         self,
         query: Select[tuple[BaseModelType]],
-        limit: int = 20,
-        offset: int = 0,
-        order_by: str = "id",
-        direction: OrderDirection = OrderDirection.ASC,
+        request_query: RequestQuerySchema,
     ) -> list[BaseModelType]:
         try:
-            column = getattr(self.model, order_by)
+            column = getattr(self.model, request_query.order_by)
         except AttributeError as e:
-            raise UnprocessableEntityException(f"Invalid order_by field: {order_by}") from e
+            raise UnprocessableEntityException(f"Invalid order_by field: {request_query.order_by}") from e
 
-        if direction == OrderDirection.ASC:
+        if request_query.order_direction == OrderDirection.ASC:
             query = query.order_by(column.asc())
         else:
             query = query.order_by(column.desc())
 
-        query = query.offset(offset).limit(limit)
+        query = query.offset(request_query.offset).limit(request_query.limit)
         result = await self.session.execute(query)
         return list(result.scalars().all())
 

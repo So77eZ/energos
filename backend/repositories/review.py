@@ -4,11 +4,11 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from core.constants import OrderDirection
 from core.database import SessionDep
-from core.exceptions import ReviewNotFoundException
+from exceptions.base import ReviewNotFoundException
 from models.review import Review
 from repositories.base import BaseRepository
+from schemas.request_query import RequestQuerySchema
 from schemas.review import ReviewCreateSchema, ReviewUpdateSchema
 
 
@@ -28,30 +28,20 @@ class ReviewRepository(BaseRepository[Review, ReviewCreateSchema, ReviewUpdateSc
     async def get_reviews_by_energy_drink_id(
         self,
         energy_drink_id: int,
-        limit: int = 20,
-        offset: int = 0,
-        order_by: str = "id",
-        direction: OrderDirection = OrderDirection.ASC,
+        request_query: RequestQuerySchema,
     ) -> list[Review]:
         query = (
             select(self.model).where(self.model.energy_drink_id == energy_drink_id).options(selectinload(Review.user))
         )
-        return await self.execute_get_many_query(
-            query, limit=limit, offset=offset, order_by=order_by, direction=direction
-        )
+        return await self.execute_get_many_query(query, request_query=request_query)
 
     async def get_many_by_user_id(
         self,
         user_id: int,
-        limit: int = 20,
-        offset: int = 0,
-        order_by: str = "id",
-        direction: OrderDirection = OrderDirection.ASC,
+        request_query: RequestQuerySchema,
     ) -> list[Review]:
         query = select(self.model).where(self.model.user_id == user_id).options(selectinload(Review.energy_drink))
-        return await self.execute_get_many_query(
-            query, limit=limit, offset=offset, order_by=order_by, direction=direction
-        )
+        return await self.execute_get_many_query(query, request_query=request_query)
 
     async def exists_by_user_and_energy_drink(self, user_id: int, energy_drink_id: int) -> bool:
         statement = (

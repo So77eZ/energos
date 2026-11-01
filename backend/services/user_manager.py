@@ -5,7 +5,7 @@ from fastapi_users import BaseUserManager, IntegerIDMixin
 
 from core.config import settings
 from core.constants import BANNED_USERNAMES, UserIdType
-from core.exceptions import (
+from exceptions.base import (
     EmailAlreadyExistsException,
     InvalidPasswordException,
     InvalidUsernameException,
