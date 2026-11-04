@@ -7,6 +7,10 @@ export type Motion = 'on' | 'off'
 export interface ThemePrefs {
   theme: Theme
   accent: Accent
+  tintDark: number
+  tintLight: number
+  tintCards: boolean
+  mutedLightAccent: boolean
   liquidBg: boolean
   grain: boolean
   scanlines: boolean

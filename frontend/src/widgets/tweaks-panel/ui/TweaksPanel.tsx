@@ -66,7 +66,7 @@ export function TweaksPanel() {
             </button>
           </header>
 
-          <TweaksBody />
+          <TweaksBody compact />
         </div>
       )}
     </>

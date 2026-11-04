@@ -1,4 +1,4 @@
-import { ACCENT_MAP, DEFAULT_PREFS, GFX_STORAGE_KEY, STORAGE_KEY } from './constants'
+import { ACCENT_MAP, DEFAULT_PREFS, GFX_STORAGE_KEY, MAX_TINT, STORAGE_KEY } from './constants'
 import {
   DEFAULT_FONT, FONT_STACKS, OPTIONAL_FONT_HREFS, PREFS_SCHEMA_VERSION, PREFS_STORAGE_KEY, fontLinkId,
 } from '../fonts'
@@ -28,8 +28,13 @@ var aK=M[p.accent]?p.accent:'${DEFAULT_PREFS.accent}';
 var a=M[aK];
 var h=document.documentElement;
 h.setAttribute('data-theme',t);
-h.style.setProperty('--accent',a.hex);
+h.style.setProperty('--accent-source',a.hex);
 h.style.setProperty('--accent-rgb',a.rgb);
+var tint=t==='light'?p.tintLight:p.tintDark;
+tint=typeof tint==='number'&&Number.isFinite(tint)?Math.min(${MAX_TINT},Math.max(0,Math.round(tint))):0;
+h.style.setProperty('--accent-tint',tint+'%');
+h.toggleAttribute('data-tint-cards',p.tintCards===true);
+h.toggleAttribute('data-muted-light-accent',p.mutedLightAccent===true);
 var gv=localStorage.getItem('${GFX_STORAGE_KEY}');
 var lo=gv==='low';
 if(!gv){var gl=document.createElement('canvas').getContext('webgl',{failIfMajorPerformanceCaveat:true});lo=!gl;var lc=gl&&gl.getExtension('WEBGL_lose_context');if(lc)lc.loseContext();if(gl)localStorage.setItem('${GFX_STORAGE_KEY}','full');}

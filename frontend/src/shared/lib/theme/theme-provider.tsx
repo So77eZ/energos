@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { ReactNode } from 'react'
 import { FEATURES } from '@shared/config/features'
 import { usePrefersReducedMotion } from '../usePrefersReducedMotion'
-import { ACCENT_MAP, DEFAULT_PREFS, GFX_STORAGE_KEY, STORAGE_KEY, parseMotion } from './constants'
+import { ACCENT_MAP, DEFAULT_PREFS, GFX_STORAGE_KEY, STORAGE_KEY, parseMotion, parseTint } from './constants'
 import { isSlowFrames, measureFrameDeltas } from './gfx'
 import type { Accent, Motion, Theme, ThemePrefs } from './types'
 
@@ -30,8 +30,11 @@ function applyToDOM(prefs: ThemePrefs, motionOn: boolean) {
   const html = document.documentElement
   html.setAttribute('data-theme', prefs.theme)
   const accent = ACCENT_MAP[prefs.accent]
-  html.style.setProperty('--accent', accent.hex)
+  html.style.setProperty('--accent-source', accent.hex)
   html.style.setProperty('--accent-rgb', accent.rgb)
+  html.style.setProperty('--accent-tint', `${prefs.theme === 'light' ? prefs.tintLight : prefs.tintDark}%`)
+  html.toggleAttribute('data-tint-cards', prefs.tintCards)
+  html.toggleAttribute('data-muted-light-accent', prefs.mutedLightAccent)
   // Единый источник для CSS: :root[data-motion="off"] замораживает анимации (globals.css).
   html.setAttribute('data-motion', motionOn ? 'on' : 'off')
   // Address-bar (mobile) под цвет фона текущей темы. Читаем реальный --bg-base
@@ -50,7 +53,7 @@ function applyToDOM(prefs: ThemePrefs, motionOn: boolean) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<ThemePrefs>(DEFAULT_PREFS)
-  const hydrated = useRef(false)
+  const [hydrated, setHydrated] = useState(false)
   const firstApply = useRef(true)
   const prevTheme = useRef<Theme>(DEFAULT_PREFS.theme)
   const systemReduce = usePrefersReducedMotion()
@@ -65,11 +68,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const stored = JSON.parse(raw) as Partial<ThemePrefs> & { motion?: unknown }
-        setPrefs({ ...DEFAULT_PREFS, ...stored, motion: parseMotion(stored.motion) })
+        setPrefs({
+          ...DEFAULT_PREFS,
+          ...stored,
+          motion: parseMotion(stored.motion),
+          tintDark: parseTint(stored.tintDark),
+          tintLight: parseTint(stored.tintLight),
+          tintCards: stored.tintCards === true,
+          mutedLightAccent: stored.mutedLightAccent === true,
+        })
       }
     } catch {}
     setLowGfx(document.documentElement.getAttribute('data-gfx') === 'low')
-    hydrated.current = true
+    setHydrated(true)
   }, [])
 
   // Видеокарта есть, но кадры всё равно медленные (слабая встройка, нагруженная машина) —
@@ -100,7 +111,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Apply + persist on any change after hydration.
   useEffect(() => {
-    if (!hydrated.current) return
+    if (!hydrated) return
 
     // Crossfade only on an explicit dark↔light switch (not the first hydration
     // apply, not accent/toggle changes). View Transitions API убирает резкий
@@ -120,7 +131,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
     } catch {}
-  }, [prefs, motionOn])
+  }, [hydrated, prefs, motionOn])
 
   const update = useCallback((patch: Partial<ThemePrefs>) => {
     setPrefs((prev) => ({ ...prev, ...patch }))
