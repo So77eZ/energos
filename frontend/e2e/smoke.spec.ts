@@ -138,5 +138,6 @@ test.describe('smoke: интерактивные элементы каталог
     await page.locator('.twk-fab').click()
     await expect(page.locator('.twk-panel')).toBeVisible()
     await expect(page.locator('.twk-panel .twk-section-title')).toHaveText(['Тема', 'Акцент'])
+    await expect(page.getByRole('link', { name: 'Все настройки оформления' })).toHaveAttribute('href', '/profile?tab=appearance')
   })
 })

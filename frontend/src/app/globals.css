@@ -2964,6 +2964,15 @@ body::before {
   overflow-y: auto;
 }
 .twk-section { display: flex; flex-direction: column; gap: 8px; }
+.twk-more {
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  color: var(--txt-dim);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.twk-more:hover, .twk-more:focus-visible { color: var(--txt); }
 .twk-section-title {
   font-family: var(--font-mono); font-size: 10px;
   color: var(--txt-quiet); letter-spacing: 1.5px; text-transform: uppercase;

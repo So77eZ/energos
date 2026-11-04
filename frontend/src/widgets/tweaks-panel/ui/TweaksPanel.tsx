@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
 import { TweaksBody } from '@shared/ui/tweaks-body'
 
@@ -67,6 +69,14 @@ export function TweaksPanel() {
           </header>
 
           <TweaksBody compact />
+          <Link
+            href={`${ROUTES.profile}?tab=appearance`}
+            className="twk-more"
+            prefetch={false}
+            onClick={() => setOpen(false)}
+          >
+            Все настройки оформления
+          </Link>
         </div>
       )}
     </>
