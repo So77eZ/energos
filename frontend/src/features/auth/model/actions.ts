@@ -5,7 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { authApi } from '@entities/user'
 import { getToken, setToken, clearToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
+import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
 import { localizeAuthError } from './auth-errors'
+import { validateNickname } from './nickname'
 
 // username возвращается в состоянии, чтобы форма подставила его обратно:
 // React 19 после server action сбрасывает неуправляемые поля (#299).
@@ -43,7 +45,8 @@ export async function registerAction(
   const confirm = formData.get('confirm') as string
 
   if (password !== confirm) return { error: 'Пароли не совпадают', username, nickname }
-  if (nickname.length < 2) return { error: 'Укажите имя (не короче 2 символов)', username, nickname }
+  const nicknameError = validateNickname(nickname)
+  if (nicknameError) return { error: nicknameError, username, nickname }
 
   try {
     await authApi.register(username, password, nickname)
@@ -96,6 +99,31 @@ export async function resetPasswordAction(
     if (e instanceof RateLimitError) return { error: e.message }
     return { error: localizeAuthError(e, 'Не удалось сменить пароль') }
   }
+  return { error: '', success: true }
+}
+
+export type ChangeUsernameState = { error: string; success?: boolean; nickname?: string } | null
+
+/** Смена публичного имени (PATCH /auth/me). Правила — validateNickname, как у регистрации; занятость проверяет бэк. */
+export async function changeUsernameAction(
+  _prev: ChangeUsernameState,
+  formData: FormData,
+): Promise<ChangeUsernameState> {
+  const token = await getToken()
+  if (!token) redirect('/auth/login')
+  const nickname = ((formData.get('nickname') as string) ?? '').trim()
+  const nicknameError = validateNickname(nickname)
+  if (nicknameError) return { error: nicknameError, nickname }
+
+  try {
+    await authApi.updateMe(token, { username: nickname })
+  } catch (e) {
+    await redirectIfSessionExpired(e) // 401 → clear+redirect; иначе вниз
+    if (e instanceof RateLimitError) return { error: e.message, nickname }
+    return { error: localizeAuthError(e, 'Не удалось сменить имя'), nickname }
+  }
+  // Имя показывают шапка (layout) и отзывы на страницах напитков — обновляем всё дерево.
+  revalidatePath('/', 'layout')
   return { error: '', success: true }
 }
 

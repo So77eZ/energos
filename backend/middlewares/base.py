@@ -4,8 +4,8 @@ from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from core.constants import MAX_BODY_SIZE
-from core.content_too_large_middleware import ContentTooLargeResponseMiddleware
-from core.exceptions import ContentTooLargeException
+from exceptions.base import ContentTooLargeException
+from middlewares.content_too_large import ContentTooLargeResponseMiddleware
 
 
 def setup_middlewares(app: FastAPI) -> None:

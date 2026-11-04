@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from fastapi_users.db import SQLAlchemyBaseUserTable
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.constants import Role
 from models.base import Base
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class User(Base, SQLAlchemyBaseUserTable[int]):
     __tablename__ = "users"
 
-    username: Mapped[str]
+    username: Mapped[str] = mapped_column(unique=True, index=True)
 
     reviews: Mapped[list[Review]] = relationship(back_populates="user", cascade="all, delete-orphan")
 

@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import SessionDep
-from core.exceptions import UserNotFoundException
+from exceptions.base import UserNotFoundException
 from models.user import User
 
 

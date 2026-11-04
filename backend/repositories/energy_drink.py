@@ -4,12 +4,12 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import defer, selectinload
 
-from core.constants import OrderDirection
 from core.database import SessionDep
-from core.exceptions import EnergyDrinkNotFoundException
+from exceptions.base import EnergyDrinkNotFoundException
 from models.energy_drink import EnergyDrink
 from repositories.base import BaseRepository
 from schemas.energy_drink import EnergyDrinkCreateSchema, EnergyDrinkUpdateSchema, ImageData
+from schemas.request_query import RequestQuerySchema
 
 
 class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema, EnergyDrinkUpdateSchema]):
@@ -30,16 +30,11 @@ class EnergyDrinkRepository(BaseRepository[EnergyDrink, EnergyDrinkCreateSchema,
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
-    async def get_many_with_reviews(
-        self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC
-    ) -> list[EnergyDrink]:
+    async def get_many_with_reviews(self, request_query: RequestQuerySchema) -> list[EnergyDrink]:
         query = select(self.model).options(
             defer(key=self.model.image), defer(self.model.image_content_type), selectinload(self.model.reviews)
         )
-        result = await self.execute_get_many_query(
-            query, limit=limit, offset=offset, order_by=order_by, direction=direction
-        )
-        return result
+        return await self.execute_get_many_query(query, request_query=request_query)
 
     async def get_by_id(self, id: int) -> EnergyDrink:
         query = (

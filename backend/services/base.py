@@ -1,7 +1,6 @@
 from abc import ABC
 from typing import Generic
 
-from core.constants import OrderDirection
 from models.base import BaseModelType
 from repositories.base import (
     BaseRepoType,
@@ -9,6 +8,7 @@ from repositories.base import (
     UpdateSchemaType,
 )
 from schemas.base import ReadSchemaType
+from schemas.request_query import RequestQuerySchema
 
 
 class BaseService(
@@ -19,12 +19,8 @@ class BaseService(
         self.repository: BaseRepoType = repository
         self.read_schema: type[ReadSchemaType] = read_schema
 
-    async def get_many(
-        self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC
-    ) -> list[ReadSchemaType]:
-        instances: list[BaseModelType] = await self.repository.get_many(
-            limit=limit, offset=offset, order_by=order_by, direction=direction
-        )
+    async def get_many(self, request_query: RequestQuerySchema) -> list[ReadSchemaType]:
+        instances: list[BaseModelType] = await self.repository.get_many(request_query=request_query)
         return [self.read_schema.model_validate(instance) for instance in instances]
 
     async def get_by_id(self, id: int) -> ReadSchemaType:

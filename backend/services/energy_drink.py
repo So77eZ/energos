@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import Depends, UploadFile
 from PIL import Image, ImageOps
 
-from core.constants import ALLOWED_IMAGE_MIME_TYPES, MAX_IMAGE_SIDE, OrderDirection
-from core.exceptions import EnergyDrinkNotFoundException, ImageNotFoundException, UnsupportedMediaTypeException
+from core.constants import ALLOWED_IMAGE_MIME_TYPES, MAX_IMAGE_SIDE
+from exceptions.base import EnergyDrinkNotFoundException, ImageNotFoundException, UnsupportedMediaTypeException
 from models.energy_drink import EnergyDrink
 from repositories.energy_drink import EnergyDrinkRepository, get_energy_drink_repository
 from schemas.energy_drink import (
@@ -15,6 +15,7 @@ from schemas.energy_drink import (
     EnergyDrinkWithMetricsReadSchema,
     ImageData,
 )
+from schemas.request_query import RequestQuerySchema
 from services.base import BaseService
 
 
@@ -56,12 +57,8 @@ class EnergyDrinkService(
         energy_drinks: list[EnergyDrink] = await self.repository.get_all_with_metrics()
         return [EnergyDrinkWithMetricsReadSchema.model_validate(drink) for drink in energy_drinks]
 
-    async def get_many_with_reviews(
-        self, limit: int = 20, offset: int = 0, order_by: str = "id", direction: OrderDirection = OrderDirection.ASC
-    ) -> list[EnergyDrinkWithMetricsReadSchema]:
-        energy_drinks: list[EnergyDrink] = await self.repository.get_many_with_reviews(
-            limit=limit, offset=offset, order_by=order_by, direction=direction
-        )
+    async def get_many_with_reviews(self, request_query: RequestQuerySchema) -> list[EnergyDrinkWithMetricsReadSchema]:
+        energy_drinks: list[EnergyDrink] = await self.repository.get_many_with_reviews(request_query=request_query)
         return [EnergyDrinkWithMetricsReadSchema.model_validate(drink) for drink in energy_drinks]
 
     async def get_image_by_id(self, energy_drink_id: int) -> ImageData:

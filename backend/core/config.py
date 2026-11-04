@@ -1,13 +1,13 @@
-from pydantic import Field, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
 class AccessTokenSettings(BaseSettings):
-    ACCESS_TOKEN_ALGORITHM: str = Field(...)
-    ACCESS_TOKEN_SECRET: str = Field(...)
-    RESET_PASSWORD_TOKEN_SECRET: str = Field(...)
-    VERIFICATION_TOKEN_SECRET: str = Field(...)
-    TOKEN_LIFETIME_SECONDS: int = Field(...)
+    ACCESS_TOKEN_ALGORITHM: str
+    ACCESS_TOKEN_SECRET: str
+    RESET_PASSWORD_TOKEN_SECRET: str
+    VERIFICATION_TOKEN_SECRET: str
+    TOKEN_LIFETIME_SECONDS: int
 
     @field_validator("ACCESS_TOKEN_SECRET", "RESET_PASSWORD_TOKEN_SECRET", "VERIFICATION_TOKEN_SECRET")
     def validate_secret_keys(cls, v: str) -> str:
@@ -17,24 +17,24 @@ class AccessTokenSettings(BaseSettings):
 
 
 class EmailSettings(BaseSettings):
-    SMTP_HOST: str = Field(...)
-    SMTP_PORT: int = Field(...)
-    SMTP_USERNAME: str = Field(...)
-    SMTP_PASSWORD: str = Field(...)
-    SMTP_FROM: str = Field(...)
-    SMTP_REPLY_TO: str = Field(...)
-    SMTP_START_TLS: bool = Field(...)
-    SMTP_USE_TLS: bool = Field(...)
+    SMTP_HOST: str
+    SMTP_PORT: int
+    SMTP_USERNAME: str
+    SMTP_PASSWORD: str
+    SMTP_FROM: str
+    SMTP_REPLY_TO: str
+    SMTP_START_TLS: bool
+    SMTP_USE_TLS: bool
 
 
 class Settings(BaseSettings):
-    DB_USER: str = Field(...)
-    DB_PASSWORD: str = Field(...)
-    DB_HOST: str = Field(...)
-    DB_NAME: str = Field(...)
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_HOST: str
+    DB_NAME: str
 
-    PUBLIC_URL: str = Field(...)
-    DEPLOY_ENV: str = Field(...)
+    PUBLIC_URL: str
+    DEPLOY_ENV: str
 
     @property
     def DATABASE_URL(self) -> str:

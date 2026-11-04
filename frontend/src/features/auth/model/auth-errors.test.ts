@@ -6,6 +6,7 @@ describe('localizeAuthError', () => {
   it('коды бэка: занятые e-mail и имя', () => {
     expect(localizeAuthError(new ApiError(409, 'A user with this email already exists', 'EMAIL_ALREADY_EXISTS'), 'x')).toMatch(/e-mail уже зарегистрирован/)
     expect(localizeAuthError(new ApiError(409, 'A user with this username already exists', 'USERNAME_ALREADY_EXISTS'), 'x')).toMatch(/имя уже занято/)
+    expect(localizeAuthError(new ApiError(422, 'Username must be 3-32 chars long, …', 'INVALID_USERNAME'), 'x')).toMatch(/^Имя не подходит/)
   })
 
   it('INVALID_PASSWORD: причина переводится по тексту, неизвестная → общий текст', () => {

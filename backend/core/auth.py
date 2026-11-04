@@ -2,8 +2,8 @@ from fastapi import Depends
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
 
 from core.config import settings
-from core.exceptions import AdminRequiredException, VerifiedUserRequiredException
 from core.fastapi_users import CustomFastAPIUsers
+from exceptions.base import AdminRequiredException, VerifiedUserRequiredException
 from models import User
 from services.user_manager import get_user_manager
 

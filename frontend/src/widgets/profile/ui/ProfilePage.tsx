@@ -20,6 +20,7 @@ import { useMySubmissions } from '@features/submissions'
 import { Icons } from '@shared/ui/icons'
 import { FEATURES } from '@shared/config/features'
 import { VerifyEmailBanner } from '@features/auth/ui/VerifyEmailBanner'
+import { UsernameEditor } from '@features/auth/ui/UsernameEditor'
 import { AchievementsTab } from './tabs/AchievementsTab'
 import { AppearanceTab } from './tabs/AppearanceTab'
 import { FavoritesTab } from './tabs/FavoritesTab'
@@ -192,7 +193,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
               {isAdmin ? 'АДМИНИСТРАТОР' : 'ПОЛЬЗОВАТЕЛЬ'}
             </span>
           </div>
-          <h1 className="prof-name">{user.username}</h1>
+          <UsernameEditor username={user.username} />
           <div className="prof-meta">
             <span>{user.email}</span>
             <span><Icons.msg w={12} /> {reviews.length} отзывов</span>
