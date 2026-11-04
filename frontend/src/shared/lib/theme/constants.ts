@@ -11,11 +11,23 @@ export const ACCENT_MAP: Record<Accent, { rgb: string; hex: string }> = {
 export const DEFAULT_PREFS: ThemePrefs = {
   theme: 'dark',
   accent: 'cyan',
+  tintDark: 0,
+  tintLight: 0,
+  tintCards: false,
+  mutedLightAccent: false,
   liquidBg: true,
   grain: true,
   scanlines: true,
   motion: null,
   gachapon: true,
+}
+
+export const MAX_TINT = 20
+
+export function parseTint(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(MAX_TINT, Math.max(0, Math.round(value)))
+    : 0
 }
 
 export const STORAGE_KEY = 'energos_theme'

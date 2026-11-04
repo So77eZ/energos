@@ -1,9 +1,5 @@
 'use client'
 
-// Содержимое настроек оформления — без floating-shell. Используется и в
-// TweaksPanel (fab внизу справа), и в профиле пользователя (вкладка
-// «Оформление»). Если изменишь секции тут — оба места обновятся.
-
 import { FEATURES } from '@shared/config/features'
 import { ACCENT_MAP, useTheme, type Accent } from '@shared/lib/theme'
 import { FONTS, useUserPreferences, type FontId } from '@shared/lib/user-preferences'
@@ -11,9 +7,8 @@ import { Icons } from '@shared/ui/icons'
 
 const ACCENTS: Accent[] = ['cyan', 'pink', 'lime', 'amber', 'purple']
 
-export function TweaksBody() {
+export function TweaksBody({ compact = false }: { compact?: boolean }) {
   const theme = useTheme()
-  const { font, setFont } = useUserPreferences()
 
   return (
     <div className="twk-body">
@@ -57,6 +52,46 @@ export function TweaksBody() {
             />
           ))}
         </div>
+      </section>
+
+      {!compact && <AppearanceDetails />}
+    </div>
+  )
+}
+
+function AppearanceDetails() {
+  const theme = useTheme()
+  const { font, setFont } = useUserPreferences()
+
+  return (
+    <>
+      <section className="twk-section">
+        <span className="twk-section-title">Подмес акцента в фон</span>
+        <p className="twk-hint">Переключай тему, чтобы сразу увидеть её подмес на странице.</p>
+        {(['tintDark', 'tintLight'] as const).map((key) => (
+          <label key={key} className="twk-range">
+            <span>{key === 'tintDark' ? 'Тёмная тема' : 'Светлая тема'}</span>
+            <input
+              type="range"
+              min={0}
+              max={20}
+              value={theme[key]}
+              aria-valuetext={`${theme[key]}%`}
+              onChange={(e) => theme.update({ [key]: e.currentTarget.valueAsNumber })}
+            />
+            <span aria-hidden="true">{theme[key]}%</span>
+          </label>
+        ))}
+        <label className="twk-toggle">
+          <span className="twk-toggle-label">Подкрашивать карточки</span>
+          <input type="checkbox" checked={theme.tintCards} onChange={(e) => theme.update({ tintCards: e.target.checked })} />
+          <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
+        </label>
+        <label className="twk-toggle">
+          <span className="twk-toggle-label">Приглушённый акцент в светлой теме</span>
+          <input type="checkbox" checked={theme.mutedLightAccent} onChange={(e) => theme.update({ mutedLightAccent: e.target.checked })} />
+          <span className="twk-toggle-track"><span className="twk-toggle-thumb" /></span>
+        </label>
       </section>
 
       <section className="twk-section">
@@ -144,6 +179,6 @@ export function TweaksBody() {
           («уменьшить движение»). Выключение помогает, если сайт тормозит.
         </p>
       </section>
-    </div>
+    </>
   )
 }

@@ -18,7 +18,7 @@ test('по умолчанию — как система; «Вкл.» сохра�
   const html = page.locator('html')
   await expect(html).toHaveAttribute('data-motion', 'off')
 
-  await page.getByRole('button', { name: /настройки|оформление/i }).first().click()
+  await page.goto('/profile?tab=appearance')
   const seg = page.getByRole('radiogroup', { name: 'Анимации' }).first()
   await expect(seg.getByRole('radio', { name: 'Выкл.' })).toHaveAttribute('aria-checked', 'true')
 
