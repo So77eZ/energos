@@ -6,13 +6,14 @@ import { BANNED_NICKNAMES, validateNickname } from './nickname'
 const CONSTANTS_PY = path.resolve(__dirname, '../../../../../backend/core/constants.py')
 
 describe('validateNickname — те же правила, что UserManager.validate_username на бэке', () => {
-  it.each(['Fox', 'e2e_k3j9x', 'playwright_taken', 'a-b_c', 'adminka', 'a'.repeat(32)])('подходит: %j', (nick) =>
+  it.each(['Ab', 'Fox', 'e2e_k3j9x', 'playwright_taken', 'a-b_c', 'adminka', 'a'.repeat(32)])('подходит: %j', (nick) =>
     expect(validateNickname(nick)).toBeNull(),
   )
 
   it.each([
-    ['ab', /от 3 до 32/],
-    ['a'.repeat(33), /от 3 до 32/],
+    ['a', /от 2 до 32/],
+    ['a'.repeat(33), /от 2 до 32/],
+    ['Ян', /латинские буквы/],
     ['Лиса', /латинские буквы/],
     ['fox bear', /латинские буквы/],
     ['fox.com', /латинские буквы/],

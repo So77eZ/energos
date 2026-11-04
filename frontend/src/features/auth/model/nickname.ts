@@ -25,7 +25,7 @@ export const BANNED_NICKNAMES: ReadonlySet<string> = new Set([
 
 /** Причина, по которой бэк отклонит имя, или null, если оно подходит. */
 export function validateNickname(nickname: string): string | null {
-  if (nickname.length < 3 || nickname.length > 32) return 'Имя — от 3 до 32 символов'
+  if (nickname.length < 2 || nickname.length > 32) return 'Имя — от 2 до 32 символов'
   if (!/^[A-Za-z0-9_-]+$/.test(nickname)) return 'В имени — только латинские буквы, цифры, «_» и «-»'
   if (!/^[A-Za-z0-9]/.test(nickname) || !/[A-Za-z0-9]$/.test(nickname))
     return 'Имя должно начинаться и заканчиваться буквой или цифрой'

@@ -27,14 +27,14 @@ describe('changeUsernameAction', () => {
   })
 
   it('обрезает пробелы, шлёт ник и обновляет всё дерево (шапка, отзывы)', async () => {
-    await expect(changeUsernameAction(null, form('  NewFox  '))).resolves.toEqual({ error: '', success: true })
-    expect(m.updateMe).toHaveBeenCalledWith('tok', { username: 'NewFox' })
+    await expect(changeUsernameAction(null, form('  Ab  '))).resolves.toEqual({ error: '', success: true })
+    expect(m.updateMe).toHaveBeenCalledWith('tok', { username: 'Ab' })
     expect(m.revalidatePath).toHaveBeenCalledWith('/', 'layout')
   })
 
   it.each([
-    ['xy', 'Имя — от 3 до 32 символов'],
-    ['a'.repeat(33), 'Имя — от 3 до 32 символов'],
+    ['x', 'Имя — от 2 до 32 символов'],
+    ['a'.repeat(33), 'Имя — от 2 до 32 символов'],
     ['Лиса', 'В имени — только латинские буквы, цифры, «_» и «-»'],
     ['admin', 'Это имя зарезервировано, выберите другое'],
   ])('правила бэка проверяет до запроса: %j', async (nick, error) => {
@@ -43,7 +43,7 @@ describe('changeUsernameAction', () => {
   })
 
   it('INVALID_USERNAME от бэка — понятный текст', async () => {
-    m.updateMe.mockRejectedValue(new ApiError(422, 'Username must be 3-32 chars long', 'INVALID_USERNAME'))
+    m.updateMe.mockRejectedValue(new ApiError(422, 'Username must be 2-32 chars long', 'INVALID_USERNAME'))
     const res = await changeUsernameAction(null, form('Wolf'))
     expect(res?.error).toMatch(/^Имя не подходит/)
   })

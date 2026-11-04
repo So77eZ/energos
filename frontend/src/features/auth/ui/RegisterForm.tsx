@@ -51,12 +51,12 @@ export function RegisterForm() {
           defaultValue={state?.nickname}
           placeholder="Как вас показывать в отзывах"
           required
-          minLength={3}
+          minLength={2}
           maxLength={32}
           autoComplete="nickname"
         />
         <span className="auth-field-hint">
-          Увидят другие пользователи рядом с вашими отзывами. 3–32 символа: латинские буквы, цифры, «_» и «-»
+          Увидят другие пользователи рядом с вашими отзывами. 2–32 символа: латинские буквы, цифры, «_» и «-»
         </span>
       </div>
 
