@@ -20,6 +20,10 @@ export const DEFAULT_PREFS: ThemePrefs = {
 
 export const STORAGE_KEY = 'energos_theme'
 
+/** 'full' — проверка WebGL в THEME_INIT_SCRIPT нашла видеокарту (больше не проверяем);
+ *  'low' — замер кадров показал, что графика не тянет (gfx.ts). */
+export const GFX_STORAGE_KEY = 'energos_gfx'
+
 /** Сохранённое значение анимаций → Motion. Старые значения: 'always' («Всегда вкл.») → 'on',
  *  'system' («По системе») и мусор → null (следовать системе). */
 export function parseMotion(v: unknown): Motion | null {

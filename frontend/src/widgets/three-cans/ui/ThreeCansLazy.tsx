@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { useTheme } from '@shared/lib/theme'
 import { useMinWidth } from '@shared/lib/useMinWidth'
 
 // three.js ~150 KB — грузим только на клиенте (ssr:false). Обёртка нужна, чтобы
@@ -15,7 +16,9 @@ const ThreeCans = dynamic(() => import('./ThreeCans').then((m) => m.ThreeCans), 
 // (а с ним и three.js-чанк) качался ТОЛЬКО когда вьюпорт дорос до брейкпоинта.
 const THREE_CANS_MIN_WIDTH = 1440
 
+// При слабой графике (gfx.ts) банок нет: WebGL без видеокарты рисуется на CPU.
 export function ThreeCansLazy() {
   const wideEnough = useMinWidth(THREE_CANS_MIN_WIDTH)
-  return wideEnough ? <ThreeCans /> : null
+  const { lowGfx } = useTheme()
+  return wideEnough && !lowGfx ? <ThreeCans /> : null
 }
