@@ -1,7 +1,7 @@
 import { Icons } from '@shared/ui/icons'
 import { HiddenBolt } from '@features/easter-eggs'
 
-// Каждый участник один раз: иконки-ссылки (Telegram, GitHub), затем «роль: ник».
+// Каждый участник один раз: Telegram, затем GitHub-ссылка с ролью и ником.
 const TEAM: ReadonlyArray<{ role: string; github: string; telegram?: string }> = [
   { role: 'Фронт', github: 'So77eZ',         telegram: 'thisIsBananash' },
   { role: 'Бэк',   github: 'SeleznevAS-dev', telegram: 'its_a_magic_time' },
@@ -51,9 +51,8 @@ export function Footer() {
               aria-label={`GitHub: ${m.github}`}
               title={m.github}
             >
-              <Icons.github w={12} />
+              <Icons.github w={12} /> {m.role}: {m.github}
             </a>
-            <span className="foot-member">{m.role}: {m.github}</span>
           </span>
         ))}
       </div>

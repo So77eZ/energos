@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useId, useState } from 'react'
 import { Icons } from '@shared/ui/icons'
+import { useTheme } from '@shared/lib/theme'
 import {
   METRIC_KEYS,
   MetricRatingInput,
@@ -10,6 +11,7 @@ import {
   type ReviewMetrics,
 } from '@entities/review'
 import { saveReviewAction } from '../model/actions'
+import { getInvalidReviewScoreKeys, REVIEW_SCORE_LABELS } from '../model/review-scores'
 
 interface ReviewFormProps {
   drinkId: number
@@ -44,13 +46,17 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
   const [metrics, setMetrics] = useState<ReviewMetrics>(() => pickInitialMetrics(editReview))
   const [rating, setRating] = useState(editReview?.rating ?? 0)
   const [comment, setComment] = useState(editReview?.comment ?? '')
+  const [submitted, setSubmitted] = useState(false)
+  const validationId = useId()
+  const { motionOn } = useTheme()
 
   const isEdit = !!editReview
   const title = isEdit ? 'Изменить отзыв' : 'Оставить отзыв'
   const filled = METRIC_KEYS.filter((k) => metrics[k] > 0).length
   const sum = METRIC_KEYS.reduce((s, k) => s + metrics[k], 0)
   const avg = filled > 0 ? sum / filled : 0
-  const canSubmit = filled === 6 && rating > 0 && !isPending
+  const missingScores = getInvalidReviewScoreKeys({ rating, ...metrics })
+  const showValidation = submitted && missingScores.length > 0
 
   const setM = (k: keyof ReviewMetrics, v: number) => {
     setMetrics((m) => ({ ...m, [k]: v }))
@@ -61,6 +67,15 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
       key={editReview?.id ?? 'new'}
       action={formAction}
       className="rev-form"
+      onSubmit={(event) => {
+        if (missingScores.length) {
+          event.preventDefault()
+          setSubmitted(true)
+          const group = event.currentTarget.querySelector<HTMLElement>(`[data-rating-field="${missingScores[0]}"]`)
+          group?.querySelector<HTMLInputElement>('input[type="radio"]')?.focus({ preventScroll: true })
+          group?.scrollIntoView({ block: 'center', behavior: motionOn ? 'smooth' : 'auto' })
+        }
+      }}
     >
       <header className="rev-form-head">
         <div>
@@ -87,9 +102,20 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
       </div>
 
       <div className="rev-form-body">
-        {state?.error && <p className="rev-form-error">{state.error}</p>}
+        {state?.error && <p className="rev-form-error" role="alert">{state.error}</p>}
+        {showValidation && (
+          <p className="rev-form-error rev-form-validation" id={validationId} role="alert">
+            Поставьте оценки: {missingScores.map((key) => REVIEW_SCORE_LABELS[key]).join(', ')}.
+          </p>
+        )}
 
-        <OverallRatingInput value={rating} onChange={setRating} name="rating" />
+        <OverallRatingInput
+          value={rating}
+          onChange={setRating}
+          name="rating"
+          invalid={submitted && missingScores.includes('rating')}
+          describedBy={showValidation ? validationId : undefined}
+        />
 
         {METRIC_KEYS.map((k) => (
           <MetricRatingInput
@@ -98,6 +124,8 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
             value={metrics[k]}
             onChange={(v) => setM(k, v)}
             name={k}
+            invalid={submitted && missingScores.includes(k)}
+            describedBy={showValidation && missingScores.includes(k) ? validationId : undefined}
           />
         ))}
 
@@ -123,7 +151,7 @@ export function ReviewForm({ drinkId, drinkName, editReview, onClose }: ReviewFo
               Отменить
             </button>
           )}
-          <button type="submit" className="cta-primary" disabled={!canSubmit}>
+          <button type="submit" className="cta-primary" disabled={isPending}>
             {isPending ? (
               <>Сохранение…</>
             ) : (

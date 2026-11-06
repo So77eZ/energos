@@ -11,6 +11,7 @@ import { FEATURES } from '@shared/config/features'
 import { Icons } from '@shared/ui/icons'
 import { SortBar } from '@features/filter-drinks/ui/SortBar'
 import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
+import { parseTasteFilters, writeTasteFilters } from '@features/filter-drinks/model/taste-filters'
 import { useTheme } from '@shared/lib/theme'
 import { useInfiniteReveal } from '../model/useInfiniteReveal'
 import { HeatmapView } from './HeatmapView'
@@ -33,7 +34,7 @@ interface DrinkCatalogProps {
 }
 
 export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) {
-  const { filtered } = useFilterDrinks(enriched)
+  const { filtered, hasFilters } = useFilterDrinks(enriched)
   const { toggle, isFavorite } = useFavorites()
   const {
     search,
@@ -41,6 +42,7 @@ export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) 
     sort, setSort,
     tiers, setTiers,
     priceRange, setPriceRange,
+    tasteFilters, setTasteFilters,
     onlyNew, setOnlyNew,
     noSugarOnly, setNoSugarOnly,
     setSearchItems,
@@ -75,6 +77,7 @@ export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) 
     }
     if (sp.get('new') === '1') setOnlyNew(true)
     if (sp.get('zero') === '1') setNoSugarOnly(true)
+    setTasteFilters(parseTasteFilters(sp))
     const v = sp.get('view')
     if (v === 'heat' || v === 'grid') setView(v)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -94,11 +97,12 @@ export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) 
     if (priceRange) params.set('price', `${priceRange[0]}-${priceRange[1]}`)
     if (onlyNew) params.set('new', '1')
     if (noSugarOnly) params.set('zero', '1')
+    writeTasteFilters(params, tasteFilters)
     if (view !== 'grid') params.set('view', view)
     const qs = params.toString()
     router.replace(qs ? `/?${qs}` : '/', { scroll: false })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sort, tiers, priceRange, onlyNew, noSugarOnly, view])
+  }, [sort, tiers, priceRange, onlyNew, noSugarOnly, tasteFilters, view])
 
   // [min, max] цен — границы для слайдера в filter-popover'е. Игнорируем напитки
   // без цены; если их вообще нет — fallback [0, 500] чтобы слайдер не сломался.
@@ -112,13 +116,14 @@ export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) 
   // который рендерится вне этого виджета).
   useEffect(() => { setPriceBounds(priceBounds) }, [priceBounds, setPriceBounds])
 
-  // Exclude hero drink from the grid to avoid duplication on the default view.
+  // Без фильтров hero уже показан выше. В результатах поиска он нужен как обычный напиток.
+  const heroExcluded = heroId != null && !hasFilters
   const gridSource = useMemo(
-    () => (heroId != null ? filtered.filter((d) => d.id !== heroId) : filtered),
-    [filtered, heroId],
+    () => (heroExcluded ? filtered.filter((d) => d.id !== heroId) : filtered),
+    [filtered, heroId, heroExcluded],
   )
 
-  const resetKey = JSON.stringify({ search, sort, tiers, priceRange, onlyNew, noSugarOnly })
+  const resetKey = JSON.stringify({ search, sort, tiers, priceRange, onlyNew, noSugarOnly, tasteFilters })
   const { count, sentinelRef, showMore, hasMore } = useInfiniteReveal({
     total: gridSource.length,
     chunk: PAGE_SIZE,
@@ -173,7 +178,7 @@ export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) 
 
       <div className="home-split with-rail">
         <div className="home-content">
-          {gridSource.length === 0 ? (
+          {(view === 'heat' ? filtered.length === 0 : gridSource.length === 0) ? (
             <div className="empty">
               <Icons.flask />
               <p>Ничего не найдено — попробуйте изменить фильтры.</p>
@@ -189,7 +194,7 @@ export function DrinkCatalog({ enriched, heroId, sideRail }: DrinkCatalogProps) 
                   <DrinkCard
                     key={drink.id}
                     drink={drink}
-                    rank={i + (heroId != null ? 2 : 1)}
+                    rank={i + (heroExcluded ? 2 : 1)}
                     isFav={isFavorite(drink.id)}
                     onToggleFav={FEATURES.favorites ? () => toggle(drink.id, drink.name) : undefined}
                   />

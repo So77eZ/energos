@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useCatalogSearch, type FilterAnchor } from '@shared/lib/catalog-search'
 import { TIER_COLORS } from '@entities/drink'
 import type { Tier } from '@entities/drink'
+import { METRIC_KEYS, METRIC_LABELS } from '@entities/review'
 import { Icons } from '@shared/ui/icons'
+import { changeTasteRange, countTasteFilters } from '../model/taste-filters'
 
 const TIERS: Tier[] = ['S', 'A', 'B', 'C', 'D']
 
@@ -23,6 +25,7 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
     filterOpen, setFilterOpen, filterAnchor,
     tiers, setTiers,
     priceRange, setPriceRange,
+    tasteFilters, setTasteFilters,
     onlyNew, setOnlyNew,
     noSugarOnly, setNoSugarOnly,
     priceBounds,
@@ -30,6 +33,27 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
 
   const popRef = useRef<HTMLDivElement | null>(null)
   const shown = filterOpen && filterAnchor === anchor
+  const [placement, setPlacement] = useState<{ above: boolean; height: number } | null>(null)
+
+  useLayoutEffect(() => {
+    if (!shown) return
+    function position() {
+      const bounds = (anchorRef?.current ?? popRef.current?.parentElement)?.getBoundingClientRect()
+      if (!bounds) return
+      const safeTop = Math.max(8, document.querySelector('.hdr')?.getBoundingClientRect().bottom ?? 8) + 8
+      const below = window.innerHeight - bounds.bottom - 16
+      const above = bounds.top - safeTop - 8
+      const openAbove = below < 260 && above > below
+      setPlacement({ above: openAbove, height: Math.max(0, openAbove ? above : below) })
+    }
+    position()
+    window.addEventListener('resize', position)
+    window.addEventListener('scroll', position)
+    return () => {
+      window.removeEventListener('resize', position)
+      window.removeEventListener('scroll', position)
+    }
+  }, [shown, anchorRef])
 
   // Esc — закрыть; клик вне popover'a и вне filter-btn — закрыть.
   useEffect(() => {
@@ -60,7 +84,7 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
   const [boundsMin, boundsMax] = priceBounds
   const lo = priceRange?.[0] ?? boundsMin
   const hi = priceRange?.[1] ?? boundsMax
-  const hasAny = tiers.length > 0 || priceRange != null || onlyNew || noSugarOnly
+  const hasAny = tiers.length > 0 || priceRange != null || onlyNew || noSugarOnly || countTasteFilters(tasteFilters) > 0
 
   function toggleTier(t: Tier) {
     setTiers(tiers.includes(t) ? tiers.filter((x) => x !== t) : [...tiers, t])
@@ -80,12 +104,14 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
     setPriceRange(null)
     setOnlyNew(false)
     setNoSugarOnly(false)
+    setTasteFilters({})
   }
 
   return (
     <div
       ref={popRef}
       className="filter-pop"
+      style={placement ? { maxHeight: placement.height, ...(placement.above ? { top: 'auto', bottom: 'calc(100% + 8px)' } : {}) } : undefined}
       role="dialog"
       aria-label="Фильтры каталога"
     >
@@ -154,6 +180,43 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
             onChange={(e) => onHiChange(Number(e.target.value))}
             aria-label="Максимальная цена"
           />
+        </div>
+      </div>
+
+      <div className="filt-section">
+        <div className="filt-lbl">ВКУС ПО ОТЗЫВАМ</div>
+        <p className="filt-taste-note">Средние значения от 1 до 5. При выборе диапазона напитки без отзывов скрываются. Все условия учитываются вместе.</p>
+        <div className="filt-taste-grid">
+          {METRIC_KEYS.map((key) => {
+            const range = tasteFilters[key] ?? [1, 5]
+            return (
+              <div className="filt-taste-row" key={key}>
+                <span className="filt-taste-label">{METRIC_LABELS[key]}</span>
+                <div className="filt-taste-bounds">
+                  <label>
+                    От
+                    <select
+                      aria-label={`${METRIC_LABELS[key]}: минимум`}
+                      value={range[0]}
+                      onChange={(e) => setTasteFilters(changeTasteRange(tasteFilters, key, 0, Number(e.target.value)))}
+                    >
+                      {[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    До
+                    <select
+                      aria-label={`${METRIC_LABELS[key]}: максимум`}
+                      value={range[1]}
+                      onChange={(e) => setTasteFilters(changeTasteRange(tasteFilters, key, 1, Number(e.target.value)))}
+                    >
+                      {[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}
+                    </select>
+                  </label>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 

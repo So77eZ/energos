@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { Icons } from '@shared/ui/icons'
 import { useCatalogSearch, type SortOption } from '@shared/lib/catalog-search'
 import { FilterPanel } from './FilterPanel'
+import { countTasteFilters } from '../model/taste-filters'
 
 type SortKey = 'rating' | 'fresh' | 'reviews' | 'price'
 type Direction = 'asc' | 'desc'
@@ -41,18 +42,19 @@ function combine(key: SortKey, dir: Direction): SortOption {
 export function SortBar() {
   const {
     sort, setSort,
-    tiers, priceRange, onlyNew, noSugarOnly,
+    tiers, priceRange, onlyNew, noSugarOnly, tasteFilters,
     filterOpen, setFilterOpen, filterAnchor, setFilterAnchor,
     view, setView,
   } = useCatalogSearch()
   const { key: activeKey, dir: activeDir } = parseSort(sort)
   const isAll = sort === 'name'
-  // Активные оси фильтра: тиры, цена, only-new, no-sugar.
+  // Каждый выбранный вкусовой диапазон — отдельный критерий.
   const activeFilterCount =
     (tiers.length > 0 ? 1 : 0) +
     (priceRange ? 1 : 0) +
     (onlyNew ? 1 : 0) +
-    (noSugarOnly ? 1 : 0)
+    (noSugarOnly ? 1 : 0) +
+    countTasteFilters(tasteFilters)
 
   const filterBtnRef = useRef<HTMLButtonElement | null>(null)
 

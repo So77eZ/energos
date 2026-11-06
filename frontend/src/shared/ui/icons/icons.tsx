@@ -405,11 +405,24 @@ const dice: IconFC = (p = {}) => {
   )
 }
 
+const palette: IconFC = (p = {}) => {
+  const { w = 20, ...rest } = p
+  return (
+    <svg viewBox="0 0 24 24" width={w} height={w} fill="none" stroke="currentColor" strokeWidth={1.8} {...rest}>
+      <path d="M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 1.4-3.4 1.6 1.6 0 0 1 1.1-2.7h1a4 4 0 0 0 4-4C21 6.5 17 3 12 3Z" />
+      <circle cx="7.5" cy="11" r="1" fill="var(--c-cyan)" stroke="none" />
+      <circle cx="10" cy="7" r="1" fill="var(--c-blue)" stroke="none" />
+      <circle cx="15" cy="7" r="1" fill="var(--c-pink)" stroke="none" />
+      <circle cx="18" cy="10.5" r="1" fill="var(--c-amber)" stroke="none" />
+    </svg>
+  )
+}
+
 export const Icons = {
   bolt, star, starOutline, search, sliders, map, msg, user, candyOff, flame,
   arrow, arrowL, trend, rouble, pulse, pkg, flask, trophy, plus, edit, trash,
   x, check, lock, layers, grid, sparkle, book, award, sun, moon, upload,
-  beaker, scale, spinner, filter, drop, github, telegram, dots, chevron, dice,
+  beaker, scale, spinner, filter, drop, github, telegram, dots, chevron, dice, palette,
 } as const
 
 export type IconName = keyof typeof Icons
