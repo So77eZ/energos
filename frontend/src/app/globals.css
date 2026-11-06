@@ -508,9 +508,10 @@ select option { background-color: var(--bg-base); color: var(--txt); }
 
 /* ─── Theme tokens ─────────────────────────────────────────────── */
 :root[data-theme="dark"], :root {
-  --bg-deep:    #05060c;
-  --bg-base:    #0a0a12;
-  --bg-card:    rgba(21, 21, 32, 0.92);
+  --bg-deep-base: #05060c;
+  --bg-page-base: #0a0a12;
+  --bg-card-base: rgba(21, 21, 32, 0.92);
+  --bg-card-alpha: 0.92;
   --bg-surface: rgba(30, 30, 40, 0.7);
   --bg-elev:    rgba(40, 40, 54, 0.55);
   --bg-input:   rgba(255,255,255,0.04);
@@ -534,9 +535,10 @@ select option { background-color: var(--bg-base); color: var(--txt); }
   /* Холодный сине-серый тон под неоновые акценты (см. light-theme спеку
      2026-06-09): чёрные альфы → альфы от тёмно-синего rgb(28,38,58), тени —
      от rgb(38,52,80), чтобы серый не желтил против холодного неона. */
-  --bg-deep:    #dfe5ee;
-  --bg-base:    #e9edf4;
-  --bg-card:    rgba(252,253,255,0.88);
+  --bg-deep-base: #dfe5ee;
+  --bg-page-base: #e9edf4;
+  --bg-card-base: rgba(252,253,255,0.88);
+  --bg-card-alpha: 0.88;
   --bg-surface: rgba(255,255,255,0.62);
   --bg-elev:    rgba(255,255,255,0.5);
   --bg-input:   rgba(28,38,58,0.05);
@@ -553,8 +555,13 @@ select option { background-color: var(--bg-base); color: var(--txt); }
 
 :root {
   /* Accent (overridden at runtime by ThemeProvider) */
-  --accent:     #00e5ff;
+  --accent-source: #00e5ff;
+  --accent: var(--accent-source);
   --accent-rgb: 0,229,255;
+  --accent-tint: 0%;
+  --bg-deep: var(--bg-deep-base);
+  --bg-base: var(--bg-page-base);
+  --bg-card: var(--bg-card-base);
 
   /* Metric colors (fixed across themes) */
   --c-cyan:   #00e5ff;
@@ -590,6 +597,22 @@ select option { background-color: var(--bg-base); color: var(--txt); }
 }
 *::-webkit-scrollbar-corner { background: transparent; }
 :root[data-theme="light"] * { scrollbar-color: rgba(var(--accent-rgb), 0.5) transparent; }
+
+@supports (color: color-mix(in oklab, black, white)) {
+  :root {
+    --bg-deep: color-mix(in oklab, var(--accent) var(--accent-tint), var(--bg-deep-base));
+    --bg-base: color-mix(in oklab, var(--accent) var(--accent-tint), var(--bg-page-base));
+  }
+}
+
+@supports (color: oklch(from red l c h)) and (color: color-mix(in oklab, black, white)) {
+  :root[data-tint-cards] {
+    --bg-card: color-mix(in oklab, oklch(from var(--accent) l c h / var(--bg-card-alpha)) calc(var(--accent-tint) / 2), var(--bg-card-base));
+  }
+  :root[data-theme="light"][data-muted-light-accent] {
+    --accent: oklch(from var(--accent-source) min(l, 0.72) min(c, 0.12) h);
+  }
+}
 
 /* ─── Liquid animated background ───────────────────────────────── */
 .liquid-bg {
@@ -3000,6 +3023,15 @@ body::before {
   overflow-y: auto;
 }
 .twk-section { display: flex; flex-direction: column; gap: 8px; }
+.twk-more {
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  color: var(--txt-dim);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.twk-more:hover, .twk-more:focus-visible { color: var(--txt); }
 .twk-section-title {
   font-family: var(--font-mono); font-size: 10px;
   color: var(--txt-quiet); letter-spacing: 1.5px; text-transform: uppercase;
@@ -3008,6 +3040,20 @@ body::before {
   margin-top: 8px; font-size: 11px; line-height: 1.4;
   color: var(--txt-quiet);
 }
+.twk-range {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 13px;
+}
+.twk-range input {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  accent-color: var(--accent);
+}
+.twk-range span:last-child { grid-row: 2; font-variant-numeric: tabular-nums; }
 
 /* Segmented control (dark/light) */
 .twk-seg {

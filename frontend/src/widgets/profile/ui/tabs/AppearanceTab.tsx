@@ -1,6 +1,6 @@
 import { TweaksBody } from '@shared/ui/tweaks-body'
 
-// Дублирует контент floating-панели TweaksPanel внутри вкладки профиля.
+// Полные настройки оформления. В плавающей панели доступны тема и акцент.
 // Сетка 2 колонки на широких экранах — настройки слева, info-блок справа.
 export function AppearanceTab() {
   return (
@@ -12,8 +12,8 @@ export function AppearanceTab() {
         <aside className="prof-appearance-aside">
           <h3 className="prof-appearance-title">Оформление</h3>
           <p className="prof-appearance-blurb">
-            Те же настройки доступны через плавающую кнопку в правом нижнем углу.
-            Выбор сохраняется в браузере — на других устройствах нужно настроить заново.
+            Тему и акцент можно быстро поменять через кнопку справа внизу.
+            Изменения применяются сразу и сохраняются в этом браузере.
           </p>
         </aside>
       </div>

@@ -26,9 +26,24 @@ test('/profile открывается под логином, видны вкла
 
 test('/profile?tab=appearance показывает TweaksBody', async ({ page }) => {
   await page.goto('/profile?tab=appearance')
-  await expect(page.locator('.prof-appearance')).toBeVisible()
-  // Внутри 5 секций из TweaksBody (тема, акцент, шрифт, эффекты, анимации)
-  await expect(page.locator('.prof-appearance .twk-section-title')).toHaveCount(5)
+  const appearance = page.locator('.prof-appearance:visible')
+  await expect(appearance).toBeVisible()
+  await expect(appearance.locator('.twk-section-title')).toHaveText([
+    'Тема', 'Акцент', 'Подмес акцента в фон', 'Шрифт', 'Эффекты', 'Анимации',
+  ])
+  const html = page.locator('html')
+  const dark = appearance.getByRole('slider', { name: 'Тёмная тема' })
+  const light = appearance.getByRole('slider', { name: 'Светлая тема' })
+  await appearance.getByRole('radio', { name: 'Тёмная' }).click()
+  await dark.fill('7')
+  await expect(html).toHaveCSS('--accent-tint', '7%')
+  await appearance.getByRole('radio', { name: 'Светлая' }).click()
+  await light.fill('9')
+  await expect(html).toHaveCSS('--accent-tint', '9%')
+  await page.reload()
+  await expect(html).toHaveCSS('--accent-tint', '9%')
+  await appearance.getByRole('radio', { name: 'Тёмная' }).click()
+  await expect(html).toHaveCSS('--accent-tint', '7%')
 })
 
 test('/submit без флага submissions → страница 404', async ({ page }) => {

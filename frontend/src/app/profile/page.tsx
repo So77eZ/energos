@@ -10,9 +10,13 @@ import { ProfilePage } from '@widgets/profile/ui/ProfilePage'
 export const metadata = { title: 'Личный кабинет — Energos' }
 export const dynamic = 'force-dynamic'
 
-export default async function ProfileRoute() {
+export default async function ProfileRoute({ searchParams }: PageProps<'/profile'>) {
+  const { tab } = await searchParams
+  const login = tab === 'appearance'
+    ? `${ROUTES.auth.login}?${new URLSearchParams({ return: `${ROUTES.profile}?tab=appearance` })}`
+    : ROUTES.auth.login
   const token = await getToken()
-  if (!token) redirect(ROUTES.auth.login)
+  if (!token) redirect(login)
 
   const [user, reviews, drinks] = await Promise.all([
     authApi.me(token).catch(() => null),
@@ -20,7 +24,7 @@ export default async function ProfileRoute() {
     drinkApi.list().catch(() => []),
   ])
 
-  if (!user) redirect(ROUTES.auth.login)
+  if (!user) redirect(login)
 
   return (
     <Suspense fallback={null}>
