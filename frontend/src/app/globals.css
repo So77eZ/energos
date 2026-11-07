@@ -2989,7 +2989,7 @@ body::before {
 
 .twk-panel {
   position: fixed; right: 16px; bottom: 72px; z-index: 900;
-  width: 300px; max-height: calc(100vh - 96px);
+  width: 300px; max-width: calc(100% - 32px); max-height: calc(100vh - 96px);
   display: flex; flex-direction: column;
   background: var(--bg-card); backdrop-filter: blur(20px) saturate(140%);
   border: 1px solid var(--line-strong); border-radius: var(--r-lg);
@@ -3735,7 +3735,7 @@ body::before {
    ═══════════════════════════════════════════════════════════════════ */
 .motion-notice {
   position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
-  z-index: 940; max-width: calc(100vw - 32px);
+  z-index: 940; width: 560px; max-width: calc(100% - 32px);
   display: inline-flex; align-items: center; gap: 12px;
   padding: 11px 14px;
   background: var(--bg-card); backdrop-filter: blur(12px) saturate(140%);
@@ -3744,6 +3744,10 @@ body::before {
   font-size: 12.5px; line-height: 1.4; color: var(--txt-dim);
 }
 .motion-notice a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.app:has(.twk-panel) .motion-notice { visibility: hidden; }
+@media (max-width: 640px) {
+  .motion-notice { bottom: calc(188px + env(safe-area-inset-bottom, 0px)); }
+}
 .motion-notice-close {
   flex-shrink: 0; width: 24px; height: 24px;
   display: grid; place-items: center;

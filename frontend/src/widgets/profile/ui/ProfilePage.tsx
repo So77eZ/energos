@@ -53,7 +53,7 @@ function parseTab(raw: string | null): TabId {
 export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [tab, setTab] = useState<TabId>(() => parseTab(searchParams.get('tab')))
+  const tab = parseTab(searchParams.get('tab'))
 
   // Редактор аватара + демо-резолв. localStorage недоступен в SSR → стартуем без демо
   // (resolveAvatar(user, null)), демо подтягиваем в useEffect; ре-резолв при закрытии
@@ -65,15 +65,13 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
     setAv(resolveAvatar(user, readAvatarDemo(user.id)))
   }, [user, editAvatar])
 
-  // Sync URL ?tab=... when tab changes (scroll: false чтобы не дёргать страницу).
-  useEffect(() => {
+  function setTab(nextTab: TabId) {
     const params = new URLSearchParams(searchParams.toString())
-    if (tab === TAB_IDS[0]) params.delete('tab')
-    else params.set('tab', tab)
+    if (nextTab === TAB_IDS[0]) params.delete('tab')
+    else params.set('tab', nextTab)
     const qs = params.toString()
     router.replace(qs ? `${ROUTES.profile}?${qs}` : ROUTES.profile, { scroll: false })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab])
+  }
 
   const drinkMap = useMemo(() => new Map(drinks.map((d) => [d.id, d])), [drinks])
   const enrichedAll = useMemo(() => enrichDrinks(drinks), [drinks])
