@@ -3795,7 +3795,8 @@ body::before {
   font-size: 12.5px; line-height: 1.4; color: var(--txt-dim);
 }
 .motion-notice a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
-.app:has(.twk-panel) .motion-notice { visibility: hidden; }
+.app:has(.twk-panel) .motion-notice,
+.app:has(.accent-editor) .motion-notice { visibility: hidden; }
 @media (max-width: 640px) {
   .motion-notice { bottom: calc(188px + env(safe-area-inset-bottom, 0px)); }
 }

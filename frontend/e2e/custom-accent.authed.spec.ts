@@ -14,6 +14,7 @@ test('свой цвет: предпросмотр не сохраняется, �
   await page.setViewportSize({ width: 1280, height: 1000 })
   await page.goto('/profile?tab=appearance')
   await page.getByRole('button', { name: 'Свой цвет', exact: true }).click()
+  await expect(page.locator('.motion-notice')).toBeHidden()
   const hex = page.getByRole('textbox', { name: 'HEX', exact: true })
   await hex.fill('#12001F')
   await expect.poll(() => page.locator('html').evaluate(el => el.style.getPropertyValue('--accent-fill'))).toBe('#12001F')
