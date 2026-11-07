@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import type { Tier } from '@shared/model/tier'
+import type { TasteFilters } from '@shared/model/taste-filters'
 
 export type SortOption =
   | 'name'
@@ -34,6 +35,8 @@ interface PageSearchCtx {
   setTiers: (v: Tier[]) => void
   priceRange: PriceRange
   setPriceRange: (v: PriceRange) => void
+  tasteFilters: TasteFilters
+  setTasteFilters: (v: TasteFilters) => void
   /** "Только новые" — фильтрует по EnrichedDrink.isNew (computed). */
   onlyNew: boolean
   setOnlyNew: (v: boolean) => void
@@ -60,6 +63,7 @@ const Ctx = createContext<PageSearchCtx>({
   sort: 'name', setSort: () => {},
   tiers: [], setTiers: () => {},
   priceRange: null, setPriceRange: () => {},
+  tasteFilters: {}, setTasteFilters: () => {},
   onlyNew: false, setOnlyNew: () => {},
   noSugarOnly: false, setNoSugarOnly: () => {},
   filterOpen: false, setFilterOpen: () => {},
@@ -73,7 +77,7 @@ function SearchResetter() {
   const pathname = usePathname()
   const {
     setSearch, setSearchItems, setFilterOpen,
-    setSort, setTiers, setPriceRange, setOnlyNew, setNoSugarOnly,
+    setSort, setTiers, setPriceRange, setTasteFilters, setOnlyNew, setNoSugarOnly,
   } = useContext(Ctx)
   // На уходе со страницы чистим поиск и фильтры (свежий каталог при возврате),
   // но НЕ view: grid/heat — display-преференс, а не фильтр, и должен переживать
@@ -85,6 +89,7 @@ function SearchResetter() {
     setSort('name')
     setTiers([])
     setPriceRange(null)
+    setTasteFilters({})
     setOnlyNew(false)
     setNoSugarOnly(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,6 +102,7 @@ export function CatalogSearchProvider({ children }: { children: ReactNode }) {
   const [sort, setSort] = useState<SortOption>('name')
   const [tiers, setTiers] = useState<Tier[]>([])
   const [priceRange, setPriceRange] = useState<PriceRange>(null)
+  const [tasteFilters, setTasteFilters] = useState<TasteFilters>({})
   const [onlyNew, setOnlyNew] = useState(false)
   const [noSugarOnly, setNoSugarOnly] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -111,6 +117,7 @@ export function CatalogSearchProvider({ children }: { children: ReactNode }) {
       sort, setSort,
       tiers, setTiers,
       priceRange, setPriceRange,
+      tasteFilters, setTasteFilters,
       onlyNew, setOnlyNew,
       noSugarOnly, setNoSugarOnly,
       filterOpen, setFilterOpen,

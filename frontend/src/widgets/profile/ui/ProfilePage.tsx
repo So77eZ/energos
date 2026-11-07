@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
-import { evaluateAchievements } from '@entities/achievement'
+import { BadgeCluster, evaluateAchievements } from '@entities/achievement'
 import type { Drink } from '@entities/drink'
 import { enrichDrinks, tierFromRating } from '@entities/drink'
 import type { Review } from '@entities/review'
@@ -196,10 +196,10 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           <UsernameEditor username={user.username} />
           <div className="prof-meta">
             <span>{user.email}</span>
-            <span><Icons.msg w={12} /> {reviews.length} отзывов</span>
-            {FEATURES.favorites && <span><Icons.bolt w={12} /> {favIds.length} в избранном</span>}
-            {FEATURES.submissions && <span><Icons.beaker w={12} /> {mySubs.length} заявок</span>}
-            {FEATURES.achievements && <span><Icons.award w={12} /> {unlockedCount}/{achievements.length}</span>}
+          </div>
+          <div className="prof-summary">
+            <span className="prof-review-total"><Icons.msg w={16} /> <b>{reviews.length}</b> отзывов</span>
+            {FEATURES.achievements && <BadgeCluster ownedIds={achievements.filter((a) => a.unlocked).map((a) => a.id)} layout="row" />}
           </div>
         </div>
         <div className="prof-actions">
@@ -218,14 +218,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
 
       {!user.is_verified && <VerifyEmailBanner email={user.email} />}
 
-      <section className="prof-stats">
-        <div className="stat-card stat-cyan">
-          <div className="stat-icon"><Icons.msg /></div>
-          <div className="stat-lbl">ОТЗЫВОВ</div>
-          <div className="stat-val">{reviews.length}</div>
-          <div className="stat-sub">всего</div>
-          <div className="stat-corner" />
-        </div>
+      {(FEATURES.favorites || FEATURES.submissions || FEATURES.achievements) && <section className="prof-stats">
         {FEATURES.favorites && <div className="stat-card stat-amber">
           <div className="stat-icon"><Icons.bolt /></div>
           <div className="stat-lbl">ИЗБРАННЫХ</div>
@@ -247,10 +240,10 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
           <div className="stat-sub">/{achievements.length}</div>
           <div className="stat-corner" />
         </div>}
-      </section>
+      </section>}
 
       <div className="prof-tabs" role="tablist" aria-label="Разделы профиля">
-        <TabButton id="reviews"      label="Отзывы"     icon="msg"     badge={counts.reviews}      active={tab} onSelect={setTab} />
+        <TabButton id="reviews"      label="Отзывы"     icon="msg"     active={tab} onSelect={setTab} />
         {FEATURES.favorites     && <TabButton id="favorites"    label="Избранное"  icon="bolt"    badge={counts.favorites}    active={tab} onSelect={setTab} />}
         {FEATURES.submissions   && <TabButton id="submissions"  label="Мои заявки" icon="beaker"  badge={counts.submissions}  active={tab} onSelect={setTab} />}
         {FEATURES.achievements  && <TabButton id="achievements" label="Достижения" icon="trophy"  badge={counts.achievements} active={tab} onSelect={setTab} />}

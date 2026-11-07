@@ -9,6 +9,7 @@ import { DrinkImg } from '@entities/drink'
 import { useCatalogSearch } from '@shared/lib/catalog-search'
 import { searchByName } from '@shared/lib/name-search'
 import { FilterPanel } from '@features/filter-drinks/ui/FilterPanel'
+import { countTasteFilters } from '@features/filter-drinks/model/taste-filters'
 
 const SEARCH_PAGES = ['/', '/admin/drinks', '/profile', '/drinks', '/taste-map']
 const FILTER_PAGES = ['/', '/taste-map']
@@ -21,9 +22,12 @@ export function HeaderSearchBar(
   const router = useRouter()
   const {
     search, setSearch, noSugarOnly, sort, searchItems,
+    tiers, priceRange, onlyNew, tasteFilters,
     filterOpen, setFilterOpen, filterAnchor, setFilterAnchor,
   } = useCatalogSearch()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
   const containerRef = useRef<HTMLDivElement>(null)
   const hdrFilterBtnRef = useRef<HTMLButtonElement | null>(null)
 
@@ -35,7 +39,10 @@ export function HeaderSearchBar(
   // оверлей рендерит второй HeaderSearchBar (forceInput) → иначе на '/' было бы
   // два header-anchored FilterPanel разом. На мобиле фильтры — через SortBar.
   const showFilterToggle = !forceInput && FILTER_PAGES.includes(pathname)
-  const hasActiveFilters = noSugarOnly || sort !== 'name'
+  // The catalog can restore URL filters before this Suspense boundary hydrates.
+  const activeFilterCount = mounted ? (tiers.length > 0 ? 1 : 0) + (priceRange ? 1 : 0) +
+    (onlyNew ? 1 : 0) + (noSugarOnly ? 1 : 0) + countTasteFilters(tasteFilters) : 0
+  const hasActiveFilters = mounted && (activeFilterCount > 0 || sort !== 'name')
 
   useEffect(() => {
     if (!dropdownOpen) return
@@ -129,7 +136,7 @@ export function HeaderSearchBar(
               if (filterOpen && filterAnchor === 'header') setFilterOpen(false)
               else { setFilterAnchor('header'); setFilterOpen(true) }
             }}
-            aria-label="Фильтры"
+            aria-label={activeFilterCount > 0 ? `Фильтры: ${activeFilterCount}` : 'Фильтры'}
             aria-expanded={filterOpen && filterAnchor === 'header'}
             aria-haspopup="dialog"
           >

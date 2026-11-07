@@ -1,5 +1,7 @@
 import type { EnrichedDrink } from '@entities/drink'
-import { cleanDrinkName, splitDrinkBrand } from '@entities/drink'
+import { cleanDrinkName } from '@entities/drink'
+import { HoverPrefetchLink } from '@shared/ui/hover-prefetch-link'
+import { ROUTES } from '@shared/config/routes'
 import { HiddenBolt } from '@features/easter-eggs'
 import {
   METRIC_KEYS,
@@ -138,15 +140,15 @@ export function GlossaryPage({ drinks }: GlossaryPageProps) {
                 <span className="som-scale-lbl">МАКС</span>
               </div>
 
-              {top && bottom && (
+              {top && bottom && topVal !== bottomVal && (
                 <div className="som-examples">
                   <div className="som-ex">
                     <span className="som-ex-tag">
                       МИН: {bottomVal != null ? bottomVal.toFixed(1) : '—'}
                     </span>
-                    <span className="som-ex-name">
-                      {splitDrinkBrand(cleanDrinkName(bottom.name)).brand}
-                    </span>
+                    <HoverPrefetchLink className="som-ex-name" href={ROUTES.reviews(bottom.id)}>
+                      {cleanDrinkName(bottom.name)}
+                    </HoverPrefetchLink>
                   </div>
                   <div className="som-ex">
                     <span
@@ -155,9 +157,9 @@ export function GlossaryPage({ drinks }: GlossaryPageProps) {
                     >
                       МАКС: {topVal != null ? topVal.toFixed(1) : '—'}
                     </span>
-                    <span className="som-ex-name">
-                      {splitDrinkBrand(cleanDrinkName(top.name)).brand}
-                    </span>
+                    <HoverPrefetchLink className="som-ex-name" href={ROUTES.reviews(top.id)}>
+                      {cleanDrinkName(top.name)}
+                    </HoverPrefetchLink>
                   </div>
                 </div>
               )}

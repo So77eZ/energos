@@ -7,11 +7,7 @@ import { getToken } from '@shared/lib/session'
 import { RateLimitError } from '@shared/api/http'
 import { redirectIfSessionExpired } from '@shared/lib/auth-guard'
 import { localizeReviewError } from './review-errors'
-
-const getNum = (formData: FormData, name: string) => {
-  const v = Number(formData.get(name))
-  return isNaN(v) ? 3 : Math.min(5, Math.max(1, Math.round(v)))
-}
+import { getInvalidReviewScoreKeys, REVIEW_SCORE_LABELS } from './review-scores'
 
 export async function saveReviewAction(
   _prev: { error: string } | null,
@@ -27,14 +23,19 @@ export async function saveReviewAction(
   const reviewId = reviewIdRaw ? Number(reviewIdRaw) : null
 
   const payload = {
-    rating:        getNum(formData, 'rating'),
-    acidity:      getNum(formData, 'acidity'),
-    sweetness:     getNum(formData, 'sweetness'),
-    concentration: getNum(formData, 'concentration'),
-    carbonation:   getNum(formData, 'carbonation'),
-    aftertaste:    getNum(formData, 'aftertaste'),
-    price_quality: getNum(formData, 'price_quality'),
+    rating:        Number(formData.get('rating')),
+    acidity:       Number(formData.get('acidity')),
+    sweetness:     Number(formData.get('sweetness')),
+    concentration: Number(formData.get('concentration')),
+    carbonation:   Number(formData.get('carbonation')),
+    aftertaste:    Number(formData.get('aftertaste')),
+    price_quality: Number(formData.get('price_quality')),
     comment:       formData.get('comment')?.toString() || null,
+  }
+
+  const invalidScores = getInvalidReviewScoreKeys(payload)
+  if (invalidScores.length) {
+    return { error: `Укажите целые оценки от 1 до 5: ${invalidScores.map((key) => REVIEW_SCORE_LABELS[key]).join(', ')}` }
   }
 
   try {

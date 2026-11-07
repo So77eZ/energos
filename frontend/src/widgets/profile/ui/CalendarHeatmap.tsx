@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import { buildActivityCalendar, type Review } from '@entities/review'
 
 // Ряды Пн→Вс (ряд 0 = Пн); подписываем Пн/Ср/Пт.
@@ -21,9 +21,19 @@ function tipDate(key: string): string {
 
 export function CalendarHeatmap({ reviews }: { reviews: Review[] }) {
   const cal = useMemo(() => buildActivityCalendar(reviews.map((r) => r.created_at)), [reviews])
+  const sectionRef = useRef<HTMLElement>(null)
+  const tooltipId = useId()
+  const [tip, setTip] = useState<{ date: string; text: string; left: number; top: number } | null>(null)
+
+  function showTip(target: HTMLElement, date: string, text: string) {
+    const section = sectionRef.current?.getBoundingClientRect()
+    if (!section) return
+    const cell = target.getBoundingClientRect()
+    setTip({ date, text, left: Math.max(110, Math.min(section.width - 110, cell.left - section.left + cell.width / 2)), top: cell.top - section.top - 8 })
+  }
 
   return (
-    <section className="cal-section">
+    <section ref={sectionRef} className="cal-section" onMouseLeave={() => setTip(null)}>
       <div className="cal-head">
         <span className="cal-title">
           {cal.total} {plural(cal.total, 'отзыв', 'отзыва', 'отзывов')} за год
@@ -39,7 +49,7 @@ export function CalendarHeatmap({ reviews }: { reviews: Review[] }) {
         </span>
       </div>
 
-      <div className="cal-scroll">
+      <div className="cal-scroll" onScroll={() => setTip(null)}>
         <div className="cal-body">
           <div className="cal-side">
             <span className="cal-dow-spacer" />
@@ -59,20 +69,29 @@ export function CalendarHeatmap({ reviews }: { reviews: Review[] }) {
             <div className="cal-grid">
               {cal.weeks.map((week, w) => (
                 <div key={w} className="cal-week">
-                  {week.map((day, d) => (
-                    <span
-                      key={d}
-                      className={`cal-cell${day.inRange ? '' : ' cal-cell-empty'}`}
-                      data-level={day.level}
-                      data-tip={day.inRange ? `${tipDate(day.date)} · ${day.count} ${plural(day.count, 'отзыв', 'отзыва', 'отзывов')}` : undefined}
-                    />
-                  ))}
+                  {week.map((day, d) => {
+                    const text = `${tipDate(day.date)} · ${day.count} ${plural(day.count, 'отзыв', 'отзыва', 'отзывов')}`
+                    return (
+                      <span
+                        key={d}
+                        className={`cal-cell${day.inRange ? '' : ' cal-cell-empty'}`}
+                        data-level={day.level}
+                        aria-label={day.inRange ? text : undefined}
+                        aria-describedby={tip?.date === day.date ? tooltipId : undefined}
+                        tabIndex={day.inRange && day.count > 0 ? 0 : undefined}
+                        onMouseEnter={(e) => day.inRange && showTip(e.currentTarget, day.date, text)}
+                        onFocus={(e) => showTip(e.currentTarget, day.date, text)}
+                        onBlur={() => setTip(null)}
+                      />
+                    )
+                  })}
                 </div>
               ))}
             </div>
           </div>
         </div>
       </div>
+      {tip && <div id={tooltipId} role="tooltip" className="cal-tooltip" style={{ left: tip.left, top: tip.top }}>{tip.text}</div>}
     </section>
   )
 }

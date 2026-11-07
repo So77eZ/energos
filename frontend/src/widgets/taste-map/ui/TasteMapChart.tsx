@@ -3,7 +3,9 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { HiddenBolt } from '@features/easter-eggs'
-import { blendMetricRGB, cleanDrinkName, splitDrinkBrand, type EnrichedDrink } from '@entities/drink'
+import { useFilterDrinks } from '@features/filter-drinks/model/useFilterDrinks'
+import { blendMetricRGB, cleanDrinkName, DrinkImg, EnergyCan, type EnrichedDrink } from '@entities/drink'
+import { HoverPrefetchLink } from '@shared/ui/hover-prefetch-link'
 import {
   METRIC_KEYS,
   METRIC_LABELS,
@@ -11,8 +13,7 @@ import {
 } from '@entities/review'
 import { Icons } from '@shared/ui/icons'
 import { ROUTES } from '@shared/config/routes'
-import { useCatalogSearch } from '@shared/lib/catalog-search'
-import { searchByName } from '@shared/lib/name-search'
+import { MAP_WIDTH, MAP_HEIGHT, TOOLTIP_WIDTH, TOOLTIP_HEIGHT, tooltipPosition } from '../model/tooltip-position'
 
 interface TasteMapChartProps {
   drinks: EnrichedDrink[]
@@ -20,8 +21,8 @@ interface TasteMapChartProps {
 
 type Axis = keyof ReviewMetrics
 
-const VIEWBOX_W = 920
-const VIEWBOX_H = 540
+const VIEWBOX_W = MAP_WIDTH
+const VIEWBOX_H = MAP_HEIGHT
 const PAD = 60
 
 const INNER_W = VIEWBOX_W - PAD * 2
@@ -35,9 +36,11 @@ export function TasteMapChart({ drinks }: TasteMapChartProps) {
   const [axisX, setAxisX] = useState<Axis>('sweetness')
   const [axisY, setAxisY] = useState<Axis>('acidity')
   const [hovered, setHovered] = useState<number | null>(null)
-  const { search, noSugarOnly } = useCatalogSearch()
+  const { filtered } = useFilterDrinks(drinks)
 
-  const visible = searchByName(drinks, search).filter((d) => d.metrics && !(noSugarOnly && !d.no_sugar))
+  const visible = filtered.filter((d) => d.metrics)
+  const activeDrink = visible.find((d) => d.id === hovered)
+  const tip = activeDrink?.metrics ? tooltipPosition(xFor(activeDrink.metrics[axisX]), yFor(activeDrink.metrics[axisY])) : null
 
   return (
     <div className="page page-tastemap">
@@ -47,7 +50,7 @@ export function TasteMapChart({ drinks }: TasteMapChartProps) {
           <div className="page-eyebrow">ВИЗУАЛИЗАЦИЯ · 2D-ПРОЕКЦИЯ</div>
           <h1 className="page-title">Карта вкусов</h1>
           <p className="page-blurb">
-            Каждая точка — напиток. Близкие точки имеют похожий профиль по выбранным осям.
+            Каждая банка — напиток. Наведи на неё или выбери название в списке, чтобы увидеть подробности.
           </p>
         </div>
         <div className="tm-axis-pickers">
@@ -81,7 +84,8 @@ export function TasteMapChart({ drinks }: TasteMapChartProps) {
         </div>
       ) : (
         <>
-          <div className="tm-stage">
+          <div className="tm-stage" onMouseLeave={() => setHovered(null)}>
+            <div className="tm-canvas">
             <svg viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`} width="100%" preserveAspectRatio="xMidYMid meet">
               {/* grid + tick labels for each integer value 1..5 */}
               {[1, 2, 3, 4, 5].map((v) => (
@@ -116,48 +120,57 @@ export function TasteMapChart({ drinks }: TasteMapChartProps) {
                 const cy = yFor(metrics[axisY])
                 const blend = blendMetricRGB(metrics)
                 const isHovered = hovered === d.id
-                const cleanedName = cleanDrinkName(d.name).slice(0, 22)
-                const ratingText = d.rating != null ? `★ ${d.rating.toFixed(1)}` : ''
-                const priceText = d.price != null ? `${d.price.toFixed(0)}₽` : ''
-                const subtitle = [ratingText, priceText].filter(Boolean).join(' · ')
                 return (
                   <g
                     key={d.id}
+                    className="tm-point"
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`${cleanDrinkName(d.name)}: ${METRIC_LABELS[axisX]} ${metrics[axisX]}, ${METRIC_LABELS[axisY]} ${metrics[axisY]}`}
                     onMouseEnter={() => setHovered(d.id)}
-                    onMouseLeave={() => setHovered(null)}
+                    onFocus={() => setHovered(d.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') router.push(ROUTES.reviews(d.id))
+                    }}
                     onClick={() => router.push(ROUTES.reviews(d.id))}
                     style={{ cursor: 'pointer' }}
                   >
                     <circle
-                      cx={cx} cy={cy} r={isHovered ? 16 : 10}
+                      cx={cx} cy={cy} r={isHovered ? 23 : 19}
                       fill={`rgba(${blend}, ${isHovered ? 0.5 : 0.25})`}
                       stroke={`rgb(${blend})`} strokeWidth="2"
                     />
-                    <circle cx={cx} cy={cy} r={3} fill={`rgb(${blend})`} />
-                    {isHovered && (
-                      <g pointerEvents="none">
-                        <rect x={cx + 18} y={cy - 26} width="180" height="42" rx="6" fill="var(--bg-card)" stroke={`rgb(${blend})`} />
-                        <text x={cx + 26} y={cy - 12} fill="var(--txt)" fontSize="11" fontFamily="'Exo 2', sans-serif" fontWeight="600">{cleanedName}</text>
-                        {subtitle && (
-                          <text x={cx + 26} y={cy + 4} fill="var(--txt-dim)" fontSize="9" fontFamily="'JetBrains Mono', monospace">{subtitle}</text>
-                        )}
-                      </g>
-                    )}
+                    <foreignObject x={cx - 12} y={cy - 23} width="24" height="46" pointerEvents="none">
+                      <div className="tm-can">
+                        {d.image_url
+                          ? <DrinkImg src={d.image_url} alt="" displayWidth={24} loading="lazy" fallback={<EnergyCan can={d.can} w={22} h={44} />} />
+                          : <EnergyCan can={d.can} w={22} h={44} />}
+                      </div>
+                    </foreignObject>
                   </g>
                 )
               })}
+              {activeDrink?.metrics && tip && (
+                <foreignObject x={tip.x} y={tip.y} width={TOOLTIP_WIDTH} height={TOOLTIP_HEIGHT}>
+                  <div className="tm-tooltip">
+                    <HoverPrefetchLink href={ROUTES.reviews(activeDrink.id)}>{cleanDrinkName(activeDrink.name)}</HoverPrefetchLink>
+                    <span>{METRIC_LABELS[axisX]}: {activeDrink.metrics[axisX].toFixed(1)} · {METRIC_LABELS[axisY]}: {activeDrink.metrics[axisY].toFixed(1)}</span>
+                    <span>{activeDrink.rating != null ? `★ ${activeDrink.rating.toFixed(1)}` : 'Нет оценки'}{activeDrink.price != null ? ` · ${activeDrink.price.toFixed(0)} ₽` : ''}</span>
+                  </div>
+                </foreignObject>
+              )}
             </svg>
+            </div>
           </div>
 
           <div className="tm-legend">
             <div className="tm-legend-head">
-              <span><Icons.pulse w={14} /> ВСЕ ТОЧКИ</span>
+              <span><Icons.pulse w={14} /> ВСЕ НАПИТКИ</span>
               <span className="tm-dim">{visible.length} напитков</span>
             </div>
             <div className="tm-legend-grid">
               {visible.map((d) => {
                 const blend = blendMetricRGB(d.metrics)
-                const { brand } = splitDrinkBrand(cleanDrinkName(d.name))
                 const xVal = d.metrics![axisX]
                 const yVal = d.metrics![axisY]
                 return (
@@ -167,13 +180,15 @@ export function TasteMapChart({ drinks }: TasteMapChartProps) {
                     className={`tm-legend-item${hovered === d.id ? ' hovered' : ''}`}
                     onMouseEnter={() => setHovered(d.id)}
                     onMouseLeave={() => setHovered(null)}
+                    onFocus={() => setHovered(d.id)}
+                    onBlur={() => setHovered(null)}
                     onClick={() => router.push(ROUTES.reviews(d.id))}
                   >
                     <span
                       className="tm-dot"
                       style={{ background: `rgb(${blend})`, boxShadow: `0 0 8px rgb(${blend})` }}
                     />
-                    <span className="tm-legend-name">{brand}</span>
+                    <span className="tm-legend-name">{cleanDrinkName(d.name)}</span>
                     <span className="tm-legend-dim">{xVal.toFixed(1)}·{yVal.toFixed(1)}</span>
                   </button>
                 )

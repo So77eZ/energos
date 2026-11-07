@@ -42,10 +42,11 @@ export function TweaksPanel() {
         className={`twk-fab${open ? ' active' : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-label="Настройки темы"
+        title="Оформление"
         aria-expanded={open}
         aria-controls="twk-panel"
       >
-        {open ? <Icons.x w={18} /> : <Icons.sliders w={18} />}
+        {open ? <Icons.x w={18} /> : <Icons.palette w={20} />}
       </button>
 
       {open && (
