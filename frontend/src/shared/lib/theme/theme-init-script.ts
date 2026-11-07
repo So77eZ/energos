@@ -1,4 +1,5 @@
 import { ACCENT_MAP, DEFAULT_PREFS, GFX_STORAGE_KEY, MAX_TINT, STORAGE_KEY } from './constants'
+import { getAccentColors } from './accent-color'
 import {
   DEFAULT_FONT, FONT_STACKS, OPTIONAL_FONT_HREFS, PREFS_SCHEMA_VERSION, PREFS_STORAGE_KEY, fontLinkId,
 } from '../fonts'
@@ -22,14 +23,24 @@ const FONT_LINKS = Object.fromEntries(
 export const THEME_INIT_SCRIPT = `(function(){try{
 var M=${JSON.stringify(ACCENT_MAP)};
 var raw=localStorage.getItem('${STORAGE_KEY}');
-var p=raw?JSON.parse(raw):{};
+var p=(raw?JSON.parse(raw):null)||{};
 var t=p.theme==='light'?'light':'${DEFAULT_PREFS.theme}';
-var aK=M[p.accent]?p.accent:'${DEFAULT_PREFS.accent}';
+var custom=p.accent==='custom'&&typeof p.customAccent==='string'&&/^#[0-9a-f]{6}$/i.test(p.customAccent);
+var aK=Object.prototype.hasOwnProperty.call(M,p.accent)?p.accent:'${DEFAULT_PREFS.accent}';
 var a=M[aK];
 var h=document.documentElement;
 h.setAttribute('data-theme',t);
 h.style.setProperty('--accent-source',a.hex);
 h.style.setProperty('--accent-rgb',a.rgb);
+if(custom){
+var colors=(${getAccentColors.toString()})(p.customAccent,t,p.mutedLightAccent===true);
+h.setAttribute('data-custom-accent','');
+h.style.setProperty('--accent-source',colors.fill);
+h.style.setProperty('--accent-rgb',colors.rgb);
+h.style.setProperty('--accent-fill',colors.fill);
+h.style.setProperty('--accent-custom-foreground',colors.foreground);
+h.style.setProperty('--on-accent',colors.ink);
+}
 var tint=t==='light'?p.tintLight:p.tintDark;
 tint=typeof tint==='number'&&Number.isFinite(tint)?Math.min(${MAX_TINT},Math.max(0,Math.round(tint))):0;
 h.style.setProperty('--accent-tint',tint+'%');

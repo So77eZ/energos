@@ -48,7 +48,7 @@ export function Avatar({ username, seed, size, avatarKind, avatarUrl, avatarSeed
     )
   }
 
-  // Буквенный кружок — neon: pickAvatarColor-фон + --on-accent тёмный ink (AA), всегда circle.
+  // Цвет буквенного аватара не зависит от личного акцента сайта.
   const letter = (username ?? '?').charAt(0).toUpperCase()
   return (
     <span
@@ -57,7 +57,7 @@ export function Avatar({ username, seed, size, avatarKind, avatarUrl, avatarSeed
         width: px,
         height: px,
         background: pickAvatarColor(seed ?? username ?? '?'),
-        color: 'var(--on-accent)',
+        color: 'var(--on-bright)',
         fontSize: `${Math.round(size * 0.42)}px`,
       }}
     >

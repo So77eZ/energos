@@ -1,5 +1,5 @@
 export type Theme = 'dark' | 'light'
-export type Accent = 'cyan' | 'pink' | 'lime' | 'amber' | 'purple'
+export type Accent = 'cyan' | 'pink' | 'lime' | 'amber' | 'purple' | 'custom'
 /** Анимации, выбранные пользователем. null — ещё не выбирал: следуем системной настройке
  *  «уменьшить движение» (reduce → выкл.). Выбор сохраняется, только когда нажали Вкл/Выкл. */
 export type Motion = 'on' | 'off'
@@ -7,6 +7,7 @@ export type Motion = 'on' | 'off'
 export interface ThemePrefs {
   theme: Theme
   accent: Accent
+  customAccent: string
   tintDark: number
   tintLight: number
   tintCards: boolean

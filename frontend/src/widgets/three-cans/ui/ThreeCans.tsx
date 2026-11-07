@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { stepSpin, SPIN, useCanGame, type SpinState } from '@features/can-game'
-import { ACCENT_MAP, useTheme } from '@shared/lib/theme'
+import { ACCENT_MAP, getAccentColors, useTheme } from '@shared/lib/theme'
 
 /**
  * Two large low-poly cans floating beside the catalog grid.
@@ -376,14 +376,14 @@ function mountCanScene(canvas: HTMLCanvasElement, side: Side, accentRgb: string,
 const ACCENT_CYCLE: Array<keyof typeof ACCENT_MAP> = ['cyan', 'pink', 'lime', 'amber', 'purple']
 
 export function ThreeCans() {
-  const { accent, motionOn } = useTheme()
+  const { accent, customAccent, motionOn } = useTheme()
   const { onBurst } = useCanGame()
   const onBurstRef = useRef(onBurst)
   useEffect(() => { onBurstRef.current = onBurst }, [onBurst])
   // Left can uses the active accent; right can uses the next one in the cycle
   // so the pair always reads as two distinct hues no matter the theme choice.
-  const leftAccent = ACCENT_MAP[accent].rgb
-  const rightAccent = ACCENT_MAP[ACCENT_CYCLE[(ACCENT_CYCLE.indexOf(accent) + 1) % ACCENT_CYCLE.length]].rgb
+  const leftAccent = accent === 'custom' ? getAccentColors(customAccent, 'dark').rgb : ACCENT_MAP[accent].rgb
+  const rightAccent = ACCENT_MAP[ACCENT_CYCLE[accent === 'custom' ? 1 : (ACCENT_CYCLE.indexOf(accent) + 1) % ACCENT_CYCLE.length]].rgb
   const leftRef = useRef<HTMLCanvasElement>(null)
   const rightRef = useRef<HTMLCanvasElement>(null)
 

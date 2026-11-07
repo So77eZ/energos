@@ -521,11 +521,10 @@ select option { background-color: var(--bg-base); color: var(--txt); }
   --txt-quiet:  #5c5c70;
   --line:       rgba(255,255,255,0.08);
   --line-strong:rgba(255,255,255,0.14);
-  /* Ink на filled-accent кнопках. Тёмный в ОБЕИХ темах: акценты (cyan/green/amber…)
-     светлые → тёмный текст читается всегда. Раньше использовался --bg-deep, но в
-     light он светлый → белое-на-светло-cyan ≈1.4:1 (primary-CTA нечитаем). Дарк не
-     трогаем — там тоже тёмный ink. */
+  /* Presets and fixed bright metric colors use dark ink. Custom accent ink is
+     calculated from its actual fill and must not change metric/avatar labels. */
   --on-accent:  #0a0a12;
+  --on-bright: #0a0a12;
 
   --radar-grid: rgba(255,255,255,0.07);
   --shadow-card:0 8px 28px rgba(0,0,0,0.5);
@@ -556,7 +555,8 @@ select option { background-color: var(--bg-base); color: var(--txt); }
 :root {
   /* Accent (overridden at runtime by ThemeProvider) */
   --accent-source: #00e5ff;
-  --accent: var(--accent-source);
+  --accent: var(--accent-custom-foreground, var(--accent-source));
+  --accent-fill: var(--accent);
   --accent-rgb: 0,229,255;
   --accent-tint: 0%;
   --bg-deep: var(--bg-deep-base);
@@ -600,16 +600,16 @@ select option { background-color: var(--bg-base); color: var(--txt); }
 
 @supports (color: color-mix(in oklab, black, white)) {
   :root {
-    --bg-deep: color-mix(in oklab, var(--accent) var(--accent-tint), var(--bg-deep-base));
-    --bg-base: color-mix(in oklab, var(--accent) var(--accent-tint), var(--bg-page-base));
+    --bg-deep: color-mix(in oklab, var(--accent-fill) var(--accent-tint), var(--bg-deep-base));
+    --bg-base: color-mix(in oklab, var(--accent-fill) var(--accent-tint), var(--bg-page-base));
   }
 }
 
 @supports (color: oklch(from red l c h)) and (color: color-mix(in oklab, black, white)) {
   :root[data-tint-cards] {
-    --bg-card: color-mix(in oklab, oklch(from var(--accent) l c h / var(--bg-card-alpha)) calc(var(--accent-tint) / 2), var(--bg-card-base));
+    --bg-card: color-mix(in oklab, oklch(from var(--accent-fill) l c h / var(--bg-card-alpha)) calc(var(--accent-tint) / 2), var(--bg-card-base));
   }
-  :root[data-theme="light"][data-muted-light-accent] {
+  :root:not([data-custom-accent])[data-theme="light"][data-muted-light-accent] {
     --accent: oklch(from var(--accent-source) min(l, 0.72) min(c, 0.12) h);
   }
 }
@@ -887,7 +887,7 @@ body::before {
 .nav-cta {
   margin-left: 6px;
   padding: 8px 16px; border-radius: var(--r-sm);
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   font-weight: 700; font-size: 11.5px; letter-spacing: 0.5px;
   text-transform: uppercase;
   box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.35);
@@ -905,7 +905,7 @@ body::before {
 .nav-avatar-letter {
   width: 26px; height: 26px; border-radius: 5px;
   display: grid; place-items: center;
-  color: var(--on-accent); font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  color: var(--on-bright); font-family: var(--font-display); font-weight: 700; font-size: 12px;
   box-shadow: 0 0 10px currentColor;
 }
 .nav-avatar-meta { display: none; flex-direction: column; line-height: 1.15; }
@@ -1059,7 +1059,7 @@ body::before {
 .cta-primary {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 11px 18px;
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   border-radius: var(--r-sm);
   font-weight: 700; font-size: 12.5px; letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1211,7 +1211,7 @@ body::before {
 .filter-count {
   font-family: var(--font-display); font-weight: 700;
   font-size: 10px; padding: 2px 6px; border-radius: 999px;
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
 }
 
 /* ─── Filter popover (раскрывается из filter-btn) ──────────────── */
@@ -1939,7 +1939,7 @@ body::before {
 .rev-avatar {
   width: 32px; height: 32px; border-radius: var(--r-sm);
   display: grid; place-items: center;
-  color: var(--on-accent); font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  color: var(--on-bright); font-family: var(--font-display); font-weight: 700; font-size: 13px;
 }
 .rev-actions { display: flex; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
 
@@ -2045,7 +2045,7 @@ body::before {
 }
 .rate-btn:hover { transform: translateY(-1px); }
 .rate-btn.on {
-  background: var(--rate-color); color: var(--on-accent); border-color: var(--rate-color);
+  background: var(--rate-fill, var(--rate-color)); color: var(--rate-ink, var(--on-bright)); border-color: var(--rate-color);
 }
 .rate-input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .rate-btn:has(.rate-input:focus-visible) { outline: 2px solid var(--rate-color); outline-offset: 3px; }
@@ -2141,7 +2141,7 @@ body::before {
   position: absolute; right: 0; bottom: 0;
   width: 34px; height: 34px; border-radius: 50%;
   display: grid; place-items: center;
-  background: var(--c-cyan); color: var(--on-accent);
+  background: var(--c-cyan); color: var(--on-bright);
   border: 3px solid var(--bg-card);
   box-shadow: 0 2px 10px rgba(0,0,0,.4);
   transition: transform .16s ease;
@@ -2204,6 +2204,7 @@ body::before {
   border-radius: var(--r-md); padding: 20px;
 }
 .prof-appearance-panel { min-width: 0; }
+.prof-appearance:has(.accent-editor) { grid-template-columns: minmax(0, 660px) minmax(180px, 1fr); }
 /* TweaksBody внутри профиля — без своих padding'ов (есть у .prof-appearance). */
 /* overflow: visible — у .twk-body overflow-y:auto (для плавающей панели), а он режет и по
    горизонтали: кольцо и свечение выбранного цвета обрезались по краю. Прокрутка тут не нужна. */
@@ -2219,6 +2220,7 @@ body::before {
 }
 @media (max-width: 800px) {
   .prof-appearance { grid-template-columns: 1fr; padding: 14px; gap: 14px; }
+  .prof-appearance:has(.accent-editor) { grid-template-columns: 1fr; }
 }
 
 .prof-rev-list { display: flex; flex-direction: column; gap: 8px; }
@@ -2348,7 +2350,7 @@ body::before {
 }
 .auth-tab:hover { color: var(--txt); }
 .auth-tab.active {
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.4);
 }
 
@@ -3070,17 +3072,18 @@ body::before {
 }
 .twk-seg-btn:hover { color: var(--txt); }
 .twk-seg-btn.active {
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.35);
 }
 
 /* Accent color picker */
-.twk-accents { display: flex; gap: 8px; }
+.twk-accents { display: flex; gap: 8px; max-width: 344px; }
 .twk-accent {
   flex: 1; aspect-ratio: 1;
   border-radius: 50%; cursor: pointer;
   border: 2px solid transparent;
   background: var(--swatch);
+  color: var(--on-bright); font-size: 22px;
   box-shadow: 0 0 0 0 rgba(0,0,0,0), 0 0 12px var(--swatch);
   transition: transform .12s, box-shadow .12s, border-color .12s;
 }
@@ -3088,6 +3091,54 @@ body::before {
 .twk-accent.active {
   border-color: var(--txt);
   box-shadow: 0 0 0 2px var(--bg-card), 0 0 16px var(--swatch);
+}
+
+.accent-custom-trigger, .accent-reset, .accent-editor-actions button {
+  font: inherit; font-size: 12px; color: var(--txt); cursor: pointer;
+  border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+  background: var(--bg-input); padding: 10px 12px; min-height: 44px;
+}
+.accent-custom-trigger { display: flex; align-items: center; gap: 10px; text-align: left; }
+.accent-custom-trigger > span:nth-child(2) { flex: 1; }
+.accent-custom-swatch { display: inline-block; width: 22px; height: 22px; flex-shrink: 0; border: 1px solid var(--txt-dim); border-radius: 4px; }
+.accent-current { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--txt); }
+.accent-reset { border: 0; padding: 4px 0; background: transparent; text-align: left; text-decoration: underline; color: var(--txt-dim); }
+.accent-editor { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; min-width: 0; padding: 12px; background: var(--bg-deep-base); border: 1px solid var(--line-strong); border-radius: var(--r-sm); }
+.accent-editor-controls { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.accent-sv { position: relative; height: 170px; touch-action: none; cursor: crosshair; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), hsl(var(--hue) 100% 50%); border: 1px solid #777; border-radius: 4px; }
+.accent-sv-thumb { position: absolute; width: 14px; height: 14px; border: 2px solid #fff; outline: 1px solid #111; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+.accent-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 11px; color: var(--txt); }
+.accent-field input:not([type="range"]) { width: 100%; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--txt-dim); border-radius: 4px; background: var(--bg-deep-base); color: var(--txt); font: inherit; font-size: 13px; }
+.accent-field input:focus-visible, .accent-editor button:focus-visible, .accent-custom-trigger:focus-visible, .accent-reset:focus-visible, .twk-accent:focus-visible { outline: 2px solid var(--txt); outline-offset: 3px; }
+.accent-hue { width: 100%; height: 24px; appearance: none; background: linear-gradient(to right, red, #ff0, #0f0, #0ff, #00f, #f0f, red); border: 1px solid #777; border-radius: 4px; cursor: pointer; }
+.accent-hue::-webkit-slider-thumb { appearance: none; width: 12px; height: 28px; background: #fff; border: 2px solid #111; border-radius: 3px; }
+.accent-hue::-moz-range-thumb { width: 10px; height: 26px; background: #fff; border: 2px solid #111; border-radius: 3px; }
+.accent-numbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.accent-help { font-size: 11px; line-height: 1.5; color: var(--txt-dim); margin: 0; }
+.accent-previews { display: flex; flex-direction: column; gap: 12px; }
+.accent-preview { display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid #777; border-radius: 6px; min-width: 0; font-size: 11px; }
+.accent-preview-dark { background: #151520; color: #f0f0f5; }
+.accent-preview-light { background: #fcfdff; color: #161a22; }
+.accent-preview button, .accent-preview > input { min-width: 0; width: 100%; font: inherit; padding: 8px 6px; border: 1px solid currentColor; border-radius: 4px; }
+.accent-preview-button { background: var(--preview-fill); color: var(--preview-ink); }
+.accent-preview-button:hover { box-shadow: 0 0 0 2px var(--preview-accent); }
+.accent-preview-button:active { transform: translateY(1px); }
+.accent-preview-link { color: var(--preview-accent); text-decoration: underline; }
+.accent-preview-check { display: flex; align-items: center; gap: 5px; }
+.accent-preview-check input { width: 14px; height: 14px; flex-shrink: 0; accent-color: var(--preview-fill); }
+.accent-preview > input { background: transparent; color: inherit; }
+.accent-preview :focus-visible { outline: 2px solid var(--preview-accent); outline-offset: 2px; }
+.accent-editor-actions { display: flex; gap: 8px; grid-column: 1 / -1; }
+.accent-editor-actions button { flex: 1; background: var(--bg-deep-base); }
+.accent-editor-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+:root[data-custom-accent] :is(.cta-primary, .nav-cta, .auth-submit, .twk-seg-btn.active) { box-shadow: inset 0 0 0 1px var(--accent); }
+:root[data-custom-accent] .cta-primary:hover:not(:disabled) { filter: none; box-shadow: inset 0 0 0 2px var(--accent); }
+:root[data-custom-accent] :is(.twk-seg-btn, .auth-tab, .rate-row-overall .rate-btn) { transition-property: transform, box-shadow; }
+:root[data-custom-accent] :is(button, a, input, textarea, select):focus-visible { outline: 2px solid var(--txt); outline-offset: 3px; }
+:root[data-custom-accent] .accent-preview :focus-visible { outline-color: var(--preview-accent); }
+@media (max-width: 580px) {
+  .accent-editor { grid-template-columns: 1fr; }
+  .accent-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 }
 
 /* Font select */
@@ -3171,7 +3222,7 @@ body::before {
 .adm-tab-badge {
   font-family: var(--font-display); font-weight: 700;
   font-size: 10px; padding: 1px 7px;
-  background: var(--c-amber); color: var(--on-accent);
+  background: var(--c-amber); color: var(--on-bright);
   border-radius: 999px;
   letter-spacing: 0.5px;
 }
@@ -3238,7 +3289,7 @@ body::before {
 .sub-user-avatar {
   width: 20px; height: 20px; border-radius: 4px;
   display: grid; place-items: center;
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   font-family: var(--font-display); font-weight: 800; font-size: 11px;
 }
 .sub-price { color: var(--c-pink); font-weight: 600; }
@@ -3325,7 +3376,7 @@ body::before {
 .lb-avatar {
   width: 32px; height: 32px; border-radius: var(--r-sm);
   display: grid; place-items: center;
-  color: var(--on-accent);
+  color: var(--on-bright);
   font-family: var(--font-display); font-weight: 700; font-size: 14px;
   flex-shrink: 0;
   box-shadow: 0 0 10px currentColor;
@@ -4115,7 +4166,7 @@ body::before {
   .mob-tab.active { color: var(--accent); }
   .mob-tab-avatar {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent-fill);
     color: var(--on-accent); font-weight: 700; font-size: 11px;
   }
   /* контент (вкл. футер) не должен прятаться под баром */
@@ -4644,7 +4695,7 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
 .ava-seg button { flex: 1; height: 40px; border-radius: 7px; font-family: var(--font-mono); font-weight: 700;
   font-size: 11px; letter-spacing: .8px; color: var(--txt-dim); text-transform: uppercase; background: transparent;
   border: none; cursor: pointer; }
-.ava-seg button.on { background: var(--accent); color: var(--on-accent); }
+.ava-seg button.on { background: var(--accent-fill); color: var(--on-accent); }
 .ava-presets { display: flex; gap: 11px; flex-wrap: wrap; margin: 9px 0 2px; }
 .ava-preset { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; padding: 0; cursor: pointer;
   border: 2px solid transparent; background: transparent; }

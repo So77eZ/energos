@@ -24,7 +24,7 @@ export function OverallRatingInput({ value, onChange, name, invalid, describedBy
   return (
     <div
       className={`rate-row rate-row-overall${invalid ? ' is-invalid' : ''}`}
-      style={{ '--rate-color': color } as CSSProperties}
+      style={{ '--rate-color': color, '--rate-fill': 'var(--accent-fill)', '--rate-ink': 'var(--on-accent)' } as CSSProperties}
       role="radiogroup"
       aria-labelledby={id}
       aria-invalid={invalid || undefined}

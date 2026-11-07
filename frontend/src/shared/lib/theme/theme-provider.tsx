@@ -6,6 +6,7 @@ import { FEATURES } from '@shared/config/features'
 import { usePrefersReducedMotion } from '../usePrefersReducedMotion'
 import { ACCENT_MAP, DEFAULT_PREFS, GFX_STORAGE_KEY, STORAGE_KEY, parseMotion, parseTint } from './constants'
 import { isSlowFrames, measureFrameDeltas } from './gfx'
+import { getAccentColors, normalizeHex } from './accent-color'
 import type { Accent, Motion, Theme, ThemePrefs } from './types'
 
 interface ThemeContextValue extends ThemePrefs {
@@ -16,6 +17,9 @@ interface ThemeContextValue extends ThemePrefs {
   lowGfx: boolean
   setTheme: (t: Theme) => void
   setAccent: (a: Accent) => void
+  accentSelection: number
+  setCustomAccent: (hex: string) => void
+  previewAccent: (hex: string | null) => void
   setLiquidBg: (v: boolean) => void
   setGrain: (v: boolean) => void
   setScanlines: (v: boolean) => void
@@ -26,12 +30,27 @@ interface ThemeContextValue extends ThemePrefs {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-function applyToDOM(prefs: ThemePrefs, motionOn: boolean) {
+function applyAccentToDOM(prefs: ThemePrefs, preview: string | null = null) {
+  const html = document.documentElement
+  const custom = preview ?? (prefs.accent === 'custom' ? prefs.customAccent : null)
+  const preset = prefs.accent !== 'custom' && Object.hasOwn(ACCENT_MAP, prefs.accent) ? prefs.accent : 'cyan'
+  const accent = custom ? getAccentColors(custom, prefs.theme, prefs.mutedLightAccent) : ACCENT_MAP[preset]
+  html.toggleAttribute('data-custom-accent', !!custom)
+  if (custom && 'fill' in accent) {
+    html.style.setProperty('--accent-fill', accent.fill)
+    html.style.setProperty('--accent-custom-foreground', accent.foreground)
+    html.style.setProperty('--on-accent', accent.ink)
+  } else {
+    for (const property of ['--accent-fill', '--accent-custom-foreground', '--on-accent']) html.style.removeProperty(property)
+  }
+  html.style.setProperty('--accent-source', 'fill' in accent ? accent.fill : accent.hex)
+  html.style.setProperty('--accent-rgb', accent.rgb)
+}
+
+function applyToDOM(prefs: ThemePrefs, motionOn: boolean, preview: string | null) {
   const html = document.documentElement
   html.setAttribute('data-theme', prefs.theme)
-  const accent = ACCENT_MAP[prefs.accent]
-  html.style.setProperty('--accent-source', accent.hex)
-  html.style.setProperty('--accent-rgb', accent.rgb)
+  applyAccentToDOM(prefs, preview)
   html.style.setProperty('--accent-tint', `${prefs.theme === 'light' ? prefs.tintLight : prefs.tintDark}%`)
   html.toggleAttribute('data-tint-cards', prefs.tintCards)
   html.toggleAttribute('data-muted-light-accent', prefs.mutedLightAccent)
@@ -56,6 +75,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false)
   const firstApply = useRef(true)
   const prevTheme = useRef<Theme>(DEFAULT_PREFS.theme)
+  const prefsRef = useRef(prefs)
+  const previewRef = useRef<string | null>(null)
+  const [accentSelection, setAccentSelection] = useState(0)
   const systemReduce = usePrefersReducedMotion()
   // false на SSR и первом рендере, как systemReduce; реальное значение — в effect ниже.
   const [lowGfx, setLowGfx] = useState(false)
@@ -71,6 +93,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         setPrefs({
           ...DEFAULT_PREFS,
           ...stored,
+          accent: stored.accent === 'custom' && normalizeHex(stored.customAccent) ? 'custom'
+            : stored.accent !== 'custom' && typeof stored.accent === 'string' && Object.hasOwn(ACCENT_MAP, stored.accent) ? stored.accent : DEFAULT_PREFS.accent,
+          customAccent: normalizeHex(stored.customAccent) ?? DEFAULT_PREFS.customAccent,
           motion: parseMotion(stored.motion),
           tintDark: parseTint(stored.tintDark),
           tintLight: parseTint(stored.tintLight),
@@ -112,6 +137,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Apply + persist on any change after hydration.
   useEffect(() => {
     if (!hydrated) return
+    prefsRef.current = prefs
 
     // Crossfade only on an explicit dark↔light switch (not the first hydration
     // apply, not accent/toggle changes). View Transitions API убирает резкий
@@ -122,9 +148,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown }
 
     if (themeChanged && !firstApply.current && motionOn && typeof doc.startViewTransition === 'function') {
-      doc.startViewTransition(() => applyToDOM(prefs, motionOn))
+      doc.startViewTransition(() => applyToDOM(prefs, motionOn, previewRef.current))
     } else {
-      applyToDOM(prefs, motionOn)
+      applyToDOM(prefs, motionOn, previewRef.current)
     }
     firstApply.current = false
 
@@ -137,6 +163,31 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setPrefs((prev) => ({ ...prev, ...patch }))
   }, [])
 
+  const previewAccent = useCallback((hex: string | null) => {
+    previewRef.current = normalizeHex(hex)
+    applyAccentToDOM(prefsRef.current, previewRef.current)
+  }, [])
+
+  const setCustomAccent = useCallback((hex: string) => {
+    const customAccent = normalizeHex(hex)
+    if (!customAccent) return
+    previewRef.current = null
+    const next: ThemePrefs = { ...prefsRef.current, accent: 'custom', customAccent }
+    prefsRef.current = next
+    applyAccentToDOM(next)
+    setPrefs(next)
+    setAccentSelection(value => value + 1)
+  }, [])
+
+  const setAccent = useCallback((accent: Accent) => {
+    previewRef.current = null
+    const next = { ...prefsRef.current, accent }
+    prefsRef.current = next
+    applyAccentToDOM(next)
+    setPrefs(next)
+    setAccentSelection(value => value + 1)
+  }, [])
+
   const value: ThemeContextValue = {
     ...prefs,
     motionOn,
@@ -145,7 +196,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     // (в localStorage по-прежнему пишется prefs, значение пользователя не теряется).
     gachapon: FEATURES.gachapon && prefs.gachapon,
     setTheme: (t) => update({ theme: t }),
-    setAccent: (a) => update({ accent: a }),
+    setAccent,
+    accentSelection,
+    setCustomAccent,
+    previewAccent,
     setLiquidBg: (v) => update({ liquidBg: v }),
     setGrain: (v) => update({ grain: v }),
     setScanlines: (v) => update({ scanlines: v }),

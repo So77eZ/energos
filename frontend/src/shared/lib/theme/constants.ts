@@ -1,6 +1,6 @@
 import type { Accent, Motion, ThemePrefs } from './types'
 
-export const ACCENT_MAP: Record<Accent, { rgb: string; hex: string }> = {
+export const ACCENT_MAP: Record<Exclude<Accent, 'custom'>, { rgb: string; hex: string }> = {
   cyan:   { rgb: '0,229,255',   hex: '#00e5ff' },
   pink:   { rgb: '255,46,136',  hex: '#ff2e88' },
   lime:   { rgb: '0,255,157',   hex: '#00ff9d' },
@@ -11,6 +11,7 @@ export const ACCENT_MAP: Record<Accent, { rgb: string; hex: string }> = {
 export const DEFAULT_PREFS: ThemePrefs = {
   theme: 'dark',
   accent: 'cyan',
+  customAccent: '#00E5FF',
   tintDark: 0,
   tintLight: 0,
   tintCards: false,

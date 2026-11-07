@@ -1,11 +1,10 @@
 'use client'
 
 import { FEATURES } from '@shared/config/features'
-import { ACCENT_MAP, useTheme, type Accent } from '@shared/lib/theme'
+import { useTheme } from '@shared/lib/theme'
 import { FONTS, useUserPreferences, type FontId } from '@shared/lib/user-preferences'
 import { Icons } from '@shared/ui/icons'
-
-const ACCENTS: Accent[] = ['cyan', 'pink', 'lime', 'amber', 'purple']
+import { AccentPicker } from './AccentPicker'
 
 export function TweaksBody({ compact = false }: { compact?: boolean }) {
   const theme = useTheme()
@@ -36,23 +35,7 @@ export function TweaksBody({ compact = false }: { compact?: boolean }) {
         </div>
       </section>
 
-      <section className="twk-section">
-        <span className="twk-section-title">Акцент</span>
-        <div className="twk-accents" role="radiogroup" aria-label="Цвет акцента">
-          {ACCENTS.map((a) => (
-            <button
-              key={a}
-              type="button"
-              role="radio"
-              aria-checked={theme.accent === a}
-              aria-label={a}
-              className={`twk-accent${theme.accent === a ? ' active' : ''}`}
-              style={{ ['--swatch' as string]: ACCENT_MAP[a].hex }}
-              onClick={() => theme.setAccent(a)}
-            />
-          ))}
-        </div>
-      </section>
+      <AccentPicker compact={compact} />
 
       {!compact && <AppearanceDetails />}
     </div>
