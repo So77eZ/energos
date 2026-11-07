@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ROUTES } from '@shared/config/routes'
 import { Icons } from '@shared/ui/icons'
-import { cleanDrinkName, DrinkImg, EnergyCan, TIER_COLORS } from '@entities/drink'
+import { cleanDrinkName, splitDrinkBrand, DrinkImg, EnergyCan, TIER_COLORS } from '@entities/drink'
 import type { EnrichedDrink, Tier } from '@entities/drink'
 
 interface HomeSideRailProps {
@@ -32,8 +32,11 @@ export function HomeSideRail({ drinks }: HomeSideRailProps) {
         <p className="rail-blurb">Топ-3 напитка по количеству отзывов в каталоге.</p>
         <div className="rail-list">
           {featured.length > 0 ? (
-            featured.map((d) => (
-              <Link key={d.id} href={ROUTES.reviews(d.id)} className="rail-row">
+            featured.map((d) => {
+              const name = cleanDrinkName(d.name)
+              const { brand, variant } = splitDrinkBrand(name)
+              return (
+              <Link key={d.id} href={ROUTES.reviews(d.id)} className="rail-row" title={name}>
                 <div className="rail-can">
                   {d.image_url ? (
                     <DrinkImg displayWidth={32} src={d.image_url} alt={d.name} loading="lazy" decoding="async" style={{ width: 32, height: 68, objectFit: 'contain' }} fallback={<EnergyCan can={d.can} w={32} h={68} />} />
@@ -42,15 +45,16 @@ export function HomeSideRail({ drinks }: HomeSideRailProps) {
                   )}
                 </div>
                 <div className="rail-info">
-                  <div className="rail-name">{cleanDrinkName(d.name)}</div>
+                  <div className="rail-brand">{brand}</div>
+                  <div className="rail-name">{variant}</div>
                   <div className="rail-meta">
                     <span className="rail-match">★ {d.rating?.toFixed(1) ?? '—'}</span>
                     <span className="rail-dim">{d.reviewCount} отзывов</span>
                   </div>
                 </div>
-                <Icons.arrow />
               </Link>
-            ))
+              )
+            })
           ) : (
             <p className="rail-blurb" style={{ opacity: 0.6 }}>Пока нет отзывов — добавьте первый!</p>
           )}
