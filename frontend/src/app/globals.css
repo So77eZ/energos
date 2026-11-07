@@ -1223,8 +1223,8 @@ body::before {
 
 .filter-pop {
   position: absolute; top: calc(100% + 8px); right: 0;
-  width: 320px; max-width: calc(100vw - 32px);
-  background: var(--bg-card); backdrop-filter: blur(14px);
+  width: 360px; max-width: calc(100vw - 32px);
+  background: var(--bg-base);
   border: 1px solid var(--line); border-radius: var(--r-md);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   z-index: 40;
@@ -1238,6 +1238,7 @@ body::before {
 }
 
 .filter-pop-head {
+  position: sticky; top: 0; z-index: 1; background: var(--bg-base); flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 14px; border-bottom: 1px solid var(--line);
 }
@@ -1255,14 +1256,19 @@ body::before {
 .filt-section:last-of-type { border-bottom: 0; }
 .filt-lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.2px; color: var(--txt-dim); }
 .filt-row { display: flex; align-items: center; justify-content: space-between; }
-.filt-taste-note { color: var(--txt-dim); font-size: 10px; line-height: 1.5; }
-.filt-taste-grid { display: flex; flex-direction: column; gap: 8px; }
-.filt-taste-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.filt-taste-label { font-size: 11px; color: var(--txt); }
-.filt-taste-bounds { display: flex; gap: 8px; flex-shrink: 0; }
-.filt-taste-bounds label { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--txt-dim); }
-.filt-taste-bounds select { min-width: 44px; min-height: 36px; padding: 4px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--bg-base); color: var(--txt); }
-.filt-taste-bounds select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.filt-taste-note { color: var(--txt-dim); font-size: 11px; line-height: 1.5; }
+.filt-taste-grid { display: flex; flex-direction: column; gap: 18px; }
+.filt-taste-row, .filt-taste-bound { min-width: 0; padding: 0; margin: 0; border: 0; }
+.filt-taste-label { padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--txt); }
+.filt-taste-bounds {
+  display: flex; flex-direction: column; gap: 8px;
+  --rate-color: var(--accent); --rate-fill: var(--accent-fill); --rate-ink: var(--on-accent);
+}
+.filt-taste-bound legend { padding: 0; margin-bottom: 4px; font-size: 11px; color: var(--txt-dim); }
+.filt-taste-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.filt-score.rate-btn { color: var(--txt-dim); }
+.filt-score.rate-btn.on { color: var(--on-accent); }
+.filt-score .rate-btn-num { font-size: 16px; }
 .filt-range-val { font-family: var(--font-mono); font-size: 10.5px; color: var(--accent); letter-spacing: 0.5px; }
 
 /* ── Tier-chip row ── */
@@ -1357,7 +1363,7 @@ body::before {
 .filt-toggle-lbl { font-size: 12.5px; color: var(--txt); }
 
 /* ── Reset foot ── */
-.filter-pop-foot { padding: 10px 14px; border-top: 1px solid var(--line); }
+.filter-pop-foot { position: sticky; bottom: 0; z-index: 1; background: var(--bg-base); padding: 10px 14px; border-top: 1px solid var(--line); flex-shrink: 0; }
 .filt-reset {
   width: 100%; padding: 8px;
   background: transparent; border: 1px solid rgba(255, 46, 136, 0.35);
@@ -2948,6 +2954,7 @@ body::before {
   transition: transform .15s, box-shadow .15s, border-color .15s;
 }
 .twk-fab { bottom: 16px; }
+.app:has(.filter-pop) :is(.twk-fab, .up-fab) { visibility: hidden; }
 /* Стрелка "наверх" сидит над TweaksPanel-fab'ом (44 + 16 + 12 gap = 72px). */
 .up-fab { bottom: 72px; }
 /* Скрыта по умолчанию; .is-visible проявляет fade+scale (заменяет framer-motion).

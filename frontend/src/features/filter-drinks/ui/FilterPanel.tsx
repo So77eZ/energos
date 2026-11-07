@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useCatalogSearch, type FilterAnchor } from '@shared/lib/catalog-search'
 import { TIER_COLORS } from '@entities/drink'
 import type { Tier } from '@entities/drink'
-import { METRIC_KEYS, METRIC_LABELS } from '@entities/review'
+import { METRIC_KEYS, METRIC_LABELS, MetricShapes } from '@entities/review'
 import { Icons } from '@shared/ui/icons'
 import { changeTasteRange, countTasteFilters } from '../model/taste-filters'
 
@@ -32,6 +32,7 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
   } = useCatalogSearch()
 
   const popRef = useRef<HTMLDivElement | null>(null)
+  const scoreGroupId = useId()
   const shown = filterOpen && filterAnchor === anchor
   const [placement, setPlacement] = useState<{ above: boolean; height: number } | null>(null)
 
@@ -41,7 +42,9 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
       const bounds = (anchorRef?.current ?? popRef.current?.parentElement)?.getBoundingClientRect()
       if (!bounds) return
       const safeTop = Math.max(8, document.querySelector('.hdr')?.getBoundingClientRect().bottom ?? 8) + 8
-      const below = window.innerHeight - bounds.bottom - 16
+      const mobileBar = document.querySelector('.mob-tabs')?.getBoundingClientRect()
+      const safeBottom = mobileBar?.height ? Math.min(window.innerHeight, mobileBar.top) : window.innerHeight
+      const below = safeBottom - bounds.bottom - 16
       const above = bounds.top - safeTop - 8
       const openAbove = below < 260 && above > below
       setPlacement({ above: openAbove, height: Math.max(0, openAbove ? above : below) })
@@ -190,32 +193,35 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
         <div className="filt-taste-grid">
           {METRIC_KEYS.map((key) => {
             const range = tasteFilters[key] ?? [1, 5]
+            const Icon = MetricShapes[key]
             return (
-              <div className="filt-taste-row" key={key}>
-                <span className="filt-taste-label">{METRIC_LABELS[key]}</span>
+              <fieldset className="filt-taste-row" key={key}>
+                <legend className="filt-taste-label">{METRIC_LABELS[key]}</legend>
                 <div className="filt-taste-bounds">
-                  <label>
-                    От
-                    <select
-                      aria-label={`${METRIC_LABELS[key]}: минимум`}
-                      value={range[0]}
-                      onChange={(e) => setTasteFilters(changeTasteRange(tasteFilters, key, 0, Number(e.target.value)))}
-                    >
-                      {[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}
-                    </select>
-                  </label>
-                  <label>
-                    До
-                    <select
-                      aria-label={`${METRIC_LABELS[key]}: максимум`}
-                      value={range[1]}
-                      onChange={(e) => setTasteFilters(changeTasteRange(tasteFilters, key, 1, Number(e.target.value)))}
-                    >
-                      {[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}
-                    </select>
-                  </label>
+                  {([0, 1] as const).map((bound) => (
+                    <fieldset className="filt-taste-bound" key={bound}>
+                      <legend>{bound === 0 ? 'От' : 'До'}</legend>
+                      <div className="filt-taste-options">
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <label key={value} className={`rate-btn filt-score${range[bound] === value ? ' on' : ''}`}>
+                            <input
+                              className="rate-input"
+                              type="radio"
+                              name={`${scoreGroupId}-${key}-${bound}`}
+                              value={value}
+                              checked={range[bound] === value}
+                              onChange={() => setTasteFilters(changeTasteRange(tasteFilters, key, bound, value))}
+                              aria-label={`${METRIC_LABELS[key]}: ${bound === 0 ? 'минимум' : 'максимум'} ${value}`}
+                            />
+                            <span className="rate-btn-num">{value}</span>
+                            <span className="rate-btn-icon" aria-hidden="true"><Icon /></span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  ))}
                 </div>
-              </div>
+              </fieldset>
             )
           })}
         </div>
