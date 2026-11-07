@@ -27,7 +27,7 @@ test('светлые метки, бренды и контакт в футере 
   await page.locator('.card').first().scrollIntoViewIfNeeded()
   await page.screenshot({ path: testInfo.outputPath('catalog-cards-light.png') })
   await page.goto('/drinks?id=8')
-  await expect(page.locator('.drink-brand')).toHaveCSS('font-size', '14px')
+  await expect(page.locator('.drink-brand:visible')).toHaveCSS('font-size', '14px')
   await page.screenshot({ path: testInfo.outputPath('drink-brand.png') })
   await page.setViewportSize({ width: 320, height: 800 })
   await contact.scrollIntoViewIfNeeded()
