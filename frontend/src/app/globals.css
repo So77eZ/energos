@@ -2196,31 +2196,30 @@ body::before {
 .prof-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 .prof-section { display: flex; flex-direction: column; gap: 14px; }
 
-/* Вкладка «Оформление» — TweaksBody слева, текстовый info-блок справа.
-   На узких экранах схлопывается в одну колонку. */
+/* Заголовок на всю ширину, палитра и остальные настройки — в двух колонках. */
 .prof-appearance {
-  display: grid; grid-template-columns: minmax(260px, 360px) 1fr; gap: 24px;
+  display: flex; flex-direction: column; gap: 24px;
   background: var(--bg-card); border: 1px solid var(--line);
   border-radius: var(--r-md); padding: 20px;
 }
 .prof-appearance-panel { min-width: 0; }
-.prof-appearance:has(.accent-editor) { grid-template-columns: minmax(0, 660px) minmax(180px, 1fr); }
 /* TweaksBody внутри профиля — без своих padding'ов (есть у .prof-appearance). */
 /* overflow: visible — у .twk-body overflow-y:auto (для плавающей панели), а он режет и по
    горизонтали: кольцо и свечение выбранного цвета обрезались по краю. Прокрутка тут не нужна. */
 .prof-appearance-panel .twk-body { padding: 6px; overflow: visible; }
-.prof-appearance-aside { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.prof-appearance-head { display: flex; flex-direction: column; gap: 10px; }
+.prof-appearance-panel .twk-body-full { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.twk-appearance-primary, .twk-appearance-details { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .prof-appearance-title {
   font-family: var(--font-title); font-weight: 600; font-size: 22px;
   color: var(--txt); margin: 0;
 }
 .prof-appearance-blurb {
   font-size: 13px; color: var(--txt-dim); line-height: 1.6; margin: 0;
-  max-width: 56ch;
 }
 @media (max-width: 800px) {
-  .prof-appearance { grid-template-columns: 1fr; padding: 14px; gap: 14px; }
-  .prof-appearance:has(.accent-editor) { grid-template-columns: 1fr; }
+  .prof-appearance { padding: 14px; gap: 14px; }
+  .prof-appearance-panel .twk-body-full { grid-template-columns: 1fr; gap: 24px; }
 }
 
 .prof-rev-list { display: flex; flex-direction: column; gap: 8px; }
@@ -3078,6 +3077,7 @@ body::before {
 
 /* Accent color picker */
 .twk-accents { display: flex; gap: 8px; max-width: 344px; }
+.twk-body-full .twk-accents { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 408px; }
 .twk-accent {
   flex: 1; aspect-ratio: 1;
   border-radius: 50%; cursor: pointer;
@@ -3093,13 +3093,13 @@ body::before {
   box-shadow: 0 0 0 2px var(--bg-card), 0 0 16px var(--swatch);
 }
 
-.accent-custom-trigger, .accent-reset, .accent-editor-actions button {
+.accent-reset, .accent-editor-actions button {
   font: inherit; font-size: 12px; color: var(--txt); cursor: pointer;
   border: 1px solid var(--line-strong); border-radius: var(--r-sm);
   background: var(--bg-input); padding: 10px 12px; min-height: 44px;
 }
-.accent-custom-trigger { display: flex; align-items: center; gap: 10px; text-align: left; }
-.accent-custom-trigger > span:nth-child(2) { flex: 1; }
+.accent-custom-trigger { display: grid; place-items: center; padding: 0; font-size: 12px; color: var(--txt); background: conic-gradient(#ff2e88, #fbbf24, #00ff9d, #00e5ff, #4d96ff, #c084fc, #ff2e88); }
+.accent-custom-trigger > span { padding: 3px 6px; border-radius: 999px; background: var(--bg-deep-base); }
 .accent-custom-swatch { display: inline-block; width: 22px; height: 22px; flex-shrink: 0; border: 1px solid var(--txt-dim); border-radius: 4px; }
 .accent-current { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--txt); }
 .accent-reset { border: 0; padding: 4px 0; background: transparent; text-align: left; text-decoration: underline; color: var(--txt-dim); }
@@ -3139,6 +3139,9 @@ body::before {
 @media (max-width: 580px) {
   .accent-editor { grid-template-columns: 1fr; }
   .accent-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+}
+@media (max-width: 480px) {
+  .twk-body-full .twk-accents { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 220px; }
 }
 
 /* Font select */

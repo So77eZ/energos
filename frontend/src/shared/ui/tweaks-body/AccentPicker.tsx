@@ -26,14 +26,14 @@ export function AccentPicker({ compact }: { compact: boolean }) {
             onClick={() => { setEditing(false); theme.setAccent(accent) }}
           >{theme.accent === accent && <span aria-hidden="true">✓</span>}</button>
         ))}
+        {!compact && (
+          <button ref={trigger} type="button" className={`twk-accent accent-custom-trigger${theme.accent === 'custom' ? ' active' : ''}`} aria-label="Свой цвет" aria-expanded={editing} aria-pressed={theme.accent === 'custom'} onClick={() => editing ? close() : setEditing(true)}>
+            <span>Свой</span>
+          </button>
+        )}
       </div>
       {!compact && (
         <>
-          <button ref={trigger} type="button" className="accent-custom-trigger" aria-label="Свой цвет" aria-expanded={editing} onClick={() => editing ? close() : setEditing(true)}>
-            <span className="accent-custom-swatch" style={{ background: theme.customAccent }} aria-hidden="true" />
-            <span>Свой цвет{theme.accent === 'custom' ? ` · ${theme.customAccent}` : ''}</span>
-            {theme.accent === 'custom' && <span aria-hidden="true">✓</span>}
-          </button>
           {editing && <AccentEditor onClose={close} />}
           <button type="button" className="accent-reset" aria-label="Сбросить акцент" onClick={() => { setEditing(false); theme.setAccent('cyan') }}>Вернуть стандартный акцент</button>
         </>

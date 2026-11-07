@@ -10,7 +10,8 @@ export function TweaksBody({ compact = false }: { compact?: boolean }) {
   const theme = useTheme()
 
   return (
-    <div className="twk-body">
+    <div className={`twk-body${compact ? '' : ' twk-body-full'}`}>
+      <div className="twk-appearance-primary">
       <section className="twk-section">
         <span className="twk-section-title">Тема</span>
         <div className="twk-seg" role="radiogroup" aria-label="Тема">
@@ -36,8 +37,8 @@ export function TweaksBody({ compact = false }: { compact?: boolean }) {
       </section>
 
       <AccentPicker compact={compact} />
-
-      {!compact && <AppearanceDetails />}
+      </div>
+      {!compact && <div className="twk-appearance-details"><AppearanceDetails /></div>}
     </div>
   )
 }
