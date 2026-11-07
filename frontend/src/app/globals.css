@@ -995,6 +995,7 @@ body::before {
   text-decoration: none;
 }
 .foot-link:hover { color: var(--accent); }
+.foot-contact { color: var(--txt); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
 
 .section-head {
   display: flex; justify-content: space-between; align-items: baseline;
@@ -1431,7 +1432,7 @@ body::before {
   display: flex; align-items: center; gap: 6px;
   white-space: nowrap; overflow: hidden;
 }
-.card-brand-name { color: var(--accent); }
+.card-brand-name { color: var(--accent); font-size: 12.5px; font-weight: 700; letter-spacing: 1px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .card-brand-sep { opacity: 0.4; }
 .card-brand-code { color: var(--txt-quiet); white-space: nowrap; }
 .card-name {
@@ -1655,6 +1656,17 @@ body::before {
 .meta-pink { color: var(--c-pink); }
 .meta-cyan { color: var(--c-cyan); }
 .meta-lime { color: var(--c-green); }
+/* Светлые неоновые цвета остаются у графиков; текстовые метки темнее фона. */
+:root[data-theme="light"] :is(.rail-match, .card-rate) { color: #775000; }
+:root[data-theme="light"] .card-rate svg { fill: currentColor; }
+:root[data-theme="light"] :is(.tag-cyan, .meta-cyan) { color: #006276; }
+:root[data-theme="light"] .tag-cyan { border-color: #007a91; background: #dff6fa; }
+:root[data-theme="light"] :is(.tag-lime, .micro-lime, .meta-lime) { color: #006044; }
+:root[data-theme="light"] :is(.tag-lime, .micro-lime) { border-color: #00845c; background: #def8ed; }
+:root[data-theme="light"] :is(.tag-pink, .meta-pink, .card-price) { color: #a21558; }
+:root[data-theme="light"] .tag-pink { border-color: #a21558; background: #ffe8f1; }
+:root[data-theme="light"] .micro-amber { color: #704300; border-color: #9a5e00; background: #fff3c4; }
+:root[data-theme="light"] .card-brand-name { color: var(--txt); }
 .meta-of { font-size: 11px; color: var(--txt-dim); font-weight: 500; }
 
 .hero-cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -1783,7 +1795,7 @@ body::before {
 }
 .drink-hero-info { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .drink-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.drink-brand { font-family: var(--font-mono); font-size: 11.5px; color: var(--txt-dim); letter-spacing: 3px; }
+.drink-brand { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--txt); letter-spacing: 2px; line-height: 1.35; }
 .drink-name {
   font-family: var(--font-title); font-weight: 700;
   font-size: 36px; line-height: 1.05; letter-spacing: -0.5px;
