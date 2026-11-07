@@ -9,7 +9,7 @@ services:
     volumes:
       - ./data/postgres:/var/lib/postgresql
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:15432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
@@ -48,7 +48,14 @@ services:
       - database
     env_file:
       - .env
-
+    logging:
+      driver: splunk
+      options:
+        splunk-url: http://127.0.0.1:9428
+        splunk-token: any-token
+        splunk-format: json
+        splunk-verify-connection: "false"
+    
   server:
     build:
       context: ./server
@@ -95,6 +102,20 @@ services:
       - ENABLE_FAIL2BAN=1
     cap_add:
       - NET_ADMIN
+    networks:
+      - backend
+
+  victoria-logs:
+    image: docker.io/victoriametrics/victoria-logs:v1.53.0
+    restart: unless-stopped
+    command:
+      - "--storageDataPath=/victoria-logs-data"
+      - "--splunk.msgField=event.line.message,event.line"
+      - "--splunk.streamFields=event.line.service,event.line.environment,event.tag"
+    ports:
+      - "9428:9428"
+    volumes:
+      - ./docker-data/victoria-logs/data:/victoria-logs-data
     networks:
       - backend
 
