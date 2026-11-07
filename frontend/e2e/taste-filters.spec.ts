@@ -22,7 +22,33 @@ test('taste ranges survive reload and reset without header hydration errors', as
   await expect(panel.getByLabel('Сладость: минимум')).toHaveValue('3')
   await panel.getByRole('button', { name: 'Сбросить все' }).click()
   await expect(page).not.toHaveURL(/taste_sweetness/)
+  await expect(panel).toBeVisible()
+  await expect(panel.getByLabel('Сладость: минимум')).toHaveValue('1')
+  await expect(panel.getByLabel('Сладость: максимум')).toHaveValue('5')
   expect(errors).toEqual([])
+})
+
+test('reset keeps the filters open; outside click and Escape still close them', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  const trigger = page.locator('.sortbar .filter-btn:visible')
+  const panel = page.locator('.filter-pop:visible')
+  await trigger.click()
+  await panel.getByRole('button', { name: 'A', exact: true }).click()
+  await panel.getByText('Без сахара', { exact: true }).click()
+  await panel.getByRole('button', { name: 'Сбросить все' }).click()
+  await expect(panel).toBeVisible()
+  await expect(panel.getByRole('button', { name: 'A', exact: true })).toHaveAttribute('aria-pressed', 'false')
+  await expect(panel.getByLabel('Без сахара')).not.toBeChecked()
+  await expect(panel.getByRole('button', { name: 'Сбросить все' })).toHaveCount(0)
+
+  await page.locator('.filter-pop-title:visible').click()
+  await expect(panel).toBeVisible()
+  await page.locator('.logo:visible').click()
+  await expect(panel).toHaveCount(0)
+  await trigger.click()
+  await expect(panel).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(panel).toHaveCount(0)
 })
 
 test('expanded filters fit the mobile viewport above and below the trigger', async ({ page }) => {

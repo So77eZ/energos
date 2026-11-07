@@ -63,7 +63,8 @@ export function FilterPanel({ anchor, anchorRef }: FilterPanelProps) {
     }
     function onClick(e: MouseEvent) {
       const target = e.target as Node
-      if (popRef.current?.contains(target)) return
+      // Сброс удаляет свою кнопку до всплытия click; путь события сохраняет popover.
+      if (popRef.current && e.composedPath().includes(popRef.current)) return
       if (anchorRef?.current?.contains(target)) return
       setFilterOpen(false)
     }
