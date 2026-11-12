@@ -50,8 +50,9 @@ async def upload_energy_drink_image(
     image: UploadFile = File(...),
     energy_drink_service: EnergyDrinkService = Depends(get_energy_drink_service),
     current_user: User = Depends(get_superuser),
-) -> EnergyDrinkReadSchema:
-    return await energy_drink_service.update_image(energy_drink_id, image)
+) -> Response:
+    image_data = await energy_drink_service.update_image(energy_drink_id, image)
+    return Response(content=image_data.data, media_type=image_data.content_type)
 
 
 @router.delete("/{energy_drink_id}/image")

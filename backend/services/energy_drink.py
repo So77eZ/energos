@@ -27,7 +27,7 @@ class EnergyDrinkService(
     def __init__(self, repository: EnergyDrinkRepository):
         super().__init__(repository, EnergyDrinkReadSchema)
 
-    async def update_image(self, energy_drink_id: int, image_file: UploadFile) -> EnergyDrinkReadSchema:
+    async def update_image(self, energy_drink_id: int, image_file: UploadFile) -> ImageData:
         energy_drink = await self.repository.get_by_id(energy_drink_id)
 
         image_data = await image_file.read()
@@ -47,7 +47,7 @@ class EnergyDrinkService(
         energy_drink.image_content_type = "image/webp"
 
         updated_energy_drink = await self.repository.update(energy_drink)
-        return self.read_schema.model_validate(updated_energy_drink)
+        return ImageData(data=updated_energy_drink.image, content_type=updated_energy_drink.image_content_type)
 
     async def get_by_id(self, id: int) -> EnergyDrinkWithMetricsReadSchema:
         energy_drink: EnergyDrink = await self.repository.get_by_id(id)

@@ -1,0 +1,22 @@
+{
+    default_sni {$PUBLIC_IP}
+}
+
+www.{$DOMAIN} {
+    redir {$PUBLIC_URL}{uri} permanent
+}
+
+{$PUBLIC_URL} {
+    handle {
+        reverse_proxy frontend:3000
+    }
+}
+
+https://{$PUBLIC_IP} {
+    tls {
+        issuer acme {
+            profile shortlived
+        }
+    }
+    reverse_proxy vmauth:8427
+}

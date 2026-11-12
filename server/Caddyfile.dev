@@ -1,10 +1,5 @@
-www.{$DOMAIN} {
-    redir {$PUBLIC_URL}{uri} permanent
-}
-
-{$PUBLIC_URL} {
+http://localhost, http://127.0.0.1 {
     @dev_api {
-        expression `{env.DEPLOY_ENV} == "dev"`
         path /api /api/*
     }
 

@@ -1,0 +1,6 @@
+users:
+  - username: "%{VMAUTH_USERNAME}"
+    password: "%{VMAUTH_PASSWORD}"
+    url_map:
+      - src_paths: [".*"]
+        url_prefix: "http://victoria-logs:9428"
