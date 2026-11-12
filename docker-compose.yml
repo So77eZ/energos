@@ -134,7 +134,7 @@ services:
     image: victoriametrics/vmauth:latest
     restart: unless-stopped
     ports:
-      - "8427:8427"
+      - "127.0.0.1:8427:8427"
     volumes:
       - ./vmauth.yml:/etc/vmauth.yml:ro
     command:
