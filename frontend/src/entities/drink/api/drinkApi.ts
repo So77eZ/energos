@@ -1,4 +1,4 @@
-import { httpRequest, rawRequest, bearerHeaders, API_V1 } from '@shared/api/http'
+import { httpRequest, rawRequest, bearerHeaders, assertResponseOk, parseApiError, ApiError, API_V1 } from '@shared/api/http'
 import type { ReviewMetrics } from '@entities/review/@x/drink'
 import type { Drink, DrinkCreate, DrinkUpdate, DrinkStats } from '../model/types'
 import { toUtcIso } from '../lib/api-date'
@@ -6,7 +6,7 @@ import { toUtcIso } from '../lib/api-date'
 const BASE = `${API_V1}/energy-drinks`
 
 // Что отдаёт бэк: EnergyDrinkWithMetricsReadSchema (список) / EnergyDrinkReadSchema (create,
-// update, image — без метрик). image_url в API нет — достраиваем в toDrink;
+// update — без метрик). image_url в API нет — достраиваем в toDrink;
 // даты приходят с часовым поясом (`…Z`), но `toUtcIso` страхует от дат без зоны.
 interface ApiDrink {
   id: number
@@ -101,14 +101,21 @@ export const drinkApi = {
       headers: bearerHeaders(token),
     }),
 
-  uploadImage: async (id: number, file: File, token: string): Promise<Drink> => {
+  uploadImage: async (id: number, file: File, token: string): Promise<void> => {
     const form = new FormData()
     form.append('image', file)
-    return toDrink(await httpRequest<ApiDrink>(`${BASE}/${id}/image`, {
+    const response = await rawRequest(`${BASE}/${id}/image`, {
       method: 'POST',
       headers: bearerHeaders(token),
       body: form,
-    }))
+    })
+    assertResponseOk(response)
+    if (!response.ok) {
+      const { code, message } = await parseApiError(response)
+      throw new ApiError(response.status, message, code)
+    }
+    // API возвращает WebP; вызывающим формам нужен только успешный статус.
+    await response.body?.cancel()
   },
 
   removeImage: (id: number, token: string) =>

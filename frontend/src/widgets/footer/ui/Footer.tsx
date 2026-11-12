@@ -17,6 +17,7 @@ export function Footer() {
           <Icons.bolt w={14} /> ENERGOS
         </span>
         <span className="foot-dim">/ платформа рейтинга энергетиков</span>
+        <a className="foot-link foot-contact" href="mailto:contact@energos.fun">contact@energos.fun</a>
       </div>
 
       <div className="foot-mid">

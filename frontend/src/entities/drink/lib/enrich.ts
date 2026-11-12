@@ -3,6 +3,7 @@ import type { ReviewMetrics } from '@entities/review/@x/drink'
 import type { Tier } from '@shared/model/tier'
 import type { Drink } from '../model/types'
 import type { CanSpec } from '../ui/EnergyCan'
+import { toUtcIso } from './api-date'
 
 export type { Tier }
 
@@ -29,7 +30,7 @@ const METRIC_RGB: ReadonlyArray<[number, number, number]> = [
 ]
 
 const DEFAULT_BLEND_RGB: [number, number, number] = [77, 150, 255]
-const NEW_WINDOW_DAYS = 14
+const NEW_WINDOW_DAYS = 7
 
 export function blendMetricRGB(metrics: ReviewMetrics | null): string {
   if (!metrics) return DEFAULT_BLEND_RGB.join(',')
@@ -56,9 +57,10 @@ export function tierFromRating(rating: number | null): Tier | null {
 
 export function isFreshDrink(createdAt: string | null, windowDays = NEW_WINDOW_DAYS): boolean {
   if (!createdAt) return false
-  const created = Date.parse(createdAt)
+  const created = Date.parse(toUtcIso(createdAt)!)
   if (!Number.isFinite(created)) return false
-  return Date.now() - created < windowDays * 24 * 60 * 60 * 1000
+  const age = Date.now() - created
+  return age >= 0 && age < windowDays * 24 * 60 * 60 * 1000
 }
 
 function canFromBlend(blend: string, drink: Drink): CanSpec {

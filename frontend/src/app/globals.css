@@ -521,11 +521,10 @@ select option { background-color: var(--bg-base); color: var(--txt); }
   --txt-quiet:  #5c5c70;
   --line:       rgba(255,255,255,0.08);
   --line-strong:rgba(255,255,255,0.14);
-  /* Ink на filled-accent кнопках. Тёмный в ОБЕИХ темах: акценты (cyan/green/amber…)
-     светлые → тёмный текст читается всегда. Раньше использовался --bg-deep, но в
-     light он светлый → белое-на-светло-cyan ≈1.4:1 (primary-CTA нечитаем). Дарк не
-     трогаем — там тоже тёмный ink. */
+  /* Presets and fixed bright metric colors use dark ink. Custom accent ink is
+     calculated from its actual fill and must not change metric/avatar labels. */
   --on-accent:  #0a0a12;
+  --on-bright: #0a0a12;
 
   --radar-grid: rgba(255,255,255,0.07);
   --shadow-card:0 8px 28px rgba(0,0,0,0.5);
@@ -556,7 +555,8 @@ select option { background-color: var(--bg-base); color: var(--txt); }
 :root {
   /* Accent (overridden at runtime by ThemeProvider) */
   --accent-source: #00e5ff;
-  --accent: var(--accent-source);
+  --accent: var(--accent-custom-foreground, var(--accent-source));
+  --accent-fill: var(--accent);
   --accent-rgb: 0,229,255;
   --accent-tint: 0%;
   --bg-deep: var(--bg-deep-base);
@@ -600,16 +600,16 @@ select option { background-color: var(--bg-base); color: var(--txt); }
 
 @supports (color: color-mix(in oklab, black, white)) {
   :root {
-    --bg-deep: color-mix(in oklab, var(--accent) var(--accent-tint), var(--bg-deep-base));
-    --bg-base: color-mix(in oklab, var(--accent) var(--accent-tint), var(--bg-page-base));
+    --bg-deep: color-mix(in oklab, var(--accent-fill) var(--accent-tint), var(--bg-deep-base));
+    --bg-base: color-mix(in oklab, var(--accent-fill) var(--accent-tint), var(--bg-page-base));
   }
 }
 
 @supports (color: oklch(from red l c h)) and (color: color-mix(in oklab, black, white)) {
   :root[data-tint-cards] {
-    --bg-card: color-mix(in oklab, oklch(from var(--accent) l c h / var(--bg-card-alpha)) calc(var(--accent-tint) / 2), var(--bg-card-base));
+    --bg-card: color-mix(in oklab, oklch(from var(--accent-fill) l c h / var(--bg-card-alpha)) calc(var(--accent-tint) / 2), var(--bg-card-base));
   }
-  :root[data-theme="light"][data-muted-light-accent] {
+  :root:not([data-custom-accent])[data-theme="light"][data-muted-light-accent] {
     --accent: oklch(from var(--accent-source) min(l, 0.72) min(c, 0.12) h);
   }
 }
@@ -887,7 +887,7 @@ body::before {
 .nav-cta {
   margin-left: 6px;
   padding: 8px 16px; border-radius: var(--r-sm);
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   font-weight: 700; font-size: 11.5px; letter-spacing: 0.5px;
   text-transform: uppercase;
   box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.35);
@@ -905,7 +905,7 @@ body::before {
 .nav-avatar-letter {
   width: 26px; height: 26px; border-radius: 5px;
   display: grid; place-items: center;
-  color: var(--on-accent); font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  color: var(--on-bright); font-family: var(--font-display); font-weight: 700; font-size: 12px;
   box-shadow: 0 0 10px currentColor;
 }
 .nav-avatar-meta { display: none; flex-direction: column; line-height: 1.15; }
@@ -995,6 +995,7 @@ body::before {
   text-decoration: none;
 }
 .foot-link:hover { color: var(--accent); }
+.foot-contact { color: var(--txt); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
 
 .section-head {
   display: flex; justify-content: space-between; align-items: baseline;
@@ -1059,7 +1060,7 @@ body::before {
 .cta-primary {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 11px 18px;
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   border-radius: var(--r-sm);
   font-weight: 700; font-size: 12.5px; letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1211,7 +1212,7 @@ body::before {
 .filter-count {
   font-family: var(--font-display); font-weight: 700;
   font-size: 10px; padding: 2px 6px; border-radius: 999px;
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
 }
 
 /* ─── Filter popover (раскрывается из filter-btn) ──────────────── */
@@ -1222,8 +1223,8 @@ body::before {
 
 .filter-pop {
   position: absolute; top: calc(100% + 8px); right: 0;
-  width: 320px; max-width: calc(100vw - 32px);
-  background: var(--bg-card); backdrop-filter: blur(14px);
+  width: 360px; max-width: calc(100vw - 32px);
+  background: var(--bg-base);
   border: 1px solid var(--line); border-radius: var(--r-md);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
   z-index: 40;
@@ -1237,6 +1238,7 @@ body::before {
 }
 
 .filter-pop-head {
+  position: sticky; top: 0; z-index: 1; background: var(--bg-base); flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 14px; border-bottom: 1px solid var(--line);
 }
@@ -1254,14 +1256,19 @@ body::before {
 .filt-section:last-of-type { border-bottom: 0; }
 .filt-lbl { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.2px; color: var(--txt-dim); }
 .filt-row { display: flex; align-items: center; justify-content: space-between; }
-.filt-taste-note { color: var(--txt-dim); font-size: 10px; line-height: 1.5; }
-.filt-taste-grid { display: flex; flex-direction: column; gap: 8px; }
-.filt-taste-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.filt-taste-label { font-size: 11px; color: var(--txt); }
-.filt-taste-bounds { display: flex; gap: 8px; flex-shrink: 0; }
-.filt-taste-bounds label { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--txt-dim); }
-.filt-taste-bounds select { min-width: 44px; min-height: 36px; padding: 4px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--bg-base); color: var(--txt); }
-.filt-taste-bounds select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.filt-taste-note { color: var(--txt-dim); font-size: 11px; line-height: 1.5; }
+.filt-taste-grid { display: flex; flex-direction: column; gap: 18px; }
+.filt-taste-row, .filt-taste-bound { min-width: 0; padding: 0; margin: 0; border: 0; }
+.filt-taste-label { padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--txt); }
+.filt-taste-bounds {
+  display: flex; flex-direction: column; gap: 8px;
+  --rate-color: var(--accent); --rate-fill: var(--accent-fill); --rate-ink: var(--on-accent);
+}
+.filt-taste-bound legend { padding: 0; margin-bottom: 4px; font-size: 11px; color: var(--txt-dim); }
+.filt-taste-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.filt-score.rate-btn { color: var(--txt-dim); }
+.filt-score.rate-btn.on { color: var(--on-accent); }
+.filt-score .rate-btn-num { font-size: 16px; }
 .filt-range-val { font-family: var(--font-mono); font-size: 10.5px; color: var(--accent); letter-spacing: 0.5px; }
 
 /* ── Tier-chip row ── */
@@ -1356,7 +1363,7 @@ body::before {
 .filt-toggle-lbl { font-size: 12.5px; color: var(--txt); }
 
 /* ── Reset foot ── */
-.filter-pop-foot { padding: 10px 14px; border-top: 1px solid var(--line); }
+.filter-pop-foot { position: sticky; bottom: 0; z-index: 1; background: var(--bg-base); padding: 10px 14px; border-top: 1px solid var(--line); flex-shrink: 0; }
 .filt-reset {
   width: 100%; padding: 8px;
   background: transparent; border: 1px solid rgba(255, 46, 136, 0.35);
@@ -1431,7 +1438,7 @@ body::before {
   display: flex; align-items: center; gap: 6px;
   white-space: nowrap; overflow: hidden;
 }
-.card-brand-name { color: var(--accent); }
+.card-brand-name { color: var(--accent); font-size: 12.5px; font-weight: 700; letter-spacing: 1px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .card-brand-sep { opacity: 0.4; }
 .card-brand-code { color: var(--txt-quiet); white-space: nowrap; }
 .card-name {
@@ -1628,8 +1635,8 @@ body::before {
 .hero-info { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .hero-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .hero-brand {
-  font-family: var(--font-mono); font-size: 11.5px;
-  color: var(--txt-dim); letter-spacing: 3px;
+  font-family: var(--font-mono); font-size: 16px; font-weight: 700;
+  color: var(--txt); letter-spacing: 1.5px; line-height: 1.3;
 }
 .hero-name {
   font-family: var(--font-title); font-weight: 700;
@@ -1655,6 +1662,17 @@ body::before {
 .meta-pink { color: var(--c-pink); }
 .meta-cyan { color: var(--c-cyan); }
 .meta-lime { color: var(--c-green); }
+/* Светлые неоновые цвета остаются у графиков; текстовые метки темнее фона. */
+:root[data-theme="light"] :is(.rail-match, .card-rate) { color: #775000; }
+:root[data-theme="light"] .card-rate svg { fill: currentColor; }
+:root[data-theme="light"] :is(.tag-cyan, .meta-cyan) { color: #006276; }
+:root[data-theme="light"] .tag-cyan { border-color: #007a91; background: #dff6fa; }
+:root[data-theme="light"] :is(.tag-lime, .micro-lime, .meta-lime) { color: #006044; }
+:root[data-theme="light"] :is(.tag-lime, .micro-lime) { border-color: #00845c; background: #def8ed; }
+:root[data-theme="light"] :is(.tag-pink, .meta-pink, .card-price) { color: #a21558; }
+:root[data-theme="light"] .tag-pink { border-color: #a21558; background: #ffe8f1; }
+:root[data-theme="light"] .micro-amber { color: #704300; border-color: #9a5e00; background: #fff3c4; }
+:root[data-theme="light"] .card-brand-name { color: var(--txt); }
 .meta-of { font-size: 11px; color: var(--txt-dim); font-weight: 500; }
 
 .hero-cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -1694,23 +1712,23 @@ body::before {
 .rail-blurb { font-size: 11.5px; color: var(--txt-dim); line-height: 1.5; }
 .rail-list { display: flex; flex-direction: column; gap: 8px; }
 .rail-row {
-  display: grid; grid-template-columns: 32px 1fr auto;
+  display: grid; grid-template-columns: 32px minmax(0, 1fr);
   gap: 10px; align-items: center;
-  padding: 6px 8px; border-radius: var(--r-sm);
+  padding: 8px 0; border-radius: var(--r-sm);
   cursor: pointer;
   text-decoration: none; color: inherit;
 }
 .rail-row:hover { background: var(--bg-input); }
-.rail-row > svg:last-child { color: var(--txt-quiet); }
 .rail-can { display: flex; }
-.rail-info { min-width: 0; }
+.rail-info { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.rail-brand { font-size: 12.5px; font-weight: 700; color: var(--txt); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rail-name {
-  font-size: 12px; font-weight: 600; color: var(--txt);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 12.5px; font-weight: 500; color: var(--txt); line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.rail-meta { display: flex; gap: 8px; font-size: 10px; color: var(--txt-dim); }
-.rail-match { color: var(--c-amber); font-family: var(--font-mono); }
-.rail-dim { color: var(--txt-quiet); font-family: var(--font-mono); }
+.rail-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--txt-dim); line-height: 1.4; }
+.rail-match { color: var(--c-amber); font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+.rail-dim { color: var(--txt-dim); font-family: var(--font-mono); }
 .rail-cta {
   margin-top: 4px;
   padding: 9px 12px; border-radius: var(--r-sm);
@@ -1783,7 +1801,7 @@ body::before {
 }
 .drink-hero-info { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .drink-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.drink-brand { font-family: var(--font-mono); font-size: 11.5px; color: var(--txt-dim); letter-spacing: 3px; }
+.drink-brand { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--txt); letter-spacing: 2px; line-height: 1.35; }
 .drink-name {
   font-family: var(--font-title); font-weight: 700;
   font-size: 36px; line-height: 1.05; letter-spacing: -0.5px;
@@ -1939,7 +1957,7 @@ body::before {
 .rev-avatar {
   width: 32px; height: 32px; border-radius: var(--r-sm);
   display: grid; place-items: center;
-  color: var(--on-accent); font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  color: var(--on-bright); font-family: var(--font-display); font-weight: 700; font-size: 13px;
 }
 .rev-actions { display: flex; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
 
@@ -2045,7 +2063,7 @@ body::before {
 }
 .rate-btn:hover { transform: translateY(-1px); }
 .rate-btn.on {
-  background: var(--rate-color); color: var(--on-accent); border-color: var(--rate-color);
+  background: var(--rate-fill, var(--rate-color)); color: var(--rate-ink, var(--on-bright)); border-color: var(--rate-color);
 }
 .rate-input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .rate-btn:has(.rate-input:focus-visible) { outline: 2px solid var(--rate-color); outline-offset: 3px; }
@@ -2141,7 +2159,7 @@ body::before {
   position: absolute; right: 0; bottom: 0;
   width: 34px; height: 34px; border-radius: 50%;
   display: grid; place-items: center;
-  background: var(--c-cyan); color: var(--on-accent);
+  background: var(--c-cyan); color: var(--on-bright);
   border: 3px solid var(--bg-card);
   box-shadow: 0 2px 10px rgba(0,0,0,.4);
   transition: transform .16s ease;
@@ -2196,10 +2214,9 @@ body::before {
 .prof-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 .prof-section { display: flex; flex-direction: column; gap: 14px; }
 
-/* Вкладка «Оформление» — TweaksBody слева, текстовый info-блок справа.
-   На узких экранах схлопывается в одну колонку. */
+/* Заголовок на всю ширину, палитра и остальные настройки — в двух колонках. */
 .prof-appearance {
-  display: grid; grid-template-columns: minmax(260px, 360px) 1fr; gap: 24px;
+  display: flex; flex-direction: column; gap: 24px;
   background: var(--bg-card); border: 1px solid var(--line);
   border-radius: var(--r-md); padding: 20px;
 }
@@ -2208,17 +2225,19 @@ body::before {
 /* overflow: visible — у .twk-body overflow-y:auto (для плавающей панели), а он режет и по
    горизонтали: кольцо и свечение выбранного цвета обрезались по краю. Прокрутка тут не нужна. */
 .prof-appearance-panel .twk-body { padding: 6px; overflow: visible; }
-.prof-appearance-aside { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.prof-appearance-head { display: flex; flex-direction: column; gap: 10px; }
+.prof-appearance-panel .twk-body-full { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.twk-appearance-primary, .twk-appearance-details { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .prof-appearance-title {
   font-family: var(--font-title); font-weight: 600; font-size: 22px;
   color: var(--txt); margin: 0;
 }
 .prof-appearance-blurb {
   font-size: 13px; color: var(--txt-dim); line-height: 1.6; margin: 0;
-  max-width: 56ch;
 }
 @media (max-width: 800px) {
-  .prof-appearance { grid-template-columns: 1fr; padding: 14px; gap: 14px; }
+  .prof-appearance { padding: 14px; gap: 14px; }
+  .prof-appearance-panel .twk-body-full { grid-template-columns: 1fr; gap: 24px; }
 }
 
 .prof-rev-list { display: flex; flex-direction: column; gap: 8px; }
@@ -2348,7 +2367,7 @@ body::before {
 }
 .auth-tab:hover { color: var(--txt); }
 .auth-tab.active {
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.4);
 }
 
@@ -2935,6 +2954,7 @@ body::before {
   transition: transform .15s, box-shadow .15s, border-color .15s;
 }
 .twk-fab { bottom: 16px; }
+.app:has(.filter-pop) :is(.twk-fab, .up-fab) { visibility: hidden; }
 /* Стрелка "наверх" сидит над TweaksPanel-fab'ом (44 + 16 + 12 gap = 72px). */
 .up-fab { bottom: 72px; }
 /* Скрыта по умолчанию; .is-visible проявляет fade+scale (заменяет framer-motion).
@@ -3070,17 +3090,19 @@ body::before {
 }
 .twk-seg-btn:hover { color: var(--txt); }
 .twk-seg-btn.active {
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.35);
 }
 
 /* Accent color picker */
-.twk-accents { display: flex; gap: 8px; }
+.twk-accents { display: flex; gap: 8px; max-width: 344px; }
+.twk-body-full .twk-accents { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); max-width: 408px; }
 .twk-accent {
   flex: 1; aspect-ratio: 1;
   border-radius: 50%; cursor: pointer;
   border: 2px solid transparent;
   background: var(--swatch);
+  color: var(--on-bright); font-size: 22px;
   box-shadow: 0 0 0 0 rgba(0,0,0,0), 0 0 12px var(--swatch);
   transition: transform .12s, box-shadow .12s, border-color .12s;
 }
@@ -3088,6 +3110,57 @@ body::before {
 .twk-accent.active {
   border-color: var(--txt);
   box-shadow: 0 0 0 2px var(--bg-card), 0 0 16px var(--swatch);
+}
+
+.accent-reset, .accent-editor-actions button {
+  font: inherit; font-size: 12px; color: var(--txt); cursor: pointer;
+  border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+  background: var(--bg-input); padding: 10px 12px; min-height: 44px;
+}
+.accent-custom-trigger { display: grid; place-items: center; padding: 0; font-size: 12px; color: var(--txt); background: conic-gradient(#ff2e88, #fbbf24, #00ff9d, #00e5ff, #4d96ff, #c084fc, #ff2e88); }
+.accent-custom-trigger > span { padding: 3px 6px; border-radius: 999px; background: var(--bg-deep-base); }
+.accent-custom-swatch { display: inline-block; width: 22px; height: 22px; flex-shrink: 0; border: 1px solid var(--txt-dim); border-radius: 4px; }
+.accent-current { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--txt); }
+.accent-reset { border: 0; padding: 4px 0; background: transparent; text-align: left; text-decoration: underline; color: var(--txt-dim); }
+.accent-editor { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; min-width: 0; padding: 12px; background: var(--bg-deep-base); border: 1px solid var(--line-strong); border-radius: var(--r-sm); }
+.accent-editor-controls { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.accent-sv { position: relative; height: 170px; touch-action: none; cursor: crosshair; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent), hsl(var(--hue) 100% 50%); border: 1px solid #777; border-radius: 4px; }
+.accent-sv-thumb { position: absolute; width: 14px; height: 14px; border: 2px solid #fff; outline: 1px solid #111; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+.accent-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 11px; color: var(--txt); }
+.accent-field input:not([type="range"]) { width: 100%; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--txt-dim); border-radius: 4px; background: var(--bg-deep-base); color: var(--txt); font: inherit; font-size: 13px; }
+.accent-field input:focus-visible, .accent-editor button:focus-visible, .accent-custom-trigger:focus-visible, .accent-reset:focus-visible, .twk-accent:focus-visible { outline: 2px solid var(--txt); outline-offset: 3px; }
+.accent-hue { width: 100%; height: 24px; appearance: none; background: linear-gradient(to right, red, #ff0, #0f0, #0ff, #00f, #f0f, red); border: 1px solid #777; border-radius: 4px; cursor: pointer; }
+.accent-hue::-webkit-slider-thumb { appearance: none; width: 12px; height: 28px; background: #fff; border: 2px solid #111; border-radius: 3px; }
+.accent-hue::-moz-range-thumb { width: 10px; height: 26px; background: #fff; border: 2px solid #111; border-radius: 3px; }
+.accent-numbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.accent-help { font-size: 11px; line-height: 1.5; color: var(--txt-dim); margin: 0; }
+.accent-previews { display: flex; flex-direction: column; gap: 12px; }
+.accent-preview { display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid #777; border-radius: 6px; min-width: 0; font-size: 11px; }
+.accent-preview-dark { background: #151520; color: #f0f0f5; }
+.accent-preview-light { background: #fcfdff; color: #161a22; }
+.accent-preview button, .accent-preview > input { min-width: 0; width: 100%; font: inherit; padding: 8px 6px; border: 1px solid currentColor; border-radius: 4px; }
+.accent-preview-button { background: var(--preview-fill); color: var(--preview-ink); }
+.accent-preview-button:hover { box-shadow: 0 0 0 2px var(--preview-accent); }
+.accent-preview-button:active { transform: translateY(1px); }
+.accent-preview-link { color: var(--preview-accent); text-decoration: underline; }
+.accent-preview-check { display: flex; align-items: center; gap: 5px; }
+.accent-preview-check input { width: 14px; height: 14px; flex-shrink: 0; accent-color: var(--preview-fill); }
+.accent-preview > input { background: transparent; color: inherit; }
+.accent-preview :focus-visible { outline: 2px solid var(--preview-accent); outline-offset: 2px; }
+.accent-editor-actions { display: flex; gap: 8px; grid-column: 1 / -1; }
+.accent-editor-actions button { flex: 1; background: var(--bg-deep-base); }
+.accent-editor-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+:root[data-custom-accent] :is(.cta-primary, .nav-cta, .auth-submit, .twk-seg-btn.active) { box-shadow: inset 0 0 0 1px var(--accent); }
+:root[data-custom-accent] .cta-primary:hover:not(:disabled) { filter: none; box-shadow: inset 0 0 0 2px var(--accent); }
+:root[data-custom-accent] :is(.twk-seg-btn, .auth-tab, .rate-row-overall .rate-btn) { transition-property: transform, box-shadow; }
+:root[data-custom-accent] :is(button, a, input, textarea, select):focus-visible { outline: 2px solid var(--txt); outline-offset: 3px; }
+:root[data-custom-accent] .accent-preview :focus-visible { outline-color: var(--preview-accent); }
+@media (max-width: 580px) {
+  .accent-editor { grid-template-columns: 1fr; }
+  .accent-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+}
+@media (max-width: 480px) {
+  .twk-body-full .twk-accents { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 220px; }
 }
 
 /* Font select */
@@ -3171,7 +3244,7 @@ body::before {
 .adm-tab-badge {
   font-family: var(--font-display); font-weight: 700;
   font-size: 10px; padding: 1px 7px;
-  background: var(--c-amber); color: var(--on-accent);
+  background: var(--c-amber); color: var(--on-bright);
   border-radius: 999px;
   letter-spacing: 0.5px;
 }
@@ -3238,7 +3311,7 @@ body::before {
 .sub-user-avatar {
   width: 20px; height: 20px; border-radius: 4px;
   display: grid; place-items: center;
-  background: var(--accent); color: var(--on-accent);
+  background: var(--accent-fill); color: var(--on-accent);
   font-family: var(--font-display); font-weight: 800; font-size: 11px;
 }
 .sub-price { color: var(--c-pink); font-weight: 600; }
@@ -3325,7 +3398,7 @@ body::before {
 .lb-avatar {
   width: 32px; height: 32px; border-radius: var(--r-sm);
   display: grid; place-items: center;
-  color: var(--on-accent);
+  color: var(--on-bright);
   font-family: var(--font-display); font-weight: 700; font-size: 14px;
   flex-shrink: 0;
   box-shadow: 0 0 10px currentColor;
@@ -3744,7 +3817,8 @@ body::before {
   font-size: 12.5px; line-height: 1.4; color: var(--txt-dim);
 }
 .motion-notice a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
-.app:has(.twk-panel) .motion-notice { visibility: hidden; }
+.app:has(.twk-panel) .motion-notice,
+.app:has(.accent-editor) .motion-notice { visibility: hidden; }
 @media (max-width: 640px) {
   .motion-notice { bottom: calc(188px + env(safe-area-inset-bottom, 0px)); }
 }
@@ -4115,7 +4189,7 @@ body::before {
   .mob-tab.active { color: var(--accent); }
   .mob-tab-avatar {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
+    width: 22px; height: 22px; border-radius: 50%; background: var(--accent-fill);
     color: var(--on-accent); font-weight: 700; font-size: 11px;
   }
   /* контент (вкл. футер) не должен прятаться под баром */
@@ -4644,7 +4718,7 @@ html[data-retro] body { text-shadow: 0 0 1px rgba(0,255,120,0.25); }
 .ava-seg button { flex: 1; height: 40px; border-radius: 7px; font-family: var(--font-mono); font-weight: 700;
   font-size: 11px; letter-spacing: .8px; color: var(--txt-dim); text-transform: uppercase; background: transparent;
   border: none; cursor: pointer; }
-.ava-seg button.on { background: var(--accent); color: var(--on-accent); }
+.ava-seg button.on { background: var(--accent-fill); color: var(--on-accent); }
 .ava-presets { display: flex; gap: 11px; flex-wrap: wrap; margin: 9px 0 2px; }
 .ava-preset { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; padding: 0; cursor: pointer;
   border: 2px solid transparent; background: transparent; }

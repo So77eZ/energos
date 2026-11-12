@@ -17,11 +17,11 @@ test.beforeEach(async ({ context }) => {
 // toBeVisible — SSR-рендер/гидрацию).
 async function gotoHome(page: Page) {
   await page.goto('/', { waitUntil: 'commit', timeout: 60_000 })
-  await expect(page.locator('.sortbar')).toBeVisible({ timeout: 20_000 })
+  await expect(page.locator('.sortbar:visible')).toBeVisible({ timeout: 20_000 })
 }
 
 const popTop = (page: Page) =>
-  page.locator('.filter-pop').evaluate((el) => el.getBoundingClientRect().top)
+  page.locator('.filter-pop:visible').evaluate((el) => el.getBoundingClientRect().top)
 
 test.describe('filter-popover: хедер-триггер', () => {
   test('клик хедер-фильтра при скролле вниз → поповер в зоне видимости', async ({ page }) => {
@@ -31,12 +31,12 @@ test.describe('filter-popover: хедер-триггер', () => {
     // Уводим SortBar за верх вьюпорта.
     await page.evaluate(() => window.scrollTo(0, 1500))
     await expect
-      .poll(() => page.locator('.sortbar').evaluate((el) => el.getBoundingClientRect().bottom), { timeout: 3000 })
+      .poll(() => page.locator('.sortbar:visible').evaluate((el) => el.getBoundingClientRect().bottom), { timeout: 3000 })
       .toBeLessThan(0)
 
     // Открываем фильтр из sticky-шапки.
-    await page.locator('.hdr-filter-btn').click()
-    await expect(page.locator('.filter-pop')).toBeVisible()
+    await page.locator('.hdr-filter-btn:visible').click()
+    await expect(page.locator('.filter-pop:visible')).toBeVisible()
 
     // Поповер в пределах вьюпорта по вертикали, а не за кадром сверху.
     const top = await popTop(page)
@@ -48,8 +48,8 @@ test.describe('filter-popover: хедер-триггер', () => {
     await page.setViewportSize({ width: 1280, height: 720 })
     await gotoHome(page)
 
-    await page.locator('.hdr-filter-btn').click()
-    await expect(page.locator('.filter-pop')).toBeVisible()
+    await page.locator('.hdr-filter-btn:visible').click()
+    await expect(page.locator('.filter-pop:visible')).toBeVisible()
 
     const top = await popTop(page)
     expect(top).toBeGreaterThanOrEqual(0)

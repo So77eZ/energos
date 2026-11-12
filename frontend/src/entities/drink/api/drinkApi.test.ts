@@ -1,9 +1,48 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { drinkApi } from './drinkApi'
+import { type ApiError, RateLimitError, SessionExpiredError } from '@shared/api/http'
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
 
 afterEach(() => vi.unstubAllGlobals())
+
+describe('drinkApi.uploadImage', () => {
+  const file = () => new File(['image'], 'can.webp', { type: 'image/webp' })
+
+  it('accepts a successful WebP response without parsing it as JSON', async () => {
+    const response = new Response(new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0, 87, 69, 66, 80]), {
+      headers: { 'Content-Type': 'image/webp' },
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response))
+
+    await expect(drinkApi.uploadImage(1, file(), 'token')).resolves.toBeUndefined()
+  })
+
+  it('also accepts the old JSON response during a rolling update', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({ id: 1, name: 'A', price: 1, no_sugar: false })))
+
+    await expect(drinkApi.uploadImage(1, file(), 'token')).resolves.toBeUndefined()
+  })
+
+  it.each([
+    [401, SessionExpiredError],
+    [429, RateLimitError],
+  ])('preserves authentication and rate-limit errors for HTTP %s', async (status, error) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({}, status)))
+
+    await expect(drinkApi.uploadImage(1, file(), 'token')).rejects.toBeInstanceOf(error)
+  })
+
+  it('preserves backend validation details and error codes', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(json({
+      error: { code: 'INVALID_IMAGE', message: 'Unsupported image type' },
+    }, 400)))
+
+    await expect(drinkApi.uploadImage(1, file(), 'token')).rejects.toMatchObject({
+      status: 400, code: 'INVALID_IMAGE', message: 'Unsupported image type',
+    } satisfies Partial<ApiError>)
+  })
+})
 
 describe('drinkApi.list', () => {
   it('created_at из API приводится к UTC; без него — null', async () => {
