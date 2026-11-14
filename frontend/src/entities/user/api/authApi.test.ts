@@ -37,6 +37,17 @@ describe('authApi', () => {
     expect(JSON.parse(init.body)).toEqual({ username: 'NewFox' })
   })
 
+  it.each([{ email: 'changed@example.com' }, { password: 'NewPassw0rd!' }])('updateMe: sends only the requested account field %j', async body => {
+    const fetchMock = vi.fn().mockResolvedValue(json({ ...apiUser, email: 'changed@example.com' }))
+    vi.stubGlobal('fetch', fetchMock)
+    await authApi.updateMe('tok', body)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toMatch(/\/api\/v1\/auth\/me$/)
+    expect(init.method).toBe('PATCH')
+    expect(init.headers.Authorization).toBe('Bearer tok')
+    expect(JSON.parse(init.body)).toEqual(body)
+  })
+
   it('login: form-urlencoded, поле username несёт e-mail', async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ access_token: 'a', token_type: 'bearer' }))
     vi.stubGlobal('fetch', fetchMock)

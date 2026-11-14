@@ -38,7 +38,7 @@ export function VerifyEmailBanner({ email }: { email: string }) {
       }}
     >
       <span>
-        Подтвердите e-mail <b>{email}</b>, чтобы оставлять отзывы. Мы отправили письмо со ссылкой при регистрации.
+        Подтвердите e-mail <b>{email}</b>, чтобы оставлять отзывы. Откройте письмо со ссылкой подтверждения или запросите его ещё раз.
       </span>
       <button type="button" className="cta-ghost" onClick={resend} disabled={isPending || sent}>
         {sent ? 'Письмо отправлено' : 'Отправить письмо ещё раз'}

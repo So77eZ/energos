@@ -2221,6 +2221,22 @@ body::before {
   border-radius: var(--r-md); padding: 20px;
 }
 .prof-appearance-panel { min-width: 0; }
+.prof-account { display: flex; flex-direction: column; gap: 24px; }
+.prof-account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.prof-account-form {
+  display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px;
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-card);
+}
+.prof-account-form h3 { font-family: var(--font-title); font-size: 20px; font-weight: 600; color: var(--txt); }
+.prof-account-hint { font-size: 12px; line-height: 1.6; color: var(--txt-dim); overflow-wrap: anywhere; }
+.prof-account-form .auth-error, .prof-account-form .auth-notice { margin: 0; overflow-wrap: anywhere; color: var(--txt); }
+.prof-account-form .auth-field input { min-width: 0; font-size: 16px; }
+.prof-account-form .auth-field label { font-size: 12px; letter-spacing: .4px; text-transform: none; }
+.prof-account-form .cta-primary { align-self: flex-start; min-height: 44px; }
+@media (max-width: 760px) {
+  .prof-account-grid { grid-template-columns: minmax(0, 1fr); }
+  .prof-account-form { padding: 16px; }
+}
 /* TweaksBody внутри профиля — без своих padding'ов (есть у .prof-appearance). */
 /* overflow: visible — у .twk-body overflow-y:auto (для плавающей панели), а он режет и по
    горизонтали: кольцо и свечение выбранного цвета обрезались по краю. Прокрутка тут не нужна. */
