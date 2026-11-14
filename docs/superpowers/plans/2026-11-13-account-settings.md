@@ -28,7 +28,11 @@
 
 ## Tasks
 
-1. Добавить тесты account-actions.test.ts и API-тесты; увидеть ошибки до реализации. Реализовать account-actions.ts и расширить updateMe в authApi.ts.
-2. Добавить AccountSettings.tsx, вкладку account в ProfilePage.tsx, возврат после входа в profile/page.tsx и небольшой scoped CSS. Сбросить состояние VerifyEmailBanner при новой почте.
-3. Проверить оба сценария на отдельном локальном аккаунте, письмо в Mailpit, сохранение состояния, ошибки и мобильную ширину. Дополнить account e2e.
-4. Unit-suite, TypeScript, ревью, Docker frontend build, страница/API и итоговый браузерный прогон. Зафиксировать локально; push/merge/production отдельно не выполнять.
+- [x] Добавить тесты account-actions.test.ts и API-тесты; увидеть ошибки до реализации. Реализовать account-actions.ts и расширить updateMe в authApi.ts.
+- [x] Добавить AccountSettings.tsx, вкладку account в ProfilePage.tsx, возврат после входа в profile/page.tsx и небольшой scoped CSS. Сбросить состояние VerifyEmailBanner при новой почте.
+- [x] Проверить оба сценария на отдельном локальном аккаунте, письмо в Mailpit, сохранение состояния, ошибки и мобильную ширину. Дополнить account e2e.
+- [x] Unit-suite, TypeScript, ревью, Docker frontend build, страница/API и итоговый браузерный прогон. Зафиксировать локально; push/merge/production отдельно не выполнять.
+
+## Результат 14.11.2026
+
+332 unit-теста, TypeScript, Docker build и 5 браузерных сценариев прошли. Обнаруженный на ревью HTTP 401 для неверного текущего пароля теперь обрабатывается отдельно от истечения сессии. Ревью исправления чистое. Runtime-образ: `energos-frontend:901e091`.

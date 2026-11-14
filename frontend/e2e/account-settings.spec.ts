@@ -110,7 +110,16 @@ test('email confirmation, reauthentication and password change work end to end',
   await page.reload({ waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('form', { name: 'Почта', exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-  await page.locator('.prof-account:visible').screenshot({ path: testInfo.outputPath('account-mobile-light.png') })
+  await page.locator('.prof-account:visible').evaluate(element => {
+    const headerHeight = document.querySelector('.hdr')?.getBoundingClientRect().height ?? 0
+    window.scrollBy(0, element.getBoundingClientRect().top - headerHeight - 16)
+  })
+  await page.screenshot({ path: testInfo.outputPath('account-mobile-light.png') })
+  const savePassword = passwordForm.getByRole('button', { name: 'Изменить пароль', exact: true })
+  await savePassword.click()
+  await expect(passwordForm.getByLabel('Текущий пароль', { exact: true })).toBeFocused()
+  await savePassword.scrollIntoViewIfNeeded()
+  await page.screenshot({ path: testInfo.outputPath('account-mobile-password.png') })
   expect(errors).toEqual([])
 })
 
