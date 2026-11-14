@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function ProfileRoute({ searchParams }: PageProps<'/profile'>) {
   const { tab } = await searchParams
-  const login = tab === 'appearance'
-    ? `${ROUTES.auth.login}?${new URLSearchParams({ return: `${ROUTES.profile}?tab=appearance` })}`
+  const login = tab === 'appearance' || tab === 'account'
+    ? `${ROUTES.auth.login}?${new URLSearchParams({ return: `${ROUTES.profile}?tab=${tab}` })}`
     : ROUTES.auth.login
   const token = await getToken()
   if (!token) redirect(login)

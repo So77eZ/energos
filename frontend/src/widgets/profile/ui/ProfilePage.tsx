@@ -21,13 +21,14 @@ import { Icons } from '@shared/ui/icons'
 import { FEATURES } from '@shared/config/features'
 import { VerifyEmailBanner } from '@features/auth/ui/VerifyEmailBanner'
 import { UsernameEditor } from '@features/auth/ui/UsernameEditor'
+import { AccountSettings } from '@features/auth/ui/AccountSettings'
 import { AchievementsTab } from './tabs/AchievementsTab'
 import { AppearanceTab } from './tabs/AppearanceTab'
 import { FavoritesTab } from './tabs/FavoritesTab'
 import { ReviewsTab } from './tabs/ReviewsTab'
 import { SubmissionsTab } from './tabs/SubmissionsTab'
 
-type TabId = 'reviews' | 'favorites' | 'submissions' | 'achievements' | 'appearance'
+type TabId = 'reviews' | 'favorites' | 'submissions' | 'achievements' | 'appearance' | 'account'
 
 // Вкладки фич, которых нет в API ветки mvp, скрыты флагами (shared/config/features.ts).
 const TAB_IDS: TabId[] = [
@@ -36,6 +37,7 @@ const TAB_IDS: TabId[] = [
   ...(FEATURES.submissions ? ['submissions' as const] : []),
   ...(FEATURES.achievements ? ['achievements' as const] : []),
   'appearance' as const,
+  'account' as const,
 ]
 
 interface ProfilePageProps {
@@ -146,8 +148,8 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
     notifyUnlocks(achievements, { toast, router })
   }, [achievements, toast, router])
 
-  // appearance исключён — у вкладки нет badge'а со счётчиком (это настройки).
-  const counts: Record<Exclude<TabId, 'appearance'>, string | number> = {
+  // У вкладок настроек нет счётчиков.
+  const counts: Record<Exclude<TabId, 'appearance' | 'account'>, string | number> = {
     reviews: reviews.length,
     favorites: favIds.length,
     submissions: mySubs.length,
@@ -214,7 +216,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
         </div>
       </section>
 
-      {!user.is_verified && <VerifyEmailBanner email={user.email} />}
+      {!user.is_verified && <VerifyEmailBanner key={user.email} email={user.email} />}
 
       {(FEATURES.favorites || FEATURES.submissions || FEATURES.achievements) && <section className="prof-stats">
         {FEATURES.favorites && <div className="stat-card stat-amber">
@@ -246,6 +248,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
         {FEATURES.submissions   && <TabButton id="submissions"  label="Мои заявки" icon="beaker"  badge={counts.submissions}  active={tab} onSelect={setTab} />}
         {FEATURES.achievements  && <TabButton id="achievements" label="Достижения" icon="trophy"  badge={counts.achievements} active={tab} onSelect={setTab} />}
         <TabButton id="appearance"   label="Оформление" icon="sparkle" active={tab} onSelect={setTab} />
+        <TabButton id="account" label="Аккаунт" icon="lock" active={tab} onSelect={setTab} />
       </div>
 
       {tab === 'reviews'      && <ReviewsTab reviews={reviews} drinkMap={drinkMap} enrichedMap={enrichedMap} />}
@@ -253,6 +256,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
       {tab === 'submissions'  && <SubmissionsTab mySubs={mySubs} />}
       {tab === 'achievements' && <AchievementsTab achievements={achievements} />}
       {tab === 'appearance'   && <AppearanceTab />}
+      {tab === 'account' && <AccountSettings email={user.email} />}
 
       {FEATURES.avatars && (
         <AvatarEditorSheet
@@ -269,7 +273,7 @@ export function ProfilePage({ user, reviews, drinks }: ProfilePageProps) {
 interface TabButtonProps {
   id: TabId
   label: string
-  icon: 'msg' | 'bolt' | 'beaker' | 'trophy' | 'sparkle'
+  icon: 'msg' | 'bolt' | 'beaker' | 'trophy' | 'sparkle' | 'lock'
   /** Опционально — вкладка «Оформление» (настройки) бейджа не имеет. */
   badge?: string | number
   active: TabId
